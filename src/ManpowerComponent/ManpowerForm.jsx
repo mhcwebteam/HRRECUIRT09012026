@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { API_BASE_URL } from "../Config/Config"
 
-const ManpowerForm = () => {
+const ManpowerForm = ({onBack}) => {
   const navigate = useNavigate();
   const [userToken, setUserToken] = useState(() => {
     return JSON.parse(localStorage.getItem('userInfo')) || {};
@@ -458,34 +458,38 @@ const ManpowerForm = () => {
   };
 
   const handleBack = () => {
-    navigate(-1);
+    if (onBack) {
+      onBack(); 
+    } else {
+      navigate('/Manpower'); 
+    }
   };
 
   return (
     // max-w-7xl w-full mx-auto p-10 rounded-3xl shadow-2xl border border-gray-300 bg-gradient-to-br from-wheat via-gray-50 to-gray-100"> <div className="flex items-center bg-white rounded-2xl shadow-lg px-8 py-6
-    <div className="min-h-screen  flex items-center justify-center p-6">
-      <div className="max-w-7xl w-full mx-auto p-10 
+    <div className="min-h-screen  flex items-center justify-center">
+      <div className="max-w-7xl w-full mx-auto pl-8 pr-8
                 rounded-3xl shadow-2xl 
                 border border-gray-300 
                 bg-gradient-to-br from-pink-100 via-gray-50 to-gray-100">
-        <div className="flex items-center bg-white rounded-2xl shadow-lg px-8 py-6 border border-gray-100">
+        {/* <div className="flex items-center bg-white rounded-2xl shadow-lg px-8 py-6 border border-gray-100"> */}
           {/* Left Accent Icon */}
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md mr-4">
+          {/* <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md mr-4">
             <BriefcaseIcon className="w-6 h-6" />
-          </div>
+          </div> */}
 
           {/* Title + Subtitle */}
-          <div className="flex-1">
+          {/* <div className="flex-1">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Manpower Requisition Form
             </h1>
             <p className="text-gray-500 text-sm mt-1">
               Submit a request for hiring, replacements, or manpower planning
             </p>
-          </div>
+          </div> */}
 
           {/* Back Button */}
-          <motion.button
+          {/* <motion.button
             onClick={handleBack}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -495,11 +499,11 @@ const ManpowerForm = () => {
           >
             <ArrowLeftIcon className="w-5 h-5" />
             Back
-          </motion.button>
-        </div>
+          </motion.button> */}
+        {/* </div> */}
 
 
-        <form onSubmit={handleSubmit} className="space-y-8 mt-10" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-8 mt-6" noValidate>
           {/* Card 1: Basic Information */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

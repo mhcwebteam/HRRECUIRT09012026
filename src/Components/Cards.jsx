@@ -227,32 +227,6 @@ const handleCardClick = (sub) => {
               </div>
             </div>
           </div>
-
-          {/* Right Column - Quick Actions */}
-          {/* <div className="col-span-12 xl:col-span-4 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                {[
-                  { icon: IoAdd, label: 'Create New Project', color: 'text-blue-500' },
-                  { icon: IoStatsChart, label: 'View Analytics', color: 'text-green-500' },
-                  { icon: IoCalendar, label: 'Schedule Meeting', color: 'text-purple-500' },
-                  { icon: IoPeople, label: 'Team Members', color: 'text-orange-500' }
-                ].map((action, index) => (
-                  <motion.button
-                    key={action.label}
-                    whileHover={{ x: 4 }}
-                    className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <div className={`p-2 rounded-lg bg-gray-50 ${action.color}`}>
-                      <action.icon className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium text-gray-700">{action.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

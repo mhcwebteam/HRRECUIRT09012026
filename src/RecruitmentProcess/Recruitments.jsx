@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -26,22 +23,17 @@ import {
   UploadFile as UploadFileIcon,
   RequestQuote as RequestQuoteIcon
 } from '@mui/icons-material';
-import ManpowerHRList from './ManPowerHrList';
-import ManpowerRequestForm from './ManpowerForm';
-import DashboardMrf from './DashboardMrf'
-import MrfUploadList from './../Mrf/MrfUploadList';
-import MrfUpload from "./../Mrf/MrfUpload";
-import { useLocation } from 'react-router-dom';
-import Reminder from './Reminder';
 
-const Manpower = () => {
+import { useLocation } from 'react-router-dom';
+import RecruitmentMail from './RecruitmentMail';
+import { CircleCheckBig, ScrollText, Signature } from 'lucide-react';
+
+const Recruitments = () => {
   const location = useLocation();
   const [onboardingEnabled, setOnboardingEnabled] = useState(true);
-  const [activeManpowerComponent, setActiveManpowerComponent] = useState(null);
+  const [activeRecruitmentComponent, setActiveRecruitmentComponent] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [hoveredTab, setHoveredTab] = useState(null);
-
-
 
   const stats = [
     { 
@@ -70,59 +62,44 @@ const Manpower = () => {
     },
   ];
 
-  const manpowerMenuItems = [
+  const RecruitmentMenuItems = [
     { 
-      label: 'Dashboard', 
-      component: 'dashboard', 
-      icon: RequestQuoteIcon,
-    },
-    { 
-      label: 'Request Form', 
-      component: 'request-form', 
-      icon: RequestQuoteIcon,
-    },
-    { 
-      label: 'HR List', 
-      component: 'hr-list', 
-      icon: ListAltIcon,
-    },
-    { 
-      label: 'Upload Form', 
-      component: 'upload-form', 
-      icon: UploadFileIcon,
-    },
-    { 
-      label: 'Upload List', 
-      component: 'upload-list', 
-      icon: ListAltIcon,
-    },
-       { 
-      label: 'Reminder', 
-      component: 'Reminder-list', 
-      icon: ListAltIcon,
-    }
-  ];
-
-  const onboardingMenuItems = [
-    { 
-      label: 'Employee Onboarding', 
-      component: 'employee-onboarding', 
+      label: 'Recruitment Mail', 
+      component: 'recruitment-mail', 
       icon: GroupAddIcon,
     },
     { 
-      label: 'Settings', 
-      component: 'onboarding-settings', 
+      label: 'Verification', 
+      component: 'verification', 
       icon: AssignmentIcon,
     },
     { 
-      label: 'Reports', 
-      component: 'onboarding-reports', 
+      label: 'Salary Stackup', 
+      component: 'salary-stackup', 
+      icon: ScrollText,
+    },
+    { 
+      label: 'Candidate Approval', 
+      component: 'candidate-approval', 
+      icon: Signature,
+    },
+    { 
+      label: 'Note For Approval', 
+      component: 'note-approval', 
       icon: TrendingUpIcon,
     },
+
+       { 
+      label: 'Offer Letter', 
+      component: 'offer-letter', 
+      icon: CircleCheckBig,
+    },
+
   ];
 
   const handleMenuItemClick = (component) => {
-    setActiveManpowerComponent(component);
+    console.log('Clicked component:', component);
+    setActiveRecruitmentComponent(component);
   };
 
   const handleOnboardingToggle = (event) => {
@@ -131,7 +108,7 @@ const Manpower = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
-    setActiveManpowerComponent(null);
+    setActiveRecruitmentComponent(null);
   };
 
   const getColorClasses = (color) => {
@@ -144,64 +121,55 @@ const Manpower = () => {
     return colorMap[color] || colorMap.blue;
   };
 
-  // Render the active manpower component
-  const renderManpowerComponent = () => {
-    switch (activeManpowerComponent) {
-      case 'dashboard':
+  const renderRecruitmentComponent = () => {
+    console.log('Current component:', activeRecruitmentComponent);
+    
+    switch (activeRecruitmentComponent) {
+      case 'recruitment-mail':
+        return <RecruitmentMail />;
+    
 
+      case 'verification':
+        return (
+          <div className="p-6">
+            <Typography variant="h4" className="mb-4">Verification</Typography>
+            <Typography>Verification content goes here...</Typography>
+          </div>
+        );
 
-        return <DashboardMrf onBack = {()=> setActiveManpowerComponent(null)}/>
-      case 'request-form':
-       return <ManpowerRequestForm onBack={() => setActiveManpowerComponent(null)} />
+      case 'salary-stackup':
+        return (
+          <div className="p-6">
+            <Typography variant="h4" className="mb-4">Salary Stackup</Typography>
+            <Typography>Salary stackup content goes here...</Typography>
+          </div>
+        );
 
-      case 'hr-list':
-        return <ManpowerHRList onBack = {()=> setActiveManpowerComponent(null)} />
-      case 'upload-form':
-        return <MrfUpload onBack = {()=> setActiveManpowerComponent(null)} />
-      case 'upload-list':
-        return <MrfUploadList onBack = {()=> setActiveManpowerComponent(null)}/>
-case 'Reminder-list': 
-   return <Reminder/>
+      case 'candidate-approval':
+        return (
+          <div className="p-6">
+            <Typography variant="h4" className="mb-4">Candidate Approval</Typography>
+            <Typography>Candidate approval content goes here...</Typography>
+          </div>
+        );
+
+      case 'note-approval':
+        return (
+          <div className="p-6">
+            <Typography variant="h4" className="mb-4">Note For Approval</Typography>
+            <Typography>Note for approval content goes here...</Typography>
+          </div>
+        );
+
       default:
         return null;
     }
   };
 
-  
-//   const renderOnboardingComponent = () => {
-//     switch (activeManpowerComponent) {
-//       case 'employee-onboarding':
-//         return (
-//           <div className="p-6">
-//             <Typography variant="h4" className="mb-4">Employee Onboarding</Typography>
-//             <Typography>Employee onboarding content goes here...</Typography>
-//           </div>
-//         );
-//       case 'onboarding-settings':
-//         return (
-//           <div className="p-6">
-//             <Typography variant="h4" className="mb-4">Onboarding Settings</Typography>
-//             <Typography>Onboarding settings content goes here...</Typography>
-//           </div>
-//         );
-//       case 'onboarding-reports':
-//         return (
-//           <div className="p-6">
-//             <Typography variant="h4" className="mb-4">Onboarding Reports</Typography>
-//             <Typography>Onboarding reports content goes here...</Typography>
-//           </div>
-//         );
-//       default:
-//         return null;
-//     }
-//   };
-
   return (
     <div className="">
       {/* Header */}
       <Paper elevation={1} className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-orange-500">
-  
-
         {/* Main Tabs */}
         <Box className="border-b border-gray-200">
           <Tabs 
@@ -218,61 +186,30 @@ case 'Reminder-list':
             }}
           >
             <Tab 
-              label="Manpower" 
+              label="Recruitment Process" 
               icon={<PeopleIcon />} 
               iconPosition="start"
             />
-        
           </Tabs>
         </Box>
 
-        {/* Submenu for Manpower Tab */}
-        {(activeTab === 0 || hoveredTab === 0) && (
-          <Box className="mt-4 p-4  rounded-lg border border-gray-200 shadow-sm">
-            <Box className="flex flex-wrap gap-2">
-              {manpowerMenuItems.map((item) => {
-                const IconComponent = item.icon;
-                const isActive = activeManpowerComponent === item.component;
-                
-                return (
-                  <Button
-                    key={item.component}
-                    variant={isActive ? "contained" : "outlined"}
-                    size="medium"
-                    onClick={() => handleMenuItemClick(item.component)}
-                    className={`normal-case transition-all duration-200 ${
-                      isActive 
-                        ? 'bg-orange-500 hover:bg-orange-600 border-orange-500' 
-                        : 'bg-white hover:bg-orange-50 border-gray-300 text-gray-700'
-                    }`}
-                    startIcon={<IconComponent />}
-                  >
-                    {item.label}
-                  </Button>
-
-                   
-                );
-
-         
-              })}
-            </Box>
-          </Box>
-        )}
-
         {/* Submenu for Onboarding Tab */}
-        {(activeTab === 1 || hoveredTab === 1) && (
+        {(activeTab === 0 || hoveredTab === 0) && (
           <Box className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
             <Box className="flex flex-wrap gap-2">
-              {onboardingMenuItems.map((item) => {
+              {RecruitmentMenuItems.map((item) => {
                 const IconComponent = item.icon;
-                const isActive = activeManpowerComponent === item.component;
+                const isActive = activeRecruitmentComponent === item.component;
                 
                 return (
                   <Button
                     key={item.component}
                     variant={isActive ? "contained" : "outlined"}
                     size="medium"
-                    onClick={() => handleMenuItemClick(item.component)}
+                    onClick={() => {
+                      console.log('Button clicked:', item.component);
+                      handleMenuItemClick(item.component);
+                    }}
                     className={`normal-case transition-all duration-200 ${
                       isActive 
                         ? 'bg-orange-500 hover:bg-orange-600 border-orange-500' 
@@ -290,26 +227,29 @@ case 'Reminder-list':
       </Paper>
 
       {/* Show active component */}
-      {activeManpowerComponent ? (
+      {activeRecruitmentComponent ? (
         <Box>
           <Paper elevation={2} className="p-2">
             <Box className="flex justify-between items-center">
-          
+              {/* <Button 
+                onClick={() => setActiveRecruitmentComponent(null)}
+                variant="outlined"
+                size="small"
+              >
+                Back to Dashboard
+              </Button> */}
             </Box>
-            {activeTab === 0 ? renderManpowerComponent() : renderOnboardingComponent()}
+            {renderRecruitmentComponent()}
           </Paper>
-
-          
         </Box>
       ) : (
         <>
-  
+    
           {activeTab === 0 && (
             <Grid container spacing={3} className="mb-6">
               {stats.map((stat, index) => {
                 const IconComponent = stat.icon;
                 const colorClasses = getColorClasses(stat.color);
-              
                 
                 return (
                   <Grid item xs={12} sm={6} lg={3} key={index}>
@@ -344,7 +284,7 @@ case 'Reminder-list':
             </Grid>
           )}
 
-          {/* Recent Activity - Only show when no component is active and on Manpower tab */}
+          {/* Recent Activity */}
           {activeTab === 0 && (
             <Card className="shadow-md border border-gray-100">
               <CardContent className="p-4">
@@ -371,12 +311,10 @@ case 'Reminder-list':
               </CardContent>
             </Card>
           )}
-
-    
         </>
       )}
     </div>
   );
 };
 
-export default Manpower;
+export default Recruitments;

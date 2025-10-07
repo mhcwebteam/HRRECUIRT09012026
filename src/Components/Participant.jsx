@@ -41,7 +41,6 @@ const Participant = () => {
   const [flowLoading, setFlowLoading] = useState(false);
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
 
-  // Keep backend connection from first code
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -111,7 +110,7 @@ const Participant = () => {
       setModalOpen(false);
       setManPowerOpen(true);
     }
-    // Fetch flow data when modal opens
+
     if (rowData.CASEID) {
       await fetchFlowData(rowData.CASEID, rowData.PROCESSNAME, type);
     }
@@ -196,7 +195,7 @@ const Participant = () => {
     { name: 'Data', completed: statusCounts.completed, pending: statusCounts.pending },
   ];
 
-  // Enhanced DataGrid columns with better styling
+
   const columns = [
     {
       field: 'SNO',

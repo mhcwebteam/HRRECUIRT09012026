@@ -5,7 +5,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { API_BASE_URL } from "../Config/Config"
 
-const FileUpload = () => {
+const FileUpload = ({onBack}) => {
 
   const [userToken, setToken] = useState(() => {
     return JSON.parse(localStorage.getItem('userInfo')) || {};
@@ -30,7 +30,13 @@ const FileUpload = () => {
 
 
 
-
+   const handleBack = () => {
+    if (onBack) {
+      onBack(); 
+    } else {
+      navigate('/Manpower'); 
+    }
+  };
 
 
   const handleFileChange = (e) => setFile(e.target.files[0]);
@@ -108,7 +114,7 @@ const FileUpload = () => {
         </div>
         <ArrowBackIcon
           className="text-blue-600 cursor-pointer hover:text-blue-800 transition-colors"
-          onClick={() => navigate('/dashboard')}
+          onClick={handleBack}
           fontSize="large"
           titleAccess="Go Back"
         />

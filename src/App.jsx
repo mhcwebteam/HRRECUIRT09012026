@@ -12,6 +12,7 @@ import Participant from "./Components/Participant";
 import Header from "./Components/Layout/Header";
 import Manpower from "./ManpowerComponent/ManPower";
 import Onboarding from "./OnBoarding/Onboarding";
+import Recruitments from "./RecruitmentProcess/Recruitments";
 
 
 export const MyContext = createContext();
@@ -57,6 +58,26 @@ export default function App() {
                 </div>
                 <div className={`contentRight py-4 px-4 ${isSidebarOpen ? 'w-[82%]' : 'w-[calc(100%-90px)]'} transition-all`}>
         <Manpower />
+                </div>
+              </div>
+            </section>
+          )
+    },
+
+       {
+      path: '/RecruitmentProcess',
+      exact: true,
+ 
+
+                element: (
+            <section className='main'>
+                 <Header/> 
+              <div className='contentMain flex'>
+                <div className={`sidebarWapper ${isSidebarOpen === true ? 'w-[18%]' : 'w-[90px]'} transition-all`}>
+                  <Sidebar/>
+                </div>
+                <div className={`contentRight py-4 px-4 ${isSidebarOpen ? 'w-[82%]' : 'w-[calc(100%-90px)]'} transition-all`}>
+        <Recruitments />
                 </div>
               </div>
             </section>

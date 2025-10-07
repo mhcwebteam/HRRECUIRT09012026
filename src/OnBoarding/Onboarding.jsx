@@ -40,13 +40,13 @@ const Onboarding = () => {
   const [hoveredTab, setHoveredTab] = useState(null);
 
   // Set active tab based on route
-  useEffect(() => {
-    if (location.pathname === '/Manpower') {
-      setActiveTab(1); // Manpower tab
-    } else if (location.pathname === '/OnBoarding') {
-      setActiveTab(0); // Onboarding tab
-    }
-  }, [location.pathname]);
+  // useEffect(() => {
+  //   if (location.pathname === '/Manpower') {
+  //     setActiveTab(1); // Manpower tab
+  //   } else if (location.pathname === '/OnBoarding') {
+  //     setActiveTab(0); // Onboarding tab
+  //   }
+  // }, [location.pathname]);
 
   const stats = [
     { 

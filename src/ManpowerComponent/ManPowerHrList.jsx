@@ -32,12 +32,14 @@ import {
   TrendingUp,
   Activity,
   Maximize,
-  Minimize
+  Minimize,
+  ArrowLeftIcon
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MenuItem, Select } from '@mui/material';
 import { API_BASE_URL } from '../Config/Config';
 
-const ManPowerHrList = () => {
+const ManPowerHrList = ({onBack}) => {
   const [searchText, setSearchText] = useState('');
   const [data, setData] = useState([]);
   const [rows, setRows] = useState([]);
@@ -53,7 +55,7 @@ const ManPowerHrList = () => {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
-  const statusOptions = ['', 'WIP', 'Joined', 'Transfer', 'Reverted'];
+  const statusOptions = ['', 'WIP', 'Joined', 'Transfer', 'Reverted', 'Shortlisted'];
   const [desgList, setDesgList] = useState([]);
   const [plantCodes, setPlantCodes] = useState([]);
   const [empDepartDesign, setempData] = useState([]);
@@ -226,11 +228,15 @@ const ManPowerHrList = () => {
         }
       });
       const responseData = response.data.data || [];
+
+       
       const rowsWithId = responseData.map((row, index) => ({
         ...row,
         id: row.CHILD_CASEID || `row_${index}`
       }));
       setData(rowsWithId);
+
+      console.log("rowsWithIdrowsWithIdrowsWithId",rowsWithId);
       setRows(rowsWithId);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -252,6 +258,8 @@ const ManPowerHrList = () => {
         },
         body: JSON.stringify({ childCaseId: child_caseId })
       });
+
+          
       const historyData = await statusData.json();
       setHistoryData(historyData.Mrfdata || []);
       if (historyData.success) {
@@ -337,8 +345,12 @@ const ManPowerHrList = () => {
           Authorization: `Bearer ${userToken.token}`,
         },
       });
+
+      console.log(payload,"responce data!!!!122");
+
+         
       Swal.fire('Success', response.data.message || 'Status updated successfully!', 'success');
-      setEmpDepartDesign({ dept: "", designation: "" }); 
+      // setEmpDepartDesign({ dept: "", designation: "" }); 
       setTransferDialogOpen(false);
       fetchData();
       // Reset form only on successful submission
@@ -424,6 +436,13 @@ const ManPowerHrList = () => {
   const uniquePlants = [...new Set(historyData.map(item => item.Plant).filter(Boolean))];
   const uniqueDesignations = [...new Set(historyData.map(item => item.Design).filter(Boolean))];
 
+   const handleBack = () => {
+    if (onBack) {
+      onBack(); 
+    } else {
+      navigate('/Manpower'); 
+    }
+  };
   return (
     <div className="min-h-screen p-6 overflow">
       < div className="max-w-7xl w-full mx-auto p-10 
@@ -441,14 +460,17 @@ const ManPowerHrList = () => {
                 <p className="text-gray-600 text-lg">Streamline HR requisitions and track status updates efficiently</p>
               </div>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={fetchData}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
+                      <motion.button
+                           onClick={handleBack}
+                           whileHover={{ scale: 1.05 }}
+                           whileTap={{ scale: 0.95 }}
+                           className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 
+                     text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 
+                     hover:from-blue-600 hover:to-blue-700 font-medium"
+                         >
+                           <ArrowLeftIcon className="w-5 h-5" />
+                           Back
+                         </motion.button>
               </div>
             </div>
 
@@ -817,7 +839,7 @@ const ManPowerHrList = () => {
                           </div>
                         )}
 
-                        {(form.status !== 'WIP' && form.status !== 'Reverted' && form.status !== '') && (
+                        {(form.status !== 'WIP' && form.status !== 'Reverted' && form.status !== 'Shortlisted' && form.status !== '') && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               EMP ID {(form.status === 'Joined' || form.status === 'Transfer') && <span className="text-red-500">*</span>}
@@ -852,7 +874,7 @@ const ManPowerHrList = () => {
                         )}
                       </div>
 
-                      {/* Second Row: Department, Designation, Date fields */}
+         
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         {(form.status === 'Transfer' || form.status === 'Joined') && (
                           <div>
@@ -957,9 +979,13 @@ const ManPowerHrList = () => {
                             />
                           </div>
                         )}
+
+
+                        
                       </div>
 
-                      {/* Third Row: Comments (full width) */}
+
+                  
 
                     </div>
                   </div>

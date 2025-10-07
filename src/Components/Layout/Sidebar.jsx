@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Home, Users, LogOut, ChevronRight, Sun, CloudRain, Wind, Zap, Trash2, Droplets, TrendingUp, Users as UsersIcon } from 'lucide-react';
+import { Home, Users, LogOut, ChevronRight, Sun, CloudRain, Wind, Zap, Trash2, Droplets, TrendingUp, Users as UsersIcon, FileKey2 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MyContext } from "../../App";
 
@@ -15,7 +15,9 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: '/Manpower', icon: Users, label: 'Manpower' },
-    { path: '/onBoarding', icon: Home, label: 'Onboarding' },
+        {path:'/RecruitmentProcess', icon: FileKey2, label:'Recruitments'},
+    { path: '/onBoarding', icon: Home, label: 'Onboarding' }
+
   ];
 
   return (

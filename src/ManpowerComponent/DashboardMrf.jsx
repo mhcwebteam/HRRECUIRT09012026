@@ -56,7 +56,7 @@ const columns = [
   { field: "WIP", headerName: "WIP", flex: 1, minWidth: 80 },
 ];
 
-export default function DashboardMrf() {
+export default function DashboardMrf({onBack}) {
   const [userToken, setToken] = useState(() => {
     const stored = localStorage.getItem("userInfo");
     return stored ? JSON.parse(stored) : null;
@@ -245,8 +245,13 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
   const handleRowToggle = (plant) => {
     setExpandedRow1(expandedRow1 === plant ? null : plant);
   };
-  const handleBack = () => {
-    navigate('//Manpower');
+  
+   const handleBack = () => {
+    if (onBack) {
+      onBack(); 
+    } else {
+      navigate('/Manpower'); 
+    }
   };
   const STATUS_LIST = ['Transferred', 'Reverted', 'Joined', 'WIP'];
   const chartData = (STATUS_LIST || []).map(status => {
@@ -338,23 +343,23 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
                 rounded-3xl shadow-2xl 
                 border border-gray-300 
                 bg-gradient-to-br from-pink-100 via-gray-50 to-gray-100 space-y-10">
-             <div className="flex items-center bg-white rounded-2xl shadow-lg px-8 py-6 border border-gray-200">
+             {/* <div className="flex items-center bg-white rounded-2xl shadow-lg px-8 py-6 border border-gray-200"> */}
   {/* Left Accent Icon */}
-  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md mr-4">
+  {/* <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md mr-4">
     <BriefcaseIcon className="w-6 h-6" />
-  </div>
+  </div> */}
 
-  <div className="flex-1">
+  {/* <div className="flex-1">
     <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
    Manpower Dashboard
     </h1>
     <p className="text-gray-500 text-sm mt-1">
       Submit a request for hiring, replacements, or manpower planning
     </p>
-  </div>
+  </div> */}
 
   {/* Back Button */}
- <motion.button
+ {/* <motion.button
     onClick={handleBack}
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
@@ -364,8 +369,8 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
   >
     <ArrowLeftIcon className="w-5 h-5" />
     Back
-  </motion.button>
-</div>
+  </motion.button> */}
+{/* </div> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* MRF Status Cards */}
