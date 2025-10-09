@@ -1,11 +1,14 @@
 import { createContext } from "react";
-import { useSubProjects, useUserProjects } from "../Apis/userApi";
+import { useHrhistory, usePersonalDetails, useSubProjects, useUserProjects } from "../Apis/userApi";
 
 export const ContextData = createContext({
   projects: [],
   isProjectsLoading: true,
   subproject: [],
   isSubProjectLoading: true,
+  personalData: [],
+  HrData: [],
+
 });
 
 export const AppProvider = ({ children }) => {
@@ -13,13 +16,12 @@ export const AppProvider = ({ children }) => {
 
   // Fetch projects
   const { data, isLoading } = useUserProjects(userToken?.token);
-  const {
-    data: subProjects,    
-    isLoading: isLoadingSub,  
-  } = useSubProjects(userToken?.token, data?.data?.[5]);
+  const {data: subProjects,    isLoading: isLoadingSub,  } = useSubProjects(userToken?.token, data?.data?.[5]);
+  const {data: PersonalInfo,isLoading: isLoadingInfo} =  usePersonalDetails(userToken?.token);
+const {data: Hrhistory} =  useHrhistory(userToken?.token);
 
-  console.log(subProjects, "subproject11111");
-
+console.log(userToken.token,"token!!!!");
+ 
   return (
     <ContextData.Provider
       value={{
@@ -27,6 +29,8 @@ export const AppProvider = ({ children }) => {
         isProjectsLoading: isLoading,
         subproject: subProjects || [],     
         isSubProjectLoading: isLoadingSub,
+        personalData: PersonalInfo || [],
+        HrData: Hrhistory || []
       }}
     >
       {children}

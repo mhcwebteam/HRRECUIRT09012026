@@ -26,7 +26,10 @@ import {
 
 import { useLocation } from 'react-router-dom';
 import RecruitmentMail from './RecruitmentMail';
+import RecruitmentForm from './RecruitmentForm';
 import { CircleCheckBig, ScrollText, Signature } from 'lucide-react';
+import Verification from './Verification';
+import Salarystackup from './Salarystackup';
 
 const Recruitments = () => {
   const location = useLocation();
@@ -95,6 +98,12 @@ const Recruitments = () => {
       icon: CircleCheckBig,
     },
 
+    {
+      label: 'Form',
+      component: 'form',
+      icon:TrendingUpIcon
+    }
+
   ];
 
   const handleMenuItemClick = (component) => {
@@ -130,20 +139,11 @@ const Recruitments = () => {
     
 
       case 'verification':
-        return (
-          <div className="p-6">
-            <Typography variant="h4" className="mb-4">Verification</Typography>
-            <Typography>Verification content goes here...</Typography>
-          </div>
-        );
+       return <Verification />
 
       case 'salary-stackup':
-        return (
-          <div className="p-6">
-            <Typography variant="h4" className="mb-4">Salary Stackup</Typography>
-            <Typography>Salary stackup content goes here...</Typography>
-          </div>
-        );
+        
+ return <Salarystackup/>
 
       case 'candidate-approval':
         return (
@@ -160,6 +160,11 @@ const Recruitments = () => {
             <Typography>Note for approval content goes here...</Typography>
           </div>
         );
+
+case 'form':
+  return <RecruitmentForm />
+
+
 
       default:
         return null;

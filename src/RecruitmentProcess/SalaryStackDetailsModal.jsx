@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect } from 'react';
 
 const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {

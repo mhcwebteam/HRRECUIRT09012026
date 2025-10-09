@@ -35,4 +35,50 @@ export const useSubProjects = (token, project) => {
 };
 
 
+export const usePersonalDetails = (token) => {
+return useQuery({
+
+    queryKey: ["details", token],
+    queryFn: async () => {
+      const res = await axios.get(`${API_BASE_URL}/verifications`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data.data; 
+    },
+    enabled: !!token 
+  });
+  
+
+}
+
+export const useHrhistory = (token) => {
+return useQuery({
+
+    queryKey: ["history", token],
+    queryFn: async () => {
+      
+      const response = await axios.get(`${API_BASE_URL}/hr_requisition_list`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+  
+      return response.data.data; 
+    },
+    enabled: !!token 
+  });
+  
+
+}
+
+
+
+
 

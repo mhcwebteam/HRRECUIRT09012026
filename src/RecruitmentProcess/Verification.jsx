@@ -1,439 +1,610 @@
-// import React, { useState, useEffect } from 'react';
-// import {
-//   Card,
-//   CardContent,
-//   Typography,
-//   Stepper,
-//   Step,
-//   StepLabel,
-//   Box,
-//   Grid,
-//   Button,
-//   Chip,
-//   Paper,
-//   Divider,
-//   Alert,
-//   List,
-//   ListItem,
-//   ListItemIcon,
-//   ListItemText,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions
-// } from '@mui/material';
-// import PersonIcon from '@mui/icons-material/Person';
-// import AssignmentIcon from '@mui/icons-material/Assignment';
-// import DescriptionIcon from '@mui/icons-material/Description';
-// import ArticleIcon from '@mui/icons-material/Article';
-// import VerifiedIcon from '@mui/icons-material/Verified';
-// import ChecklistIcon from '@mui/icons-material/Checklist';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
+import {
+  Paper,
+  Box,
+  Typography,
+  IconButton,
+  Tooltip,
+  TextField,
+  InputAdornment,
+  MenuItem
+} from '@mui/material';
+import {
+  Search,
+  CheckCircle,
+  Cancel,
+  Visibility,
+  Refresh
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import { ContextData } from '../Context/ContextData';
+import VerificationDetailsModal from './VerificationDetailsModal';
 
-// const Verification = () => {
-//   const [currentStage, setCurrentStage] = useState(0);
-//   const [candidateData, setCandidateData] = useState({
-//     personalInfo: {
-//       name: 'John Doe',
-//       email: 'john.doe@email.com',
-//       phone: '+1-234-567-8900'
-//     },
-//     appliedRole: 'Senior React Developer',
-//     verificationStatus: 'completed',
-//     interviewStages: [],
-//     currentStatus: 'verified',
-//     documents: {
-//       resume: 'verified',
-//       certificates: 'verified',
-//       idProof: 'verified'
-//     }
-//   });
+const Verification = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [modalOpen, setModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+  const { personalData,  } = useContext(ContextData);
+   const { HrData  } = useContext(ContextData);
 
-//   const recruitmentStages = [
-//     {
-//       stage: 'verified',
-//       label: 'Profile Verified',
-//       description: 'Candidate documents and background verified',
-//       icon: <CheckCircleIcon />,
-//       color: 'success'
-//     },
-//     {
-//       stage: 'screening',
-//       label: 'Initial Screening',
-//       description: 'HR screening call scheduled',
-//       icon: <PersonIcon />,
-//       color: 'primary'
-//     },
-//     {
-//       stage: 'technical',
-//       label: 'Technical Interview',
-//       description: 'Technical skills assessment',
-//       icon: <WorkIcon />,
-//       color: 'primary'
-//     },
-//     {
-//       stage: 'manager',
-//       label: 'Manager Interview',
-//       description: 'Interview with hiring manager',
-//       icon: <InterviewIcon />,
-//       color: 'primary'
-//     },
-//     {
-//       stage: 'hr',
-//       label: 'HR Discussion',
-//       description: 'Final HR and compensation discussion',
-//       icon: <AssignmentIcon />,
-//       color: 'primary'
-//     },
-//     {
-//       stage: 'offer',
-//       label: 'Offer Extended',
-//       description: 'Job offer prepared and sent',
-//       icon: <EmailIcon />,
-//       color: 'warning'
-//     },
-//     {
-//       stage: 'onboarding',
-//       label: 'Onboarding',
-//       description: 'Candidate onboarding process',
-//       icon: <CelebrationIcon />,
-//       color: 'success'
-//     }
-//   ];
+  const filteredData = useMemo(() => {
+    if (!personalData || personalData.length === 0) return [];
 
-//   const [interviewSchedule, setInterviewSchedule] = useState([
-//     {
-//       id: 1,
-//       type: 'HR Screening',
-//       scheduledDate: '2024-01-15T10:00',
-//       interviewer: 'Sarah Wilson - HR Manager',
-//       status: 'scheduled',
-//       meetingLink: 'https://meet.google.com/abc-xyz-123'
-//     },
-//     {
-//       id: 2,
-//       type: 'Technical Interview',
-//       scheduledDate: '2024-01-18T14:00',
-//       interviewer: 'Mike Chen - Tech Lead',
-//       status: 'pending',
-//       meetingLink: ''
-//     }
-//   ]);
+    let result = [...personalData];
 
-//   const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
+    if (searchTerm) {
+      result = result.filter(user =>
 
-//   // Simulate stage progression
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       if (currentStage < recruitmentStages.length - 1) {
-//         setCurrentStage(prev => prev + 1);
-//       }
-//     }, 3000);
-//     return () => clearTimeout(timer);
-//   }, [currentStage]);
+        (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
 
-//   const handleScheduleInterview = (interviewId) => {
+      
+      ));
+    }
+
+    if (statusFilter !== 'all') {
+      result = result.filter(user => user.status === statusFilter);
+    }
+    return result.map((item, index) => ({
+      id: item.id || item.SNO || `row-${index}`,
+      SNO: item.SNO || index + 1,
+      CASEID: item.caseId || item.CASEID || 'N/A',
+      NAME: item.name || item.NAME || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
+      EMAIL: item.email || item.EMAIL || 'N/A',
+      ADDRESS: item.address || item.ADDRESS || 'N/A',
+      PHONE_NUMBER: item.phoneNumber || item.phone || item.PHONE_NUMBER || 'N/A',
+      DOB: item.dob || item.DOB || item.dateOfBirth || 'N/A',
+      AADHAR_NUM: item.AADHAR_NUM || 'N/A',
+      PAN_NUM: item.PAN_NUM || 'N/A',
+      SSC_SCORE: item.SSC_SCORE || 'N/A',
+      INTER_SCORE: item.INTER_SCORE || 'N/A',
+      BTECH_SCORE: item.BTECH_SCORE || 'N/A',
+      POST_GRADUCTION: item.POST_GRADUCTION || 'N/A',
+      CURRENT_CTC: item.CURRENT_CTC || 'N/A',
+      EXP_CTC: item.EXP_CTC || 'N/A',
+      NOTICE_PERIOD: item.NOTICE_PERIOD || 'N/A',
+      PREVIOUS_COMPANY: item.PREVIOUS_COMPANY || 'N/A',
+      DURATION: item.DURATION || 'N/A',
+
+      STATUS: item.status || item.STATUS || 'pending',
+      remarks: item.remarks || 'No remarks',
+      submitted_date: item.submitted_date || item.created_at || 'N/A'
+    }));
+  }, [personalData, searchTerm, statusFilter]);
+
+  const getStatusChip = (status) => {
+    const statusValue = status?.toLowerCase();
+    const config = {
+      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" /> },
+      pending: { color: '#f59e0b', icon: <Refresh className="w-4 h-4" /> },
+      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" /> },
+      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" /> },
+      'not uploaded': { color: '#6b7280', icon: <Cancel className="w-4 h-4" /> }
+    };
+
+    const { color, icon } = config[statusValue] || config.pending;
+
+    return (
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%'
+      }}>
+        <Box sx={{
+          color: '#ffffff',
+          backgroundColor: color,
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '11px',
+          fontWeight: 600,
+          textTransform: 'capitalize',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
+        }}>
+          {icon}
+          {statusValue?.charAt(0).toUpperCase() + statusValue?.slice(1) || 'Pending'}
+        </Box>
+      </Box>
+    );
+  };
+
+
+ const handleViewDetails = (user) => {
+    setSelectedUser(user);
+    setModalOpen(true);
+  };
+
+   const handleStatusChange = (updateData) => {
+    console.log('Status updated:', updateData);
   
-//     console.log('Scheduling interview:', interviewId);
-//     setOpenScheduleDialog(true);
-//   };
+  };
 
-//   const handleSendOffer = () => {
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'N/A') return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('en-GB');
+    } catch {
+      return dateString;
+    }
+  };
 
-//     alert('Offer letter sent to candidate!');
-//   };
+  const formatNumber = (value) => {
+    if (!value || value === 'N/A') return 'N/A';
+    return value.toString();
+  };
 
-//   const handleStartOnboarding = () => {
+  const columns = useMemo(() => [
+    {
+      field: 'SNO',
+      headerName: 'S.NO',
+      width: 80,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Box sx={{
+          fontWeight: 600,
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: 'CASEID',
+      headerName: 'Case ID',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 500
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
 
-//     alert('Onboarding process initiated!');
-//   };
 
-//   const getStageStatus = (stageIndex) => {
-//     if (stageIndex < currentStage) return 'completed';
-//     if (stageIndex === currentStage) return 'current';
-//     return 'pending';
-//   };
+    {
+      field: 'PLANT',
+      headerName: 'Plant Name',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 500
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: 'NAME',
+      headerName: 'Name',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box sx={{
+          fontWeight: 600,
+          color: '#1f2937',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: 'EMAIL',
+      headerName: 'Email',
+      flex: 1,
+      minWidth: 200,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontSize: '13px'
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: 'PHONE_NUMBER',
+      headerName: 'Phone Number',
+      flex: 1,
+      minWidth: 140,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 500
+        }}>
+          {formatNumber(params.value)}
+        </Box>
+      ),
+    },
+    {
+      field: 'DOB',
+      headerName: 'Date of Birth',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {formatDate(params.value)}
+        </Box>
+      ),
+    },
+    {
+      field: 'AADHAR_NUM',
+      headerName: 'Aadhar Number',
+      flex: 1,
+      minWidth: 140,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontFamily: 'monospace'
+        }}>
+          {formatNumber(params.value)}
+        </Box>
+      ),
+    },
+    {
+      field: 'PAN_NUM',
+      headerName: 'PAN Number',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontFamily: 'monospace'
+        }}>
+          {formatNumber(params.value)}
+        </Box>
+      ),
+    },
+    {
+      field: 'SSC_SCORE',
+      headerName: 'SSC Score',
+      width: 100,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 600
+        }}>
+          {params.value}%
+        </Box>
+      ),
+    },
+    {
+      field: 'INTER_SCORE',
+      headerName: 'Inter Score',
+      width: 100,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 600
+        }}>
+          {params.value}%
+        </Box>
+      ),
+    },
+    {
+      field: 'BTECH_SCORE',
+      headerName: 'BTech Score',
+      width: 100,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 600
+        }}>
+          {params.value}%
+        </Box>
+      ),
+    },
+    {
+      field: 'POST_GRADUCTION',
+      headerName: 'Post Graduation',
+      width: 130,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {params.value}%
+        </Box>
+      ),
+    },
+    {
+      field: 'CURRENT_CTC',
+      headerName: 'Current CTC',
+      width: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#059669',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 600
+        }}>
+          ₹{formatNumber(params.value)}
+        </Box>
+      ),
+    },
+    {
+      field: 'EXP_CTC',
+      headerName: 'Expected CTC',
+      width: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#dc2626',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 600
+        }}>
+          ₹{formatNumber(params.value)}
+        </Box>
+      ),
+    },
+    {
+      field: 'NOTICE_PERIOD',
+      headerName: 'Notice Period',
+      width: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {params.value} days
+        </Box>
+      ),
+    },
+    {
+      field: 'PREVIOUS_COMPANY',
+      headerName: 'Current Company',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: 'DURATION',
+      headerName: 'Duration',
+      width: 100,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          {params.value} months
+        </Box>
+      ),
+    },
+  
+   
 
-//   return (
-//     <Box sx={{ p: 3, maxWidth: 1200, margin: 'auto' }}>
-//       {/* Header */}
-//       <Card sx={{ mb: 3 }}>
-//         <CardContent>
-//           <Grid container spacing={3} alignItems="center">
-//             <Grid item xs={12} md={8}>
-//               <Typography variant="h4" gutterBottom>
-//                 Recruitment Process
-//               </Typography>
-//               <Typography variant="h6" color="primary">
-//                 Candidate: {candidateData.personalInfo.name}
-//               </Typography>
-//               <Typography variant="body1" color="text.secondary">
-//                 Applied Role: {candidateData.appliedRole}
-//               </Typography>
-//               <Box sx={{ mt: 2 }}>
-//                 <Chip 
-//                   label="Profile Verified" 
-//                   color="success" 
-//                   variant="filled"
-//                   icon={<CheckCircleIcon />}
-//                 />
-//               </Box>
-//             </Grid>
-//             <Grid item xs={12} md={4}>
-//               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light' }}>
-//                 <Typography variant="h6">Verification Status</Typography>
-//                 <Typography variant="h4" color="success.main">
-//                   COMPLETED
-//                 </Typography>
-//               </Paper>
-//             </Grid>
-//           </Grid>
-//         </CardContent>
-//       </Card>
+    {
+      field: 'STATUS',
+      headerName: 'Overall Status',
+      width: 140,
+      renderCell: (params) => getStatusChip(params.value),
+    },
+    {
+      field: 'submitted_date',
+      headerName: 'Submitted Date',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontSize: '12px'
+        }}>
+          {formatDate(params.value)}
+        </Box>
+      ),
+    },
+   {
+       field: 'actions',
+       headerName: 'Actions',
+       width: 100,
+       sortable: false,
+       renderCell: (params) => (
+         <Tooltip title="View Details">
+           <IconButton
+             size="small"
+             onClick={() => handleViewDetails(params.row)}
+             sx={{
+               color: '#3b82f6',
+               '&:hover': {
+                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
+               },
+             }}
+           >
+             <Visibility fontSize="small" />
+           </IconButton>
+         </Tooltip>
+       ),
+     },
+  ], []);
 
-//       {/* Recruitment Progress */}
-//       <Card sx={{ mb: 3 }}>
-//         <CardContent>
-//           <Typography variant="h6" gutterBottom>
-//             Recruitment Progress
-//           </Typography>
-//           <Stepper alternativeLabel sx={{ mt: 3 }}>
-//             {recruitmentStages.map((stage, index) => (
-//               <Step key={stage.stage} completed={getStageStatus(index) === 'completed'}>
-//                 <StepLabel 
-//                   icon={stage.icon}
-//                   error={getStageStatus(index) === 'current'}
-//                 >
-//                   <Typography variant="body2" fontWeight="bold">
-//                     {stage.label}
-//                   </Typography>
-//                   <Typography variant="caption" color="text.secondary">
-//                     {stage.description}
-//                   </Typography>
-//                 </StepLabel>
-//               </Step>
-//             ))}
-//           </Stepper>
-//         </CardContent>
-//       </Card>
+  return (
+    <Box
+      sx={{
+        maxWidth: "1280px",
+        margin: "0 auto",
+        padding: "20px",
+        borderRadius: "24px",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+        border: "1px solid #d1d5db",
+        background: "linear-gradient(to bottom right, #fce7f3, #f9fafb, #f3f4f6)",
+      }}
+    >
+      <Paper sx={{
+        width: '100%',
+        padding: 3,
+        borderRadius: '20px',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #e2e8f0',
+      }}>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        
+          
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              size="small"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: '#6b7280' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                minWidth: 250,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                }
+              }}
+            />
+            
+            <TextField
+              select
+              size="small"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              sx={{
+                minWidth: 150,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                }
+              }}
+            >
+              <MenuItem value="all">All Status</MenuItem>
+              <MenuItem value="verified">Verified</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
+            </TextField>
+          </Box>
+        </Box>
 
-//       {/* Action Cards */}
-//       <Grid container spacing={3}>
-//         {/* Interview Schedule */}
-//         <Grid item xs={12} md={6}>
-//           <Card>
-//             <CardContent>
-//               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-//                 <ScheduleIcon /> Interview Schedule
-//               </Typography>
-              
-//               <List>
-//                 {interviewSchedule.map((interview) => (
-//                   <ListItem key={interview.id} divider>
-//                     <ListItemIcon>
-//                       {interview.status === 'scheduled' ? (
-//                         <CheckCircleIcon color="success" />
-//                       ) : (
-//                         <ScheduleIcon color="action" />
-//                       )}
-//                     </ListItemIcon>
-//                     <ListItemText
-//                       primary={interview.type}
-//                       secondary={
-//                         <Box>
-//                           <Typography variant="body2">
-//                             {new Date(interview.scheduledDate).toLocaleString()}
-//                           </Typography>
-//                           <Typography variant="body2">
-//                             Interviewer: {interview.interviewer}
-//                           </Typography>
-//                           {interview.meetingLink && (
-//                             <Button 
-//                               size="small" 
-//                               variant="outlined" 
-//                               sx={{ mt: 1 }}
-//                               onClick={() => window.open(interview.meetingLink, '_blank')}
-//                             >
-//                               Join Meeting
-//                             </Button>
-//                           )}
-//                         </Box>
-//                       }
-//                     />
-//                     <Button 
-//                       variant="contained" 
-//                       size="small"
-//                       onClick={() => handleScheduleInterview(interview.id)}
-//                     >
-//                       {interview.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
-//                     </Button>
-//                   </ListItem>
-//                 ))}
-//               </List>
+        <Box
+          sx={{
+            width: "100%",
+            borderRadius: "12px",
+            overflow: "hidden",
+            border: "1px solid #dfe5f1ff",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+          }}
+        >
+          <DataGrid
+            rows={filteredData}
+            columns={columns}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 20, 50]}
+            rowHeight={50}
+            columnHeaderHeight={50}
+            sx={{
+              border: "none",
+              "& .MuiDataGrid-columnHeaders": {
+                borderBottom: "2px solid #e2e8f0",
+              },
+              "& .MuiDataGrid-columnHeader": {
+                fontWeight: 600,
+                fontSize: "14px",
+                color: "#1e293b",
+                backgroundColor: "rgba(188, 198, 238, 0.5)",
+                borderRight: "1px solid #e2e8f0",
+              },
+              "& .MuiDataGrid-cell": {
+                borderBottom: "1px solid #e2e8f0",
+                borderRight: "1px solid #e2e8f0",
+                fontSize: "13px",
+                color: "#374151",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#f0f9ff",
+                cursor: "pointer",
+              },
+              "& .MuiDataGrid-footerContainer": {
+                borderTop: "1px solid #e2e8f0",
+                backgroundColor: "#f0f7fa",
+              },
+            }}
+          />
+        </Box>
+      </Paper>
+       <VerificationDetailsModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        data={selectedUser}
+        onStatusChange={handleStatusChange}
+      />
+    </Box>
+  );
+};
 
-//               <Button 
-//                 variant="outlined" 
-//                 fullWidth 
-//                 sx={{ mt: 2 }}
-//                 onClick={() => setOpenScheduleDialog(true)}
-//               >
-//                 + Add Interview Round
-//               </Button>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-
-//         {/* Next Steps */}
-//         <Grid item xs={12} md={6}>
-//           <Card>
-//             <CardContent>
-//               <Typography variant="h6" gutterBottom>
-//                 Next Steps
-//               </Typography>
-              
-//               {currentStage === 0 && (
-//                 <Alert severity="info" sx={{ mb: 2 }}>
-//                   Candidate verification complete. Ready for initial screening.
-//                 </Alert>
-//               )}
-
-//               {currentStage === 1 && (
-//                 <Box>
-//                   <Alert severity="warning" sx={{ mb: 2 }}>
-//                     Schedule HR screening call with candidate.
-//                   </Alert>
-//                   <Button variant="contained" fullWidth>
-//                     Schedule Screening Call
-//                   </Button>
-//                 </Box>
-//               )}
-
-//               {currentStage === 4 && (
-//                 <Box>
-//                   <Alert severity="success" sx={{ mb: 2 }}>
-//                     All interview rounds completed. Ready for offer.
-//                   </Alert>
-//                   <Button 
-//                     variant="contained" 
-//                     fullWidth 
-//                     color="success"
-//                     onClick={handleSendOffer}
-//                   >
-//                     Prepare & Send Offer Letter
-//                   </Button>
-//                 </Box>
-//               )}
-
-//               {currentStage === 5 && (
-//                 <Box>
-//                   <Alert severity="info" sx={{ mb: 2 }}>
-//                     Offer accepted by candidate. Ready for onboarding.
-//                   </Alert>
-//                   <Button 
-//                     variant="contained" 
-//                     fullWidth 
-//                     color="primary"
-//                     onClick={handleStartOnboarding}
-//                   >
-//                     Start Onboarding Process
-//                   </Button>
-//                 </Box>
-//               )}
-
-//               {/* Quick Actions */}
-//               <Box sx={{ mt: 3 }}>
-//                 <Typography variant="subtitle2" gutterBottom>
-//                   Quick Actions:
-//                 </Typography>
-//                 <Grid container spacing={1}>
-//                   <Grid item xs={6}>
-//                     <Button variant="outlined" size="small" fullWidth>
-//                       Send Email
-//                     </Button>
-//                   </Grid>
-//                   <Grid item xs={6}>
-//                     <Button variant="outlined" size="small" fullWidth>
-//                       Add Notes
-//                     </Button>
-//                   </Grid>
-//                   <Grid item xs={6}>
-//                     <Button variant="outlined" size="small" fullWidth>
-//                       Download CV
-//                     </Button>
-//                   </Grid>
-//                   <Grid item xs={6}>
-//                     <Button variant="outlined" size="small" fullWidth>
-//                       View Profile
-//                     </Button>
-//                   </Grid>
-//                 </Grid>
-//               </Box>
-//             </CardContent>
-//           </Card>
-//         </Grid>
-//       </Grid>
-
-//       {/* Candidate Evaluation */}
-//       <Card sx={{ mt: 3 }}>
-//         <CardContent>
-//           <Typography variant="h6" gutterBottom>
-//             Candidate Evaluation
-//           </Typography>
-//           <Grid container spacing={3}>
-//             <Grid item xs={12} md={4}>
-//               <Paper sx={{ p: 2, textAlign: 'center' }}>
-//                 <Typography variant="h4" color="primary">8.5/10</Typography>
-//                 <Typography variant="body2">Technical Score</Typography>
-//               </Paper>
-//             </Grid>
-//             <Grid item xs={12} md={4}>
-//               <Paper sx={{ p: 2, textAlign: 'center' }}>
-//                 <Typography variant="h4" color="primary">9/10</Typography>
-//                 <Typography variant="body2">Cultural Fit</Typography>
-//               </Paper>
-//             </Grid>
-//             <Grid item xs={12} md={4}>
-//               <Paper sx={{ p: 2, textAlign: 'center' }}>
-//                 <Typography variant="h4" color="primary">85%</Typography>
-//                 <Typography variant="body2">Overall Match</Typography>
-//               </Paper>
-//             </Grid>
-//           </Grid>
-
-//           <Box sx={{ mt: 3 }}>
-//             <Typography variant="subtitle1" gutterBottom>
-//               Interviewer Feedback:
-//             </Typography>
-//             <Typography variant="body2" color="text.secondary">
-//               "Strong technical skills in React and Node.js. Good communication skills. 
-//               Would be a great fit for the team."
-//             </Typography>
-//           </Box>
-//         </CardContent>
-//       </Card>
-
-//       {/* Schedule Interview Dialog */}
-//       <Dialog 
-//         open={openScheduleDialog} 
-//         onClose={() => setOpenScheduleDialog(false)}
-//         maxWidth="sm"
-//         fullWidth
-//       >
-//         <DialogTitle>Schedule Interview</DialogTitle>
-//         <DialogContent>
-//           <Typography>
-//             Schedule a new interview round for {candidateData.personalInfo.name}
-//           </Typography>
-//           {/* Add schedule form here */}
-//         </DialogContent>
-//         <DialogActions>
-//           <Button onClick={() => setOpenScheduleDialog(false)}>Cancel</Button>
-//           <Button variant="contained" onClick={() => setOpenScheduleDialog(false)}>
-//             Schedule
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Box>
-//   );
-// };
-
-// export default Verification;
+export default Verification;
