@@ -7,7 +7,9 @@ import {
   Tooltip,
   TextField,
   InputAdornment,
-  MenuItem
+  MenuItem,
+  Button,
+  CircularProgress
 } from '@mui/material';
 import {
   Search,
@@ -28,6 +30,7 @@ const Salarystackup = () => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [modalOpen, setModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+      const [submitting, setSubmitting] = useState({});
   const { personalData,  } = useContext(ContextData);
    const { HrData  } = useContext(ContextData);
 
@@ -365,12 +368,12 @@ const Salarystackup = () => {
       ),
     },
    {
-       field: 'actions',
-       headerName: 'Actions',
+       field: 'create',
+       headerName: 'Create',
        width: 100,
        sortable: false,
        renderCell: (params) => (
-         <Tooltip title="View Details">
+         <Tooltip title="Create">
            <IconButton
              size="small"
              onClick={() => handleViewDetails(params.row)}
@@ -386,6 +389,61 @@ const Salarystackup = () => {
          </Tooltip>
        ),
      },
+
+
+       {
+      field: 'ACTIONS',
+      headerName: 'Actions',
+      flex: 1,
+      minWidth: 120,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const isSubmitting = submitting[params.row.CASEID] || false;
+        // const email = emailInputs[params.row.CASEID] || '';
+        
+        return (
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
+            <Button
+              variant="contained"
+              size="small"
+           
+              sx={{
+                background: isSubmitting 
+                  ? '#9ca3af' 
+                  : 'linear-gradient(135deg, #535756ff 0%, #121313ff 100%)',
+                color: 'white',
+                fontSize: '10px',
+                padding: '4px 12px',
+                borderRadius: '6px',
+                textTransform: 'capitalize',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                '&:hover': {
+                  background: isSubmitting 
+                    ? '#9ca3af' 
+                    : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  transform: isSubmitting ? 'none' : 'translateY(-1px)',
+                  boxShadow: isSubmitting ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.4)',
+                },
+                '&:disabled': {
+                  background: '#9ca3af',
+                  color: '#e5e7eb',
+                }
+              }}
+            >
+              {isSubmitting ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <CircularProgress size={12} sx={{ color: 'white' }} />
+                  Sending...
+                </Box>
+              ) : (
+                'Send Email'
+              )}
+            </Button>
+          </Box>
+        );
+      },
+    },
   ], []);
 
   return (

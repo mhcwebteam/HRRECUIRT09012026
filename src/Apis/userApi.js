@@ -35,12 +35,56 @@ export const useSubProjects = (token, project) => {
 };
 
 
+// 
+
 export const usePersonalDetails = (token) => {
 return useQuery({
 
     queryKey: ["details", token],
     queryFn: async () => {
       const res = await axios.get(`${API_BASE_URL}/verifications`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data.data; 
+    },
+    enabled: !!token 
+  });
+  
+
+}
+
+
+export const usePersonVerification = (token) => {
+return useQuery({
+
+    queryKey: ["details", token],
+    queryFn: async () => {
+      const res = await axios.get(`${API_BASE_URL}/verify-getData`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data.data; 
+    },
+    enabled: !!token 
+  });
+  
+
+}
+
+
+export const usePostPersonalDetails = (token) => {
+return useQuery({
+
+    queryKey: ["details", token],
+    queryFn: async () => {
+      const res = await axios.post(`${API_BASE_URL}/recruitStore`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

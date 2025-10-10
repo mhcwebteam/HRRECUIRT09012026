@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { useHrhistory, usePersonalDetails, useSubProjects, useUserProjects } from "../Apis/userApi";
+import { useHrhistory, usePersonalDetails, usePostPersonalDetails, useSubProjects, useUserProjects } from "../Apis/userApi";
 
 export const ContextData = createContext({
   projects: [],
@@ -8,19 +8,19 @@ export const ContextData = createContext({
   isSubProjectLoading: true,
   personalData: [],
   HrData: [],
+  PersonPostData: [],
 
 });
 
 export const AppProvider = ({ children }) => {
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  // Fetch projects
   const { data, isLoading } = useUserProjects(userToken?.token);
   const {data: subProjects,    isLoading: isLoadingSub,  } = useSubProjects(userToken?.token, data?.data?.[5]);
   const {data: PersonalInfo,isLoading: isLoadingInfo} =  usePersonalDetails(userToken?.token);
 const {data: Hrhistory} =  useHrhistory(userToken?.token);
+const {data: Personpost} = usePostPersonalDetails(userToken.token);
 
-console.log(userToken.token,"token!!!!");
  
   return (
     <ContextData.Provider
@@ -30,7 +30,8 @@ console.log(userToken.token,"token!!!!");
         subproject: subProjects || [],     
         isSubProjectLoading: isLoadingSub,
         personalData: PersonalInfo || [],
-        HrData: Hrhistory || []
+        HrData: Hrhistory || [],
+        PersonPostData:Personpost || []
       }}
     >
       {children}

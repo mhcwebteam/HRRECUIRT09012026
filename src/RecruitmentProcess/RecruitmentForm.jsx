@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   Box,
   Container,
@@ -43,6 +43,8 @@ import {
   ArrowForward,
   Send,
 } from '@mui/icons-material';
+import { ContextData } from '../Context/ContextData';
+import axios from 'axios';
 
 function RecruitmentForm() {
   const [activeTab, setActiveTab] = useState(0);
@@ -90,6 +92,12 @@ function RecruitmentForm() {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [errors, setErrors] = useState({});
 
+
+  const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
+
+
+   const { PersonPostData  } = useContext(ContextData);
+
   const steps = activeTab === 0
     ? ['Personal Details', 'Education & Documents']
     : ['Personal Details', 'Education & Documents', 'Professional Experience'];
@@ -109,6 +117,55 @@ function RecruitmentForm() {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
+
+
+const payload = {
+  'NAME': "ak",
+  'EMAIL': "aj@gmail.com",
+  'ADDRESS': "address_value",
+  'AADHAR_NUM': "aadhar_number",
+  'AADHAR_PATH': "aadhar_path",
+  'PAN_NUM': "pan_number",
+  'PAN_PATH': "pan_path",
+  'SSC_MARKS': "ssc_marks",
+  'INTER_MARKS': "inter_marks",
+  'BTECH_MARKS': "btech_marks",
+  'TENTH_FILENAME': "tenth_filename",
+  'INTER_FILENAME': "inter_filename",
+  'BTECH_FILENAME': "btech_filename",
+  'PG_MARKS': "pg_marks",
+  'PHONE_NUMBER': "phone_number",
+  'DOB': "dob",
+  'CURRENT_CTC': "current_ctc",
+  'EXP_CTC': "expected_ctc",
+  'OFFER_CTC': "offer_ctc",
+  'NOTICE_PERIOD': "notice_period",
+  'PREVIOUS_COMPANY': "previous_company",
+  'DURATION': "duration",
+  'PAYSLIPS': "payslips",
+  'EXP_LETTER': "experience_letter",
+  'RELIEVING_LETTER': "relieving_letter",
+  'HR': "hr_status",
+  'DIRECTOR': "director_status",
+  'EVC': "evc_status"
+};
+
+  const FormDetails = async() => {
+
+    try{
+          const response = await axios.post(`${API_BASE_URL}/recruitStore`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${userToken.token}`,
+        },
+      });
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+ 
 
   const handleFileUpload = (fieldName, event) => {
     const file = event.target.files[0];
@@ -188,7 +245,11 @@ function RecruitmentForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+
+
+
   const handleSubmit = (e) => {
+    FormDetails()
     e.preventDefault();
     if (validateStep()) {
       console.log('Form Data:', formData);

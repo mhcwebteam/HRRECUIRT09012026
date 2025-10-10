@@ -260,6 +260,24 @@ const Verification = () => {
         </Box>
       ),
     },
+
+    {
+      field: 'ADDRESS',
+      headerName: 'ADDRESS',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#374151',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontSize: '13px'
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
     {
       field: 'AADHAR_NUM',
       headerName: 'Aadhar Number',

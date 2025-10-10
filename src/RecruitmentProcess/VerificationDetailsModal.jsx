@@ -84,7 +84,7 @@ const VerificationDetailsModal = ({ open, onClose, data, onStatusChange }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-6 flex justify-between items-center">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 flex justify-between items-center text-white p-6 flex justify-between">
           <h2 className="text-2xl font-bold">Verification Details</h2>
           <button
             onClick={onClose}

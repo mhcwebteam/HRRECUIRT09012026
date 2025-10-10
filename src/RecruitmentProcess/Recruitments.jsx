@@ -30,6 +30,9 @@ import RecruitmentForm from './RecruitmentForm';
 import { CircleCheckBig, ScrollText, Signature } from 'lucide-react';
 import Verification from './Verification';
 import Salarystackup from './Salarystackup';
+import CandidateApproval from './CandidateApproval';
+import NoteForApprovals from './NoteForApprovals';
+import OfferLetter from './OfferLetter';
 
 const Recruitments = () => {
   const location = useLocation();
@@ -146,21 +149,15 @@ const Recruitments = () => {
  return <Salarystackup/>
 
       case 'candidate-approval':
-        return (
-          <div className="p-6">
-            <Typography variant="h4" className="mb-4">Candidate Approval</Typography>
-            <Typography>Candidate approval content goes here...</Typography>
-          </div>
-        );
-
+        return <CandidateApproval/>
+        
       case 'note-approval':
-        return (
-          <div className="p-6">
-            <Typography variant="h4" className="mb-4">Note For Approval</Typography>
-            <Typography>Note for approval content goes here...</Typography>
-          </div>
-        );
+        return <NoteForApprovals/>
 
+        case 'offer-letter':
+  return <OfferLetter/>
+
+         
 case 'form':
   return <RecruitmentForm />
 
