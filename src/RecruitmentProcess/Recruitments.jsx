@@ -159,7 +159,7 @@ const Recruitments = () => {
 
          
 case 'form':
-  return <RecruitmentForm />
+  // return <RecruitmentForm />
 
 
 
@@ -170,9 +170,9 @@ case 'form':
 
   return (
     <div className="">
-      {/* Header */}
+  
       <Paper elevation={1} className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-orange-500">
-        {/* Main Tabs */}
+  
         <Box className="border-b border-gray-200">
           <Tabs 
             value={activeTab} 

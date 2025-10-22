@@ -1,824 +1,498 @@
-import { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
-  Box,
-  Container,
-  Paper,
-  Tabs,
-  Tab,
-  TextField,
-  Button,
-  Grid,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
-  Divider,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Alert,
-  Stepper,
-  Step,
-  StepLabel,
-  Chip,
-  LinearProgress,
-  Card,
-  CardContent,
-} from '@mui/material';
-import {
-  CloudUpload,
-  Delete,
-  Person,
-  Email,
+  Upload,
+  User,
+  Mail,
   Phone,
-  Home,
-  School,
-  Work,
-  AttachFile,
-  CheckCircle,
-  ArrowBack,
-  ArrowForward,
-  Send,
-} from '@mui/icons-material';
-import { ContextData } from '../Context/ContextData';
+  Briefcase,
+  BookOpen,
+  Award
+} from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from "../Config/Config"
+import { ContextData } from '../Context/ContextData';
+import { useParams } from 'react-router-dom';
 
-function RecruitmentForm() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [activeStep, setActiveStep] = useState(0);
+const RecruitmentForm = () => {
+
+  const {case_Id} = useParams();
+ const { HrData } = useContext(ContextData);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    dateOfBirth: '',
-    gender: '',
-    tenthCertificate: null,
-    interCertificate: null,
-    btechCertificate: null,
-    resume: null,
-    previousCompany: '',
-    designation: '',
-    experienceYears: '',
-    experienceMonths: '',
-    currentCTC: '',
-    expectedCTC: '',
-    noticePeriod: '',
-    payslip1: null,
-    payslip2: null,
-    payslip3: null,
-    experienceLetter: null,
-    relievingLetter: null,
+    CHILD_CASEID: "",
+    PLANT: "",
+    NAME: '',
+    EMAIL: '',
+    PHONE_NUMBER: '',
+    DOB: '',
+    DEPT: '',
+    ADDRESS: '',
+    AADHAR_NUM: '',
+    PAN_NUM: '',
+    SSC_MARKS: '',
+    INTER_MARKS: '',
+    BTECH_MARKS: '',
+    PG_MARKS: '',
+    CURRENT_CTC: '',
+    EXP_CTC: '',
+    OFFER_CTC: '',
+    NOTICE_PERIOD: '',
+    PREVIOUS_COMPANY: '',
+    DURATION: '',
+    
+
+    AADHAR_PATH: null,
+    PAN_PATH: null,
+    '10TH_FILENAME': null,
+    INTER_FILENAME: null,
+    BTECH_FILENAME: null,
+    PG_FILENAME: null,
+    PHOTO: null,
+    EXP_LETTER: null,
+    RELIEVING_LETTER: '',
+    PAYSLIPS: []
   });
-
-  const [uploadedFiles, setUploadedFiles] = useState({
-    tenthCertificate: null,
-    interCertificate: null,
-    btechCertificate: null,
-    resume: null,
-    payslip1: null,
-    payslip2: null,
-    payslip3: null,
-    experienceLetter: null,
-    relievingLetter: null,
-  });
-
-  const [submitStatus, setSubmitStatus] = useState(null);
-  const [errors, setErrors] = useState({});
-
 
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
+ 
 
 
-   const { PersonPostData  } = useContext(ContextData);
 
-  const steps = activeTab === 0
-    ? ['Personal Details', 'Education & Documents']
-    : ['Personal Details', 'Education & Documents', 'Professional Experience'];
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setActiveStep(0);
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    console.log(name,"nameddddddddd", value)
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
   };
 
+  useEffect(() => {
+    if (HrData && HrData.length > 0 && case_Id) {
+      var hr = HrData.find((ele) => ele.CHILD_CASEID === case_Id);
+      if (hr) {
+        setFormData((prev) => ({
+          ...prev,
+          PLANT: hr.PLANT || "",
+          CHILD_CASEID: hr.CHILD_CASEID || case_Id
+        }));
+      }
+    }
+  }, [HrData, case_Id]);
 
-const payload = {
-  'NAME': "ak",
-  'EMAIL': "aj@gmail.com",
-  'ADDRESS': "address_value",
-  'AADHAR_NUM': "aadhar_number",
-  'AADHAR_PATH': "aadhar_path",
-  'PAN_NUM': "pan_number",
-  'PAN_PATH': "pan_path",
-  'SSC_MARKS': "ssc_marks",
-  'INTER_MARKS': "inter_marks",
-  'BTECH_MARKS': "btech_marks",
-  'TENTH_FILENAME': "tenth_filename",
-  'INTER_FILENAME': "inter_filename",
-  'BTECH_FILENAME': "btech_filename",
-  'PG_MARKS': "pg_marks",
-  'PHONE_NUMBER': "phone_number",
-  'DOB': "dob",
-  'CURRENT_CTC': "current_ctc",
-  'EXP_CTC': "expected_ctc",
-  'OFFER_CTC': "offer_ctc",
-  'NOTICE_PERIOD': "notice_period",
-  'PREVIOUS_COMPANY': "previous_company",
-  'DURATION': "duration",
-  'PAYSLIPS': "payslips",
-  'EXP_LETTER': "experience_letter",
-  'RELIEVING_LETTER': "relieving_letter",
-  'HR': "hr_status",
-  'DIRECTOR': "director_status",
-  'EVC': "evc_status"
-};
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
 
-  const FormDetails = async() => {
+    if (name === 'PAYSLIPS') {
+      setFormData(prev => ({
+        ...prev,
+        PAYSLIPS: [...files]
+      }));
+    } 
+   else {
+setFormData(prev => ({
+        ...prev,
+        [name]: files[0]
+      }));
+   }
+      
+    
+  };
 
-    try{
-          const response = await axios.post(`${API_BASE_URL}/recruitStore`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const data = new FormData();
+
+
+      const textFields = [
+        'CHILD_CASEID', 'PLANT', 'NAME', 'EMAIL', 'PHONE_NUMBER', 'DOB', 'DEPT', 'ADDRESS',
+        'AADHAR_NUM', 'PAN_NUM', 'SSC_MARKS', 'INTER_MARKS', 'BTECH_MARKS', 'PG_MARKS',
+        'CURRENT_CTC', 'EXP_CTC', 'OFFER_CTC', 'NOTICE_PERIOD', 'PREVIOUS_COMPANY', 'DURATION'
+      ];
+
+      textFields.forEach(field => {
+        if (formData[field] !== '' && formData[field] !== null) {
+          data.append(field, String(formData[field]));
+          
+        }
+      });
+
+      // Add file fields
+      const fileFields = [
+        'AADHAR_PATH', 'PAN_PATH', '10TH_FILENAME', 'INTER_FILENAME', 
+        'BTECH_FILENAME', 'PG_FILENAME', 'PHOTO', 'EXP_LETTER', 'RELIEVING_LETTER'
+      ];
+
+      fileFields.forEach(field => {
+        if (formData[field] instanceof File) {
+          data.append(field, formData[field]);
+        }
+      });
+
+      // Handle PAYSLIPS array
+      if (formData.PAYSLIPS.length > 0) {
+        formData.PAYSLIPS.forEach((file, index) => {
+          if (file instanceof File) {
+            data.append('PAYSLIPS[]', file);
+          }
+        });
+      }
+
+      console.log("Submitting form data...");
+
+      const response = await axios.post(`${API_BASE_URL}/recruitStore`, data, {
+        headers: { 
           Authorization: `Bearer ${userToken.token}`,
+          'Content-Type': 'multipart/form-data'
         },
       });
-    }
-    catch(err){
-      console.log(err)
-    }
-  }
- 
 
-  const handleFileUpload = (fieldName, event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, [fieldName]: 'File size must be less than 5MB' }));
-        return;
+      console.log("Response:", response);
+      
+      if (response.data.success) {
+        alert("Form submitted successfully!");
+        resetForm();
+      } else {
+        alert("Submission failed: " + response.data.message);
       }
-      setUploadedFiles((prev) => ({
-        ...prev,
-        [fieldName]: file,
-      }));
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: file,
-      }));
-      setErrors((prev) => ({ ...prev, [fieldName]: '' }));
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.errors ? 
+                          JSON.stringify(error.response.data.errors) : 
+                          error.message;
+      alert("Error submitting form: " + errorMessage);
     }
   };
 
-  const handleFileRemove = (fieldName) => {
-    setUploadedFiles((prev) => ({
-      ...prev,
-      [fieldName]: null,
-    }));
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: null,
-    }));
-  };
-
-  const validateStep = () => {
-    const newErrors = {};
-
-    if (activeStep === 0) {
-      if (!formData.fullName) newErrors.fullName = 'Full name is required';
-      if (!formData.email) newErrors.email = 'Email is required';
-      if (!formData.phone) newErrors.phone = 'Phone number is required';
-      if (!formData.address) newErrors.address = 'Address is required';
-      if (!formData.city) newErrors.city = 'City is required';
-      if (!formData.state) newErrors.state = 'State is required';
-      if (!formData.pincode) newErrors.pincode = 'Pincode is required';
-      if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
-      if (!formData.gender) newErrors.gender = 'Gender is required';
-    } else if (activeStep === 1) {
-      if (!uploadedFiles.tenthCertificate) newErrors.tenthCertificate = '10th certificate is required';
-      if (!uploadedFiles.interCertificate) newErrors.interCertificate = '12th certificate is required';
-      if (!uploadedFiles.btechCertificate) newErrors.btechCertificate = 'B.Tech certificate is required';
-      if (!uploadedFiles.resume) newErrors.resume = 'Resume is required';
-    } else if (activeStep === 2 && activeTab === 1) {
-      if (!formData.previousCompany) newErrors.previousCompany = 'Previous company is required';
-      if (!formData.designation) newErrors.designation = 'Designation is required';
-      if (!formData.experienceYears) newErrors.experienceYears = 'Experience years is required';
-      if (!formData.currentCTC) newErrors.currentCTC = 'Current CTC is required';
-      if (!formData.expectedCTC) newErrors.expectedCTC = 'Expected CTC is required';
-      if (!formData.noticePeriod) newErrors.noticePeriod = 'Notice period is required';
-      if (!uploadedFiles.payslip1) newErrors.payslip1 = 'Payslip 1 is required';
-      if (!uploadedFiles.payslip2) newErrors.payslip2 = 'Payslip 2 is required';
-      if (!uploadedFiles.payslip3) newErrors.payslip3 = 'Payslip 3 is required';
-      if (!uploadedFiles.experienceLetter) newErrors.experienceLetter = 'Experience letter is required';
-      if (!uploadedFiles.relievingLetter) newErrors.relievingLetter = 'Relieving letter is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateStep()) {
-      setActiveStep((prevStep) => prevStep + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-
-
-
-  const handleSubmit = (e) => {
-    FormDetails()
-    e.preventDefault();
-    if (validateStep()) {
-      console.log('Form Data:', formData);
-      console.log('Candidate Type:', activeTab === 0 ? 'Fresher' : 'Experienced');
-      setSubmitStatus('success');
-      setTimeout(() => setSubmitStatus(null), 5000);
-    }
-  };
-
-  const calculateProgress = () => {
-    return ((activeStep + 1) / steps.length) * 100;
-  };
-
-  const FileUploadField = ({ label, fieldName, icon: Icon, required = false }) => (
-    <Card variant="outlined" sx={{ height: '100%', transition: 'all 0.3s', '&:hover': { boxShadow: 3 } }}>
-      <CardContent>
-        <Typography variant="subtitle2" className="mb-3 font-semibold flex items-center gap-2 text-gray-700">
-          {Icon && <Icon fontSize="small" color="primary" />}
-          {label}
-          {required && <Chip label="Required" size="small" color="error" sx={{ height: 20 }} />}
-        </Typography>
-        <Box className="flex flex-col gap-2">
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<CloudUpload />}
-            fullWidth
-            sx={{
-              py: 1.5,
-              borderStyle: 'dashed',
-              '&:hover': { borderStyle: 'solid' }
-            }}
-          >
-            Choose File
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => handleFileUpload(fieldName, e)}
-            />
-          </Button>
-          {uploadedFiles[fieldName] && (
-            <Box className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-              <CheckCircle fontSize="small" className="text-green-600" />
-              <Typography variant="body2" className="truncate flex-1 text-green-700">
-                {uploadedFiles[fieldName].name}
-              </Typography>
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => handleFileRemove(fieldName)}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Box>
-          )}
-          {errors[fieldName] && (
-            <Typography variant="caption" color="error">
-              {errors[fieldName]}
-            </Typography>
-          )}
-          <Typography variant="caption" className="text-gray-500">
-            PDF, JPG, PNG (Max 5MB)
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-
-  const renderStepContent = () => {
-    if (activeStep === 0) {
-      return (
-        <>
-          <Typography variant="h6" className="mb-4 flex items-center gap-2 text-gray-800">
-            <Person className="text-blue-600" /> Personal Information
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                required
-                label="Full Name"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                error={!!errors.fullName}
-                helperText={errors.fullName}
-                variant="outlined"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                type="email"
-                label="Email Address"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                error={!!errors.email}
-                helperText={errors.email}
-                InputProps={{
-                  startAdornment: <Email className="mr-2 text-gray-400" fontSize="small" />,
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label="Phone Number"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                InputProps={{
-                  startAdornment: <Phone className="mr-2 text-gray-400" fontSize="small" />,
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                required
-                label="Address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                error={!!errors.address}
-                helperText={errors.address}
-                multiline
-                rows={2}
-                InputProps={{
-                  startAdornment: <Home className="mr-2 text-gray-400 self-start mt-3" fontSize="small" />,
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                required
-                label="City"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                error={!!errors.city}
-                helperText={errors.city}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                required
-                label="State"
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
-                error={!!errors.state}
-                helperText={errors.state}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                required
-                label="Pincode"
-                name="pincode"
-                value={formData.pincode}
-                onChange={handleInputChange}
-                error={!!errors.pincode}
-                helperText={errors.pincode}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                type="date"
-                label="Date of Birth"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleInputChange}
-                error={!!errors.dateOfBirth}
-                helperText={errors.dateOfBirth}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required error={!!errors.gender}>
-                <FormLabel>Gender</FormLabel>
-                <RadioGroup
-                  row
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                >
-                  <FormControlLabel value="male" control={<Radio />} label="Male" />
-                  <FormControlLabel value="female" control={<Radio />} label="Female" />
-                  <FormControlLabel value="other" control={<Radio />} label="Other" />
-                </RadioGroup>
-                {errors.gender && (
-                  <Typography variant="caption" color="error">
-                    {errors.gender}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-          </Grid>
-        </>
-      );
-    } else if (activeStep === 1) {
-      return (
-        <>
-          <Typography variant="h6" className="mb-4 flex items-center gap-2 text-gray-800">
-            <School className="text-blue-600" /> Educational Documents
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <FileUploadField
-                label="10th Certificate"
-                fieldName="tenthCertificate"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FileUploadField
-                label="12th/Inter Certificate"
-                fieldName="interCertificate"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FileUploadField
-                label="B.Tech Certificate"
-                fieldName="btechCertificate"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FileUploadField
-                label="Resume/CV"
-                fieldName="resume"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-          </Grid>
-        </>
-      );
-    } else if (activeStep === 2 && activeTab === 1) {
-      return (
-        <>
-          <Typography variant="h6" className="mb-4 flex items-center gap-2 text-gray-800">
-            <Work className="text-blue-600" /> Professional Experience
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label="Previous Company"
-                name="previousCompany"
-                value={formData.previousCompany}
-                onChange={handleInputChange}
-                error={!!errors.previousCompany}
-                helperText={errors.previousCompany}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label="Designation"
-                name="designation"
-                value={formData.designation}
-                onChange={handleInputChange}
-                error={!!errors.designation}
-                helperText={errors.designation}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                type="number"
-                label="Experience (Years)"
-                name="experienceYears"
-                value={formData.experienceYears}
-                onChange={handleInputChange}
-                error={!!errors.experienceYears}
-                helperText={errors.experienceYears}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Experience (Months)"
-                name="experienceMonths"
-                value={formData.experienceMonths}
-                onChange={handleInputChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label="Current CTC (LPA)"
-                name="currentCTC"
-                value={formData.currentCTC}
-                onChange={handleInputChange}
-                error={!!errors.currentCTC}
-                helperText={errors.currentCTC}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label="Expected CTC (LPA)"
-                name="expectedCTC"
-                value={formData.expectedCTC}
-                onChange={handleInputChange}
-                error={!!errors.expectedCTC}
-                helperText={errors.expectedCTC}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControl fullWidth required error={!!errors.noticePeriod}>
-                <InputLabel>Notice Period</InputLabel>
-                <Select
-                  name="noticePeriod"
-                  value={formData.noticePeriod}
-                  onChange={handleInputChange}
-                  label="Notice Period"
-                >
-                  <MenuItem value="immediate">Immediate</MenuItem>
-                  <MenuItem value="15days">15 Days</MenuItem>
-                  <MenuItem value="1month">1 Month</MenuItem>
-                  <MenuItem value="2months">2 Months</MenuItem>
-                  <MenuItem value="3months">3 Months</MenuItem>
-                </Select>
-                {errors.noticePeriod && (
-                  <Typography variant="caption" color="error">
-                    {errors.noticePeriod}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-          </Grid>
-
-          <Divider className="my-6" />
-
-          <Typography variant="h6" className="mb-4 flex items-center gap-2 text-gray-800">
-            <AttachFile className="text-blue-600" /> Experience Documents
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <FileUploadField
-                label="Payslip 1 (Recent)"
-                fieldName="payslip1"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <FileUploadField
-                label="Payslip 2"
-                fieldName="payslip2"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <FileUploadField
-                label="Payslip 3"
-                fieldName="payslip3"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FileUploadField
-                label="Experience Letter"
-                fieldName="experienceLetter"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FileUploadField
-                label="Relieving Letter"
-                fieldName="relievingLetter"
-                icon={AttachFile}
-                required
-              />
-            </Grid>
-          </Grid>
-        </>
-      );
-    }
+  const resetForm = () => {
+    setFormData({
+      CHILD_CASEID: '',
+      PLANT: '',
+      NAME: '',
+      EMAIL: '',
+      PHONE_NUMBER: '',
+      DOB: '',
+      DEPT: '',
+      ADDRESS: '',
+      AADHAR_NUM: '',
+      PAN_NUM: '',
+      SSC_MARKS: '',
+      INTER_MARKS: '',
+      BTECH_MARKS: '',
+      PG_MARKS: '',
+      CURRENT_CTC: '',
+      EXP_CTC: '',
+      OFFER_CTC: '',
+      NOTICE_PERIOD: '',
+      PREVIOUS_COMPANY: '',
+      DURATION: '',
+      AADHAR_PATH: null,
+      PAN_PATH: null,
+      '10TH_FILENAME': null,
+      INTER_FILENAME: null,
+      BTECH_FILENAME: null,
+      PG_FILENAME: null,
+      PHOTO: null,
+      EXP_LETTER: null,
+      RELIEVING_LETTER: null,
+      PAYSLIPS: []
+    });
   };
 
   return (
-    <Box className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 py-8">
-      <Container maxWidth="lg">
-        <Paper elevation={0} sx={{ overflow: 'hidden', borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
-          <Box className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white p-8">
-            <Typography variant="h3" component="h1" className="font-bold mb-2">
-              Join Our Team
-            </Typography>
-            <Typography variant="body1" className="opacity-90">
-              We're excited to learn more about you. Please complete the application form below.
-            </Typography>
-          </Box>
+    <div className="max-w-7xl w-full mx-auto p-10 
+                rounded-3xl shadow-2xl 
+                border border-gray-300 
+                bg-gradient-to-br from-pink-100 via-gray-50 to-gray-100">
+      <div className="max-w-6xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* === BASIC INFORMATION === */}
+          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-blue-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-blue-500 text-white p-3 rounded-lg">
+                <User size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Basic Information</h2>
+            </div>
 
-          <Box className="border-b bg-white">
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              variant="fullWidth"
-              indicatorColor="primary"
-              textColor="primary"
-              sx={{
-                '& .MuiTab-root': {
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  py: 2.5,
-                },
-              }}
-            >
-              <Tab label="Fresher Application" />
-              <Tab label="Experienced Professional" />
-            </Tabs>
-          </Box>
-
-          <Box className="p-6 md:p-8 bg-white">
-            <Box className="mb-6">
-              <LinearProgress
-                variant="determinate"
-                value={calculateProgress()}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  '& .MuiLinearProgress-bar': {
-                    borderRadius: 4,
-                    background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-                  }
-                }}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <InputField
+                label="CHILD_CASEID"
+                name="CHILD_CASEID"
+                type="text"
+                value={case_Id}
+                onChange={handleInputChange}
+                disabled={true}
               />
-              <Typography variant="caption" className="text-gray-500 mt-2 block text-right">
-                Step {activeStep + 1} of {steps.length} - {Math.round(calculateProgress())}% Complete
-              </Typography>
-            </Box>
+              <InputField
+                label="Plant Name"
+                name="PLANT"
+                type="text"
+                value={formData.PLANT}
+                onChange={handleInputChange}
+                disabled = {true}
+              
+              />
+              <InputField
+                label="Full Name"
+                name="NAME"
+                type="text"
+                value={formData.NAME}
+                placeholder="As per Aadhar"
+                onChange={handleInputChange}
+                required
+              />
+              <InputField
+                label="Email"
+                name="EMAIL"
+                type="email"
+                value={formData.EMAIL}
+                onChange={handleInputChange}
+                required
+              />
+              <InputField
+                label="Phone"
+                name="PHONE_NUMBER"
+                type="tel"
+                value={formData.PHONE_NUMBER}
+                onChange={handleInputChange}
+                required
+              />
+              <InputField
+                label="Date Of Birth"
+                name="DOB"
+                type="date"
+                value={formData.DOB}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Department"
+                name="DEPT"
+                type="text"
+                value={formData.DEPT}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Aadhaar Number"
+                name="AADHAR_NUM"
+                type="text"
+                value={formData.AADHAR_NUM}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, ""); 
+                  if (val.length <= 12) handleInputChange({ target: { name: "AADHAR_NUM", value: val } });
+                }}
+                required
+              />
+              <InputField
+                label="PAN Number"
+                name="PAN_NUM"
+                type="text"
+                value={formData.PAN_NUM}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase();
+                  if (val.length <= 10) handleInputChange({ target: { name: "PAN_NUM", value: val } });
+                }}
+                required
+              />
+            </div>
 
-            <Stepper activeStep={activeStep} alternativeLabel className="mb-8">
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+              <textarea
+                name="ADDRESS"
+                value={formData.ADDRESS}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter full address"
+              ></textarea>
+            </div>
 
-            {submitStatus === 'success' && (
-              <Alert
-                severity="success"
-                className="mb-6"
-                icon={<CheckCircle />}
-                sx={{ borderRadius: 2 }}
-              >
-                <Typography variant="subtitle2" className="font-semibold">
-                  Application Submitted Successfully!
-                </Typography>
-                <Typography variant="body2">
-                  Thank you for applying. We'll review your application and get back to you soon.
-                </Typography>
-              </Alert>
-            )}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FileUpload label="Aadhaar Card" name="AADHAR_PATH" onChange={handleFileChange} />
+              <FileUpload label="PAN Card" name="PAN_PATH" onChange={handleFileChange} />
+              <FileUpload label="Passport-size Photo" name="PHOTO" onChange={handleFileChange} />
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit}>
-              <Box className="mb-8">
-                {renderStepContent()}
-              </Box>
+          {/* === EDUCATION DETAILS === */}
+          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-purple-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-purple-500 text-white p-3 rounded-lg">
+                <BookOpen size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Education Details</h2>
+            </div>
 
-              <Divider className="my-6" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <InputField
+                label="SSC Marks"
+                name="SSC_MARKS"
+                type="number"
+                value={formData.SSC_MARKS}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Inter Marks"
+                name="INTER_MARKS"
+                type="number"
+                value={formData.INTER_MARKS}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="B.Tech Marks"
+                name="BTECH_MARKS"
+                type="number"
+                value={formData.BTECH_MARKS}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="PG Marks"
+                name="PG_MARKS"
+                type="number"
+                value={formData.PG_MARKS}
+                onChange={handleInputChange}
+              />
+            </div>
 
-              <Box className="flex gap-3 justify-between">
-                <Button
-                  variant="outlined"
-                  size="large"
-                  onClick={handleBack}
-                  disabled={activeStep === 0}
-                  startIcon={<ArrowBack />}
-                  sx={{ minWidth: 120 }}
-                >
-                  Back
-                </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <FileUpload label="10th Marksheet" name="10TH_FILENAME" onChange={handleFileChange} />
+              <FileUpload label="Intermediate Marksheet" name="INTER_FILENAME" onChange={handleFileChange} />
+              <FileUpload label="Degree (B.Tech)" name="BTECH_FILENAME" onChange={handleFileChange} />
+              <FileUpload label="Post Graduation" name="PG_FILENAME" onChange={handleFileChange} />
+            </div>
+          </div>
 
-                <Box className="flex gap-3">
-                  {activeStep === steps.length - 1 ? (
-                    <Button
-                      variant="contained"
-                      size="large"
-                      type="submit"
-                      endIcon={<Send />}
-                      sx={{
-                        minWidth: 200,
-                        background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-                        '&:hover': {
-                          background: 'linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)',
-                        }
-                      }}
-                    >
-                      Submit Application
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      size="large"
-                      onClick={handleNext}
-                      endIcon={<ArrowForward />}
-                      sx={{
-                        minWidth: 120,
-                        background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-                        '&:hover': {
-                          background: 'linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)',
-                        }
-                      }}
-                    >
-                      Next
-                    </Button>
-                  )}
-                </Box>
-              </Box>
-            </form>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+          {/* === EXPERIENCE & CTC === */}
+          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-green-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-500 text-white p-3 rounded-lg">
+                <Award size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Experience & CTC</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <InputField
+                label="Previous Company"
+                name="PREVIOUS_COMPANY"
+                type="text"
+                value={formData.PREVIOUS_COMPANY}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Duration (Months)"
+                name="DURATION"
+                type="number"
+                value={formData.DURATION}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Current CTC"
+                name="CURRENT_CTC"
+                type="number"
+                value={formData.CURRENT_CTC}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Expected CTC"
+                name="EXP_CTC"
+                type="number"
+                value={formData.EXP_CTC}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Offered CTC"
+                name="OFFER_CTC"
+                type="number"
+                value={formData.OFFER_CTC}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Notice Period (Days)"
+                name="NOTICE_PERIOD"
+                type="number"
+                value={formData.NOTICE_PERIOD}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FileUpload label="Experience Letter" name="EXP_LETTER" onChange={handleFileChange} />
+              <FileUpload label="Relieving Letter" name="RELIEVING_LETTER" onChange={handleFileChange} />
+              <FileUpload label="Payslips" name="PAYSLIPS" onChange={handleFileChange} />
+            </div>
+          </div>
+
+     
+          <div className="flex gap-4 pt-4 justify-end">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-semibold"
+            >
+              Reset
+            </button>
+            <button
+              type="submit"
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-md"
+            >
+              Submit Form
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const InputField = ({ label, name, type, value, onChange, required, disabled = false }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+        }`}
+      required={required}
+    />
+  </div>
+);
+
+const FileUpload = ({ label, name, onChange, multiple = false }) => {
+  const [fileName, setFileName] = useState('No file chosen');
+
+  const handleChange = (e) => {
+    setFileName(e.target.files?.length > 0 ? `${e.target.files.length} file(s) selected` : 'No file chosen');
+    onChange(e);
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="file"
+          name={name}
+          accept="application/pdf,image/*"
+          onChange={handleChange}
+          multiple={multiple}
+          className="hidden"
+        />
+        <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium">
+          Choose File
+        </span>
+        <span className="text-gray-600">{fileName}</span>
+      </label>
+    </div>
   );
 }
 

@@ -79,7 +79,7 @@ const Onboarding = () => {
 
   const onboardingMenuItems = [
     { 
-      label: 'Employee Onboarding', 
+      label: 'Joining Report', 
       component: 'employee-onboarding', 
       icon: GroupAddIcon,
     },

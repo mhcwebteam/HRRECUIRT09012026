@@ -16,7 +16,9 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/Manpower', icon: Users, label: 'Manpower' },
         {path:'/RecruitmentProcess', icon: FileKey2, label:'Recruitments'},
-    { path: '/onBoarding', icon: Home, label: 'Onboarding' }
+    { path: '/onBoarding', icon: Home, label: 'Onboarding' },
+
+    {path: '/RecruitmentForm',  icon: Home, label: 'RecruitmentForm'}
 
   ];
 

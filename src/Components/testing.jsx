@@ -1,286 +1,484 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  Upload,
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  BookOpen,
+  Award
+} from 'lucide-react';
+import axios from 'axios';
+import { API_BASE_URL } from "../Config/Config"
+import { ContextData } from '../Context/ContextData';
 
-const OfferLetter = () => {
-  const [candidate, setCandidate] = useState({
-    name: '',
-    position: 'Full Stack Developer',
-    startDate: '',
-    offerCTC: '',
-    location: 'Hyderabad, India',
-    reportingManager: '',
-    workMode: 'Hybrid'
+const RecruitmentForm = () => {
+  const [formData, setFormData] = useState({
+    CHILD_CASEID: '',
+    PLANT: '',
+    NAME: '',
+    EMAIL: '',
+    PHONE_NUMBER: '',
+    DOB: '',
+    DEPT: '',
+    ADDRESS: '',
+    AADHAR_NUM: '',
+    PAN_NUM: '',
+    SSC_MARKS: '',
+    INTER_MARKS: '',
+    BTECH_MARKS: '',
+    POST_GRADUCTION: '',
+    CURRENT_CTC: '',
+    EXP_CTC: '',
+    OFFER_CTC: '',
+    NOTICE_PERIOD: '',
+    PREVIOUS_COMPANY: '',
+    DURATION: '',
+    
+    // File fields
+    AADHAR_PATH: null,
+    PAN_PATH: null,
+    '10TH_FILENAME': null,
+    INTER_FILENAME: null,
+    BTECH_FILENAME: null,
+    PG_FILENAME: null,
+    PHOTO: null,
+    EXP_LETTER: null,
+    RELIEVING_LETTER: '',
+    PAYSLIPS: []
   });
 
-  const [isGenerated, setIsGenerated] = useState(false);
+  const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
+  const { HrData } = useContext(ContextData);
 
-  const handleInputChange = (field, value) => {
-    setCandidate(prev => ({
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
   };
 
-  const generateOfferLetter = () => {
-    if (candidate.name && candidate.startDate && candidate.offerCTC) {
-      setIsGenerated(true);
+  useEffect(() => {
+    if (HrData.length > 0) {
+      const firstRecord = HrData[0];
+      setFormData(prev => ({
+        ...prev,
+        CHILD_CASEID: firstRecord?.CHILD_CASEID || '',
+        PLANT: firstRecord?.PLANT || ''
+      }));
+    }
+  }, [HrData]);
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+
+    if (name === 'PAYSLIPS') {
+      setFormData(prev => ({
+        ...prev,
+        PAYSLIPS: [...files]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0]
+      }));
     }
   };
 
-  const downloadPDF = () => {
-    window.print();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const data = new FormData();
+
+      // Add all text fields
+      const textFields = [
+        'CHILD_CASEID', 'PLANT', 'NAME', 'EMAIL', 'PHONE_NUMBER', 'DOB', 'DEPT', 'ADDRESS',
+        'AADHAR_NUM', 'PAN_NUM', 'SSC_MARKS', 'INTER_MARKS', 'BTECH_MARKS', 'POST_GRADUCTION',
+        'CURRENT_CTC', 'EXP_CTC', 'OFFER_CTC', 'NOTICE_PERIOD', 'PREVIOUS_COMPANY', 'DURATION'
+      ];
+
+      textFields.forEach(field => {
+        if (formData[field] !== '' && formData[field] !== null) {
+          data.append(field, String(formData[field]));
+        }
+      });
+
+      // Add file fields
+      const fileFields = [
+        'AADHAR_PATH', 'PAN_PATH', '10TH_FILENAME', 'INTER_FILENAME', 
+        'BTECH_FILENAME', 'PG_FILENAME', 'PHOTO', 'EXP_LETTER', 'RELIEVING_LETTER'
+      ];
+
+      fileFields.forEach(field => {
+        if (formData[field] instanceof File) {
+          data.append(field, formData[field]);
+        }
+      });
+
+      // Handle PAYSLIPS array
+      if (formData.PAYSLIPS.length > 0) {
+        formData.PAYSLIPS.forEach((file, index) => {
+          if (file instanceof File) {
+            data.append('PAYSLIPS[]', file);
+          }
+        });
+      }
+
+      console.log("Submitting form data...");
+
+      const response = await axios.post(`${API_BASE_URL}/recruitStore`, data, {
+        headers: { 
+          Authorization: `Bearer ${userToken.token}`,
+          'Content-Type': 'multipart/form-data'
+        },
+      });
+
+      console.log("Response:", response);
+      
+      if (response.data.success) {
+        alert("Form submitted successfully!");
+        resetForm();
+      } else {
+        alert("Submission failed: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.errors ? 
+                          JSON.stringify(error.response.data.errors) : 
+                          error.message;
+      alert("Error submitting form: " + errorMessage);
+    }
   };
 
-  const salaryBreakdown = {
-    basic: Math.round(candidate.offerCTC * 0.50),
-    hra: Math.round(candidate.offerCTC * 0.20),
-    specialAllowance: Math.round(candidate.offerCTC * 0.25),
-    otherBenefits: Math.round(candidate.offerCTC * 0.05)
+  const resetForm = () => {
+    setFormData({
+      CHILD_CASEID: '',
+      PLANT: '',
+      NAME: '',
+      EMAIL: '',
+      PHONE_NUMBER: '',
+      DOB: '',
+      DEPT: '',
+      ADDRESS: '',
+      AADHAR_NUM: '',
+      PAN_NUM: '',
+      SSC_MARKS: '',
+      INTER_MARKS: '',
+      BTECH_MARKS: '',
+      POST_GRADUCTION: '',
+      CURRENT_CTC: '',
+      EXP_CTC: '',
+      OFFER_CTC: '',
+      NOTICE_PERIOD: '',
+      PREVIOUS_COMPANY: '',
+      DURATION: '',
+      AADHAR_PATH: null,
+      PAN_PATH: null,
+      '10TH_FILENAME': null,
+      INTER_FILENAME: null,
+      BTECH_FILENAME: null,
+      PG_FILENAME: null,
+      PHOTO: null,
+      EXP_LETTER: null,
+      RELIEVING_LETTER: null,
+      PAYSLIPS: []
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Offer Letter Generator</h1>
-          <p className="text-gray-600">Create professional offer letters in minutes</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Input Form */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Candidate Details
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    value={candidate.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter candidate name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                  <select
-                    value={candidate.position}
-                    onChange={(e) => handleInputChange('position', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option>Full Stack Developer</option>
-                    <option>Frontend Developer</option>
-                    <option>Backend Developer</option>
-                    <option>DevOps Engineer</option>
-                    <option>UI/UX Designer</option>
-                    <option>Project Manager</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                  <input
-                    type="date"
-                    value={candidate.startDate}
-                    onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Offer CTC (₹) *</label>
-                  <input
-                    type="number"
-                    value={candidate.offerCTC}
-                    onChange={(e) => handleInputChange('offerCTC', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter annual CTC"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Work Mode</label>
-                  <select
-                    value={candidate.workMode}
-                    onChange={(e) => handleInputChange('workMode', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option>Hybrid</option>
-                    <option>Remote</option>
-                    <option>On-site</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reporting Manager</label>
-                  <input
-                    type="text"
-                    value={candidate.reportingManager}
-                    onChange={(e) => handleInputChange('reportingManager', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Manager's name"
-                  />
-                </div>
-
-                <button
-                  onClick={generateOfferLetter}
-                  disabled={!candidate.name || !candidate.startDate || !candidate.offerCTC}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                >
-                  Generate Offer Letter
-                </button>
+    <div className="max-w-7xl w-full mx-auto p-10 
+                rounded-3xl shadow-2xl 
+                border border-gray-300 
+                bg-gradient-to-br from-pink-100 via-gray-50 to-gray-100">
+      <div className="max-w-6xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* === BASIC INFORMATION === */}
+          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-blue-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-blue-500 text-white p-3 rounded-lg">
+                <User size={24} />
               </div>
+              <h2 className="text-2xl font-bold text-gray-800">Basic Information</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <InputField
+                label="CHILD_CASEID"
+                name="CHILD_CASEID"
+                type="text"
+                value={formData.CHILD_CASEID}
+                onChange={handleInputChange}
+                disabled={true}
+              />
+              <InputField
+                label="Plant Name"
+                name="PLANT"
+                type="text"
+                value={formData.PLANT}
+                onChange={handleInputChange}
+                disabled={true}
+              />
+              <InputField
+                label="Full Name"
+                name="NAME"
+                type="text"
+                value={formData.NAME}
+                placeholder="As per Aadhar"
+                onChange={handleInputChange}
+                required
+              />
+              <InputField
+                label="Email"
+                name="EMAIL"
+                type="email"
+                value={formData.EMAIL}
+                onChange={handleInputChange}
+                required
+              />
+              <InputField
+                label="Phone"
+                name="PHONE_NUMBER"
+                type="tel"
+                value={formData.PHONE_NUMBER}
+                onChange={handleInputChange}
+                required
+              />
+              <InputField
+                label="Date Of Birth"
+                name="DOB"
+                type="date"
+                value={formData.DOB}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Department"
+                name="DEPT"
+                type="text"
+                value={formData.DEPT}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Aadhaar Number"
+                name="AADHAR_NUM"
+                type="text"
+                value={formData.AADHAR_NUM}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, ""); 
+                  if (val.length <= 12) handleInputChange({ target: { name: "AADHAR_NUM", value: val } });
+                }}
+                required
+              />
+              <InputField
+                label="PAN Number"
+                name="PAN_NUM"
+                type="text"
+                value={formData.PAN_NUM}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase();
+                  if (val.length <= 10) handleInputChange({ target: { name: "PAN_NUM", value: val } });
+                }}
+                required
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+              <textarea
+                name="ADDRESS"
+                value={formData.ADDRESS}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter full address"
+              ></textarea>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FileUpload label="Aadhaar Card" name="AADHAR_PATH" onChange={handleFileChange} />
+              <FileUpload label="PAN Card" name="PAN_PATH" onChange={handleFileChange} />
+              <FileUpload label="Passport-size Photo" name="PHOTO" onChange={handleFileChange} />
             </div>
           </div>
 
-          {/* Offer Letter Preview */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              {/* Letter Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-8">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">TechCorp Solutions</h1>
-                    <p className="text-blue-100">Innovating the Future, Together</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-blue-100">Date: {new Date().toLocaleDateString()}</p>
-                    <p className="text-blue-100">Ref: TC/{new Date().getFullYear()}/{Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
-                  </div>
-                </div>
+          {/* === EDUCATION DETAILS === */}
+          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-purple-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-purple-500 text-white p-3 rounded-lg">
+                <BookOpen size={24} />
               </div>
+              <h2 className="text-2xl font-bold text-gray-800">Education Details</h2>
+            </div>
 
-              {/* Letter Content */}
-              <div className="p-8">
-                {!isGenerated ? (
-                  <div className="text-center py-12">
-                    <svg className="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-gray-600 mb-2">Preview Will Appear Here</h3>
-                    <p className="text-gray-500">Fill in the details and generate your offer letter</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div>
-                      <p className="text-gray-600 mb-2">To,</p>
-                      <p className="font-semibold text-lg">{candidate.name}</p>
-                      <p className="text-gray-600">Email: candidate@example.com</p>
-                      <p className="text-gray-600">Phone: +91 XXXXX XXXXX</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <InputField
+                label="SSC Marks"
+                name="SSC_MARKS"
+                type="number"
+                value={formData.SSC_MARKS}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Inter Marks"
+                name="INTER_MARKS"
+                type="number"
+                value={formData.INTER_MARKS}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="B.Tech Marks"
+                name="BTECH_MARKS"
+                type="number"
+                value={formData.BTECH_MARKS}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="PG Marks"
+                name="POST_GRADUCTION"
+                type="number"
+                value={formData.POST_GRADUCTION}
+                onChange={handleInputChange}
+              />
+            </div>
 
-                    <div>
-                      <p className="font-bold text-xl text-blue-800 mb-4">OFFER OF EMPLOYMENT</p>
-                      <p className="text-gray-700 leading-relaxed">
-                        Dear <span className="font-semibold">{candidate.name}</span>,
-                      </p>
-                      <p className="text-gray-700 leading-relaxed mt-3">
-                        We are pleased to offer you the position of <span className="font-semibold">{candidate.position}</span> 
-                        at TechCorp Solutions. This letter outlines the terms and conditions of your employment.
-                      </p>
-                    </div>
-
-                    {/* Key Details */}
-                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-gray-700">Position</p>
-                        <p className="text-gray-600">{candidate.position}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-700">Start Date</p>
-                        <p className="text-gray-600">{new Date(candidate.startDate).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-700">Work Location</p>
-                        <p className="text-gray-600">{candidate.location}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-700">Work Mode</p>
-                        <p className="text-gray-600">{candidate.workMode}</p>
-                      </div>
-                    </div>
-
-                    {/* Compensation */}
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800 mb-3">Compensation Package</h3>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-semibold text-gray-700">Annual CTC:</span>
-                          <span className="text-2xl font-bold text-green-700">₹{candidate.offerCTC?.toLocaleString('en-IN')}</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                          <div>Basic Salary: ₹{salaryBreakdown.basic?.toLocaleString('en-IN')}</div>
-                          <div>HRA: ₹{salaryBreakdown.hra?.toLocaleString('en-IN')}</div>
-                          <div>Special Allowance: ₹{salaryBreakdown.specialAllowance?.toLocaleString('en-IN')}</div>
-                          <div>Other Benefits: ₹{salaryBreakdown.otherBenefits?.toLocaleString('en-IN')}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Terms */}
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800 mb-3">Terms & Conditions</h3>
-                      <ul className="list-disc list-inside space-y-2 text-gray-700">
-                        <li>This is a full-time employment position</li>
-                        <li>Standard company policies and procedures apply</li>
-                        <li>You will report to: {candidate.reportingManager || "To be assigned"}</li>
-                        <li>Probation period: 3 months</li>
-                        <li>Working hours: 9:00 AM - 6:00 PM (Monday - Friday)</li>
-                      </ul>
-                    </div>
-
-                    {/* Closing */}
-                    <div className="mt-8">
-                      <p className="text-gray-700 leading-relaxed">
-                        We are excited about the prospect of you joining our team and believe your skills will be a valuable asset to our company.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed mt-4">
-                        Please sign and return this letter by {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()} to indicate your acceptance.
-                      </p>
-                      <div className="mt-8">
-                        <p className="font-semibold text-gray-800">Sincerely,</p>
-                        <p className="text-gray-700">HR Department</p>
-                        <p className="text-gray-600">TechCorp Solutions</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              {isGenerated && (
-                <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 flex justify-end gap-4">
-                  <button
-                    onClick={() => setIsGenerated(false)}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Edit Details
-                  </button>
-                  <button
-                    onClick={downloadPDF}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Download PDF
-                  </button>
-                </div>
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <FileUpload label="10th Marksheet" name="10TH_FILENAME" onChange={handleFileChange} />
+              <FileUpload label="Intermediate Marksheet" name="INTER_FILENAME" onChange={handleFileChange} />
+              <FileUpload label="Degree (B.Tech)" name="BTECH_FILENAME" onChange={handleFileChange} />
+              <FileUpload label="Post Graduation" name="PG_FILENAME" onChange={handleFileChange} />
             </div>
           </div>
-        </div>
+
+          {/* === EXPERIENCE & CTC === */}
+          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-green-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-500 text-white p-3 rounded-lg">
+                <Award size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Experience & CTC</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <InputField
+                label="Previous Company"
+                name="PREVIOUS_COMPANY"
+                type="text"
+                value={formData.PREVIOUS_COMPANY}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Duration (Months)"
+                name="DURATION"
+                type="number"
+                value={formData.DURATION}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Current CTC"
+                name="CURRENT_CTC"
+                type="number"
+                value={formData.CURRENT_CTC}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Expected CTC"
+                name="EXP_CTC"
+                type="number"
+                value={formData.EXP_CTC}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Offered CTC"
+                name="OFFER_CTC"
+                type="number"
+                value={formData.OFFER_CTC}
+                onChange={handleInputChange}
+              />
+              <InputField
+                label="Notice Period (Days)"
+                name="NOTICE_PERIOD"
+                type="number"
+                value={formData.NOTICE_PERIOD}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FileUpload label="Experience Letter" name="EXP_LETTER" onChange={handleFileChange} />
+              <FileUpload label="Relieving Letter" name="RELIEVING_LETTER" onChange={handleFileChange} />
+              <FileUpload label="Payslips (Multiple)" name="PAYSLIPS" onChange={handleFileChange} multiple />
+            </div>
+          </div>
+
+          {/* === BUTTONS === */}
+          <div className="flex gap-4 pt-4 justify-end">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-semibold"
+            >
+              Reset
+            </button>
+            <button
+              type="submit"
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-md"
+            >
+              Submit Form
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default OfferLetter;
+const InputField = ({ label, name, type, value, onChange, required, disabled = false }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+        }`}
+      required={required}
+    />
+  </div>
+);
+
+const FileUpload = ({ label, name, onChange, multiple = false }) => {
+  const [fileName, setFileName] = useState('No file chosen');
+
+  const handleChange = (e) => {
+    setFileName(e.target.files?.length > 0 ? `${e.target.files.length} file(s) selected` : 'No file chosen');
+    onChange(e);
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="file"
+          name={name}
+          accept="application/pdf,image/*"
+          onChange={handleChange}
+          multiple={multiple}
+          className="hidden"
+        />
+        <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium">
+          Choose File
+        </span>
+        <span className="text-gray-600">{fileName}</span>
+      </label>
+    </div>
+  );
+}
+
+export default RecruitmentForm;

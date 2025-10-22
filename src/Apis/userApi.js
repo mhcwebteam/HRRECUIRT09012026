@@ -42,7 +42,7 @@ return useQuery({
 
     queryKey: ["details", token],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/verifications`, {
+      const res = await axios.get(`${API_BASE_URL}/emp-verify-data`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -70,6 +70,8 @@ return useQuery({
           Authorization: `Bearer ${token}`,
         },
       });
+
+      console.log(res,"resresresresresresresresres");
       return res.data.data; 
     },
     enabled: !!token 
@@ -112,6 +114,8 @@ return useQuery({
             Authorization: `Bearer ${token}`
           }
         });
+
+     
 
   
       return response.data.data; 

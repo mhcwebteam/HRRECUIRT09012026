@@ -31,9 +31,9 @@ const Salarystackup = () => {
   const [modalOpen, setModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
       const [submitting, setSubmitting] = useState({});
-  const { personalData,  } = useContext(ContextData);
-   const { HrData  } = useContext(ContextData);
+  const { personalData  } = useContext(ContextData);
 
+console.log("prersonalllllllllllllllllll", personalData);
   const filteredData = useMemo(() => {
     if (!personalData || personalData.length === 0) return [];
 
@@ -52,31 +52,38 @@ const Salarystackup = () => {
     if (statusFilter !== 'all') {
       result = result.filter(user => user.status === statusFilter);
     }
-    return result.map((item, index) => ({
-      id: item.id || item.SNO || `row-${index}`,
-      SNO: item.SNO || index + 1,
-      CASEID: item.caseId || item.CASEID || 'N/A',
-      NAME: item.name || item.NAME || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
-      EMAIL: item.email || item.EMAIL || 'N/A',
-      ADDRESS: item.address || item.ADDRESS || 'N/A',
-      PHONE_NUMBER: item.phoneNumber || item.phone || item.PHONE_NUMBER || 'N/A',
-      DOB: item.dob || item.DOB || item.dateOfBirth || 'N/A',
-      AADHAR_NUM: item.AADHAR_NUM || 'N/A',
-      PAN_NUM: item.PAN_NUM || 'N/A',
-      SSC_SCORE: item.SSC_SCORE || 'N/A',
-      INTER_SCORE: item.INTER_SCORE || 'N/A',
-      BTECH_SCORE: item.BTECH_SCORE || 'N/A',
-      POST_GRADUCTION: item.POST_GRADUCTION || 'N/A',
-      CURRENT_CTC: item.CURRENT_CTC || 'N/A',
-      EXP_CTC: item.EXP_CTC || 'N/A',
-     OFFER_CTC: item.OFFER_CTC|| 'N/A',
-      NOTICE_PERIOD: item.NOTICE_PERIOD || 'N/A',
-      PREVIOUS_COMPANY: item.PREVIOUS_COMPANY || 'N/A',
-      DURATION: item.DURATION || 'N/A',
 
-      STATUS: item.status || item.STATUS || 'pending',
+    console.log(result,"ressssssssssssssss");
+  
+    return result.map((item, index) => ({
+
+      id: item.id || `row-${index}`,
+      SNO: index + 1,
+      CHILD_CASEID: item.child_caseid || 'N/A',
+      PLANT: item.plant || 'N/A', 
+      NAME: item.name || 'N/A',
+      EMAIL: item.email || 'N/A',
+      ADDRESS: item.address || 'N/A',
+      PHONE_NUMBER: item.phone_number || 'N/A',
+      DOB: item.dob || 'N/A',
+      AADHAR_NUM: item.aadhar_number || 'N/A',
+      PAN_NUM: item.pan_number || 'N/A',
+      SSC_MARKS: item.ssc_marks || 'N/A',
+      INTER_MARKS: item.inter_marks || 'N/A',
+      BTECH_MARKS: item.btech_marks || 'N/A',
+      PG_MARKS: item.pg_marks || 'N/A',
+      CURRENT_CTC: item.current_ctc || 'N/A',
+      EXP_CTC: item.expected_ctc || 'N/A',
+      OFFER_CTC: item.offer_ctc || 'N/A',
+      NOTICE_PERIOD: item.notice_period || 'N/A',
+      PREVIOUS_COMPANY: item.previous_company || 'N/A',
+      DURATION: item.duration || 'N/A',
+      STATUS: item.status || 'pending',
       remarks: item.remarks || 'No remarks',
-      submitted_date: item.submitted_date || item.created_at || 'N/A'
+      submitted_date: item.created_at || 'N/A',
+      
+      // Include documents for modal
+      documents: item.documents || {}
     }));
   }, [personalData, searchTerm, statusFilter]);
 

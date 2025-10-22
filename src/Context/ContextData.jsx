@@ -1,5 +1,11 @@
-import { createContext } from "react";
-import { useHrhistory, usePersonalDetails, usePostPersonalDetails, useSubProjects, useUserProjects } from "../Apis/userApi";
+import React, { createContext, useState } from "react";
+import {
+  useHrhistory,
+  usePersonalDetails,
+  usePostPersonalDetails,
+  useSubProjects,
+  useUserProjects
+} from "../Apis/userApi";
 
 export const ContextData = createContext({
   projects: [],
@@ -9,29 +15,40 @@ export const ContextData = createContext({
   personalData: [],
   HrData: [],
   PersonPostData: [],
-
+  selectedRecord: null,
+  setSelectedRecord: () => {},
 });
 
 export const AppProvider = ({ children }) => {
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  const { data, isLoading } = useUserProjects(userToken?.token);
-  const {data: subProjects,    isLoading: isLoadingSub,  } = useSubProjects(userToken?.token, data?.data?.[5]);
-  const {data: PersonalInfo,isLoading: isLoadingInfo} =  usePersonalDetails(userToken?.token);
-const {data: Hrhistory} =  useHrhistory(userToken?.token);
-const {data: Personpost} = usePostPersonalDetails(userToken.token);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
- 
+  // Fetching all required data using custom hooks
+  const { data, isLoading } = useUserProjects(userToken?.token);
+  const {
+    data: subProjects,
+    isLoading: isLoadingSub,
+  } = useSubProjects(userToken?.token, data?.data?.[5]);
+  const {
+    data: PersonalInfo,
+    isLoading: isLoadingInfo,
+  } = usePersonalDetails(userToken?.token);
+  const { data: Hrhistory } = useHrhistory(userToken?.token);
+  const { data: Personpost } = usePostPersonalDetails(userToken?.token);
+console.log("selectedRecordselectedRecordselectedRecord",selectedRecord)
   return (
     <ContextData.Provider
       value={{
         projects: data || [],
         isProjectsLoading: isLoading,
-        subproject: subProjects || [],     
+        subproject: subProjects || [],
         isSubProjectLoading: isLoadingSub,
         personalData: PersonalInfo || [],
         HrData: Hrhistory || [],
-        PersonPostData:Personpost || []
+        PersonPostData: Personpost || [],
+        selectedRecord,
+        setSelectedRecord,
       }}
     >
       {children}

@@ -13,6 +13,7 @@ import Header from "./Components/Layout/Header";
 import Manpower from "./ManpowerComponent/ManPower";
 import Onboarding from "./OnBoarding/Onboarding";
 import Recruitments from "./RecruitmentProcess/Recruitments";
+import RecruitmentForm from "./RecruitmentProcess/RecruitmentForm";
 
 
 export const MyContext = createContext();
@@ -83,6 +84,26 @@ export default function App() {
             </section>
           )
     },
+
+     {
+      path: '/RecruitmentForm/:case_Id',
+      exact: true,
+ 
+
+                element: (
+            <section className='main'>
+                 <Header/> 
+              <div className='contentMain flex'>
+                <div className={`sidebarWapper ${isSidebarOpen === true ? 'w-[18%]' : 'w-[90px]'} transition-all`}>
+                  <Sidebar/>
+                </div>
+                <div className={`contentRight py-4 px-4 ${isSidebarOpen ? 'w-[82%]' : 'w-[calc(100%-90px)]'} transition-all`}>
+        <RecruitmentForm />
+                </div>
+              </div>
+            </section>
+          )
+    }
     
    
   ]);

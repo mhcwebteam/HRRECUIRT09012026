@@ -21,6 +21,7 @@ import { ArrowLeftIcon, BriefcaseIcon, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../Config/Config.jsx';
 import { ContextData } from '../Context/ContextData.jsx';
+import RecruitmentForm from './RecruitmentForm.jsx';
 
 ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
 
@@ -39,7 +40,9 @@ const RecruitmentMail = () => {
   const [emailInputs, setEmailInputs] = useState({});
   const [submitting, setSubmitting] = useState({});
 
- const { HrData  } = useContext(ContextData);
+
+
+ const { HrData,setSelectedRecord  } = useContext(ContextData);
 
 
   useEffect(() => {
@@ -55,7 +58,7 @@ const RecruitmentMail = () => {
       });
       const rowsWithId = shortlistedData.map((row, index) => ({
         ...row,
-        id: row.CHILD_CASEID || row.CASEID || `row_${index}`
+        id: row.CHILD_CASEID || row.CHILD_CASEID || `row_${index}`
       }));
       
       setData(rowsWithId);
@@ -86,13 +89,12 @@ const RecruitmentMail = () => {
       return;
     }
 
-    console.log('row', row)
-    console.log('row1',row.PLANT)
+
 
     const filtered = data.filter(row => {
       const search = searchValue.toLowerCase();
       return (
-        (row.CASEID && row.CASEID.toLowerCase().includes(search)) ||
+        (row.CHILD_CASEID && row.CHILD_CASEID.toLowerCase().includes(search)) ||
         (row.PROCESSNAME && row.PROCESSNAME.toLowerCase().includes(search)) ||
         (row.RAISER && row.RAISER.toLowerCase().includes(search)) ||
         (row.RAISER_DATE && row.RAISER_DATE.toLowerCase().includes(search)) ||
@@ -107,7 +109,7 @@ const RecruitmentMail = () => {
     setFilteredData(filtered);
   };
 
-  // Handle email input change
+
   const handleEmailChange = (caseId, email) => {
     setEmailInputs(prev => ({
       ...prev,
@@ -118,6 +120,7 @@ const RecruitmentMail = () => {
 const handleSubmitEmail = async (caseId, rowData) => {
 
   const email = emailInputs[caseId];
+
   
   if (!email) {
     Swal.fire('Error', 'Please enter email', 'error');
@@ -126,26 +129,31 @@ const handleSubmitEmail = async (caseId, rowData) => {
 
   setSubmitting(prev => ({ ...prev, [caseId]: true }));
 
+
+const payload2 = {
+   email: email,
+  child_caseId: caseId,
+ 
+}
+
+
+
+
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/send-onboarding-link`,
-      {
-        case_id: caseId,
-        employee_email: email,
-        employee_name: rowData.RAISER,
-        designation: rowData.MANPOWER_DESG,
-        department: rowData.DEPT,
-        plant: rowData.PLANT,
-      },
+      `${API_BASE_URL}/emp-email`,
+   payload2,
       {
         headers: {
+          Authorization: `Bearer ${userToken.token}`,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
       }
     );
+    console.log(response,"pay1");
 
-    if (response.data.success) {
+    if (response.data) {
       Swal.fire({
         title: 'Success!',
         text: 'Onboarding form link sent to employee email!',
@@ -176,7 +184,7 @@ const handleSubmitEmail = async (caseId, rowData) => {
     setSelectedRowData(rowData);
     setProcessAndCaseIdData({ 
       processname: rowData.PROCESSNAME, 
-      caseId: rowData.CASEID, 
+      caseId: row.CHILD_CASEID, 
       type: type 
     });
     setManPowerOpen(true);
@@ -264,7 +272,7 @@ const handleSubmitEmail = async (caseId, rowData) => {
       ),
     },
     {
-      field: 'CASEID',
+      field: 'CHILD_CASEID',
       headerName: 'Case ID',
       flex: 1,
       minWidth: 120,
@@ -407,8 +415,8 @@ const handleSubmitEmail = async (caseId, rowData) => {
           size="small"
           type="email"
           placeholder="Enter email address"
-          value={emailInputs[params.row.CASEID] || ''}
-          onChange={(e) => handleEmailChange(params.row.CASEID, e.target.value)}
+          value={emailInputs[params.row.CHILD_CASEID] || ''}
+          onChange={(e) => handleEmailChange(params.row.CHILD_CASEID, e.target.value)}
           sx={{
             width: '100%',
             '& .MuiOutlinedInput-root': {
@@ -437,15 +445,15 @@ const handleSubmitEmail = async (caseId, rowData) => {
       sortable: false,
       filterable: false,
       renderCell: (params) => {
-        const isSubmitting = submitting[params.row.CASEID] || false;
-        const email = emailInputs[params.row.CASEID] || '';
+        const isSubmitting = submitting[params.row.CHILD_CASEID] || false;
+        const email = emailInputs[params.row.CHILD_CASEID] || '';
         
         return (
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
             <Button
               variant="contained"
               size="small"
-              onClick={() => handleSubmitEmail(params.row.CASEID, params.row)}
+              onClick={() => handleSubmitEmail(params.row.CHILD_CASEID, params.row)}
               disabled={isSubmitting || !email}
               sx={{
                 background: isSubmitting 
@@ -655,7 +663,7 @@ const handleSubmitEmail = async (caseId, rowData) => {
               flex: 1,
               textAlign: 'center',
             }}>
-              Case ID: {selectedRowData?.CASEID} | Process: {selectedRowData?.PROCESSNAME}
+              Case ID: {selectedRowData?.CHILD_CASEID} | Process: {selectedRowData?.PROCESSNAME}
             </Typography>
             <IconButton
               aria-label="close"
