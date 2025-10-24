@@ -51,7 +51,7 @@ const Verification = () => {
       result = result.filter(user => user.status === statusFilter);
     }
 
-
+console.log("deptttttttttt", result);
     return result.map((item, index) => ({
 
       id: item.id || `row-${index}`,

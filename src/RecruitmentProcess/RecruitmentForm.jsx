@@ -83,6 +83,9 @@ const RecruitmentForm = () => {
   const handleFileChange = (e) => {
     const { name, files } = e.target;
 
+
+    
+
     if (name === 'PAYSLIPS') {
       setFormData(prev => ({
         ...prev,

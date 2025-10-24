@@ -2,78 +2,88 @@
 
 
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../Config/Config';
+import axios from 'axios';
 
 const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
   const FIXED_COMPONENTS = {
     conveyance: 1600,
-    educationAllowance: 200
+    education_allowance: 200
   };
-
+ const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
   const calculateSalaryBreakdown = (offerCTC) => {
     console.log(offerCTC, "offer ctc");
 
     const monthlyCTC = offerCTC / 12;
+   
     const conveyance = FIXED_COMPONENTS.conveyance;
-    const educationAllowance = FIXED_COMPONENTS.educationAllowance;
+    const education_allowance = FIXED_COMPONENTS.education_allowance;
     
-    const basicSalary = Math.round(monthlyCTC * 0.50);
-    const hra = Math.round(basicSalary * 0.40);
+    const basic_salary = Math.round(monthlyCTC * 0.50);
+    console.log("basiccccccccccc",basic_salary);
+    const hra = Math.round(basic_salary * 0.40);
     
-    const employeePFContribution = Math.min(Math.round(basicSalary * 0.12), 1800);
-    const employerPFContribution = employeePFContribution;
+    const employee_pf_contribution = Math.min(Math.round(basic_salary * 0.12), 1800);
+    const employer_pf_contribution = employee_pf_contribution;
     
    
-    const grossSalaryForESI = basicSalary + hra + conveyance + educationAllowance;
-    const isESIAplicable = grossSalaryForESI <= 10000;
+    const grossSalaryForESI = basic_salary + hra + conveyance + education_allowance;
+    const is_esi_applicable = grossSalaryForESI <= 10000;
     
   
-    const employeeESIContribution = isESIAplicable ? Math.round(grossSalaryForESI * 0.0075) : 0;
-    const employerESIContribution = isESIAplicable ? Math.round(grossSalaryForESI * 0.0325) : 0;
+    const employeeESIContribution = is_esi_applicable ? Math.round(grossSalaryForESI * 0.0075) : 0;
+    const employer_esi_contribution = is_esi_applicable ? Math.round(grossSalaryForESI * 0.0325) : 0;
     
   
-    const professionalTax = 200;
+    const professional_tax = 200;
     
-    const otherBenefits = employerPFContribution + employerESIContribution;
-    const deductions = employeePFContribution + employeeESIContribution + professionalTax;
+    const otherBenefits = employer_pf_contribution + employer_esi_contribution;
+    const deductions = employee_pf_contribution + employeeESIContribution + professional_tax;
     const targetGross = monthlyCTC - otherBenefits + deductions;
-    const specialAllowance = Math.round(targetGross - basicSalary - hra - conveyance - educationAllowance);
+    const special_allowance = Math.round(targetGross - basic_salary - hra - conveyance - education_allowance);
+
+    console.log(special_allowance,"special!!!!");
 
     const bonus = Math.round((offerCTC * 0.04) / 12);
+
+
     
     return {
-      basicSalary,
+      basic_salary,
       hra,
       conveyance,
-      educationAllowance,
-      specialAllowance: Math.max(0, specialAllowance),
+      education_allowance,
+      special_allowance: Math.max(0, special_allowance),
       bonus,
-      leaveTravelAllowance: 0,
-      mealVouchers: 0,
-      employerPFContribution,
-      employerESIContribution,
-      employeePFContribution,
+      leave_travel_allowance: 0,
+      meal_vouchers: 0,
+      employer_pf_contribution,
+      employer_esi_contribution,
+      employee_pf_contribution,
       employeeESIContribution,
-      professionalTax,
-      isESIAplicable 
+      professional_tax,
+      is_esi_applicable 
     };
   };
 
   const [offerCTC, setOfferCTC] = useState(0);
+
+
   const [salaryComponents, setSalaryComponents] = useState({
-    basicSalary: 0,
+    basic_salary: 0,
     hra: 0,
     conveyance: FIXED_COMPONENTS.conveyance,
-    educationAllowance: FIXED_COMPONENTS.educationAllowance,
-    specialAllowance: 0,
+    education_allowance: FIXED_COMPONENTS.education_allowance,
+    special_allowance: 0,
     bonus: 0,
-    leaveTravelAllowance: 0,
-    mealVouchers: 0,
-    employerPFContribution: 0,
-    employerESIContribution: 0,
-    employeePFContribution: 0,
+    leave_travel_allowance: 0,
+    meal_vouchers: 0,
+    employer_pf_contribution: 1800,
+    employer_esi_contribution: 0,
+    employee_pf_contribution: 1800,
     employeeESIContribution: 0,
-    professionalTax: 200,
-    isESIAplicable: false
+    professional_tax: 200,
+    is_esi_applicable: false
   });
 
   const [remarks, setRemarks] = useState('');
@@ -81,7 +91,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
   
   useEffect(() => {
     if (open && data) {
-      const offerAmount = parseFloat(data.OFFER_CTC) || 420000;
+      const offerAmount = parseFloat(data.OFFER_CTC);
       setOfferCTC(offerAmount);
       const breakdown = calculateSalaryBreakdown(offerAmount);
       setSalaryComponents(breakdown);
@@ -89,43 +99,45 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
   }, [open, data]);
 
   const calculations = {
-    bonus: Math.round(salaryComponents.basicSalary * 8.33 / 100),
+    bonus: Math.round(salaryComponents.basic_salary * 8.33 / 100),
 
-    specialAllowance:   Math.round( Math.max(0,
+    special_allowance:   Math.round( Math.max(0,
       (offerCTC || 0) / 12 - (
-        (salaryComponents?.basicSalary || 0) +
+        (salaryComponents?.basic_salary || 0) +
         (salaryComponents?.hra || 0) +
         (salaryComponents?.conveyance || 0) +
-        (salaryComponents?.educationAllowance || 0) +
-        (salaryComponents?.employerPFContribution || 0) +
-        ((salaryComponents?.basicSalary || 0) * 8.33 / 100)
+        (salaryComponents?.education_allowance || 0) +
+        (salaryComponents?.employer_pf_contribution || 0) +
+        ((salaryComponents?.basic_salary || 0) * 8.33 / 100)
       )
     )),
 
-    grossSalary: Math.round((salaryComponents?.basicSalary || 0) + 
+    grossSalary: Math.round((salaryComponents?.basic_salary || 0) + 
       (salaryComponents?.hra || 0) + 
       (salaryComponents?.conveyance || 0) + 
-      (salaryComponents?.educationAllowance || 0) + 
+      (salaryComponents?.education_allowance || 0) + 
       Math.max(0,
         (offerCTC || 0) / 12 - (
-          (salaryComponents?.basicSalary || 0) +
+          (salaryComponents?.basic_salary || 0) +
           (salaryComponents?.hra || 0) +
           (salaryComponents?.conveyance || 0) +
-          (salaryComponents?.educationAllowance || 0) +
-          (salaryComponents?.employerPFContribution || 0) +
-          ((salaryComponents?.basicSalary || 0) * 8.33 / 100)
+          (salaryComponents?.education_allowance || 0) +
+          (salaryComponents?.employer_pf_contribution || 0) +
+          ((salaryComponents?.basic_salary || 0) * 8.33 / 100)
         )
       )),
 
+     
+
     otherBenefits: salaryComponents.bonus + 
-      salaryComponents.leaveTravelAllowance + 
-      salaryComponents.mealVouchers + 
-      salaryComponents.employerPFContribution + 
-      salaryComponents.employerESIContribution,
+      salaryComponents.leave_travel_allowance + 
+      salaryComponents.meal_vouchers + 
+      salaryComponents.employer_pf_contribution + 
+      salaryComponents.employer_esi_contribution,
     
-    totalDeductions: salaryComponents.employeePFContribution + 
+    totalDeductions: salaryComponents.employee_pf_contribution + 
       salaryComponents.employeeESIContribution + 
-      salaryComponents.professionalTax,
+      salaryComponents.professional_tax,
     
     get netSalaryMonthly() {
       return this.grossSalary - this.totalDeductions;
@@ -160,24 +172,60 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
   if (!open) return null;
 
-  const handleSubmit = (status) => {
-    if (onStatusChange) {
-      onStatusChange({
-        id: data.id,
-        status: status,
+
+    
+
+  const handleSubmit = async () => {
+console.log("dataaaaaaaaaa", data.id)
+    const payload = {
+ salary_breakup_id: data.id,
+        status: "approved",
         remarks: remarks,
-        offerCTC: offerCTC,
-        salaryBreakdown: salaryComponents
-      });
+        offer_ctc: offerCTC,
+
+    basic_salary: salaryComponents.basic_salary,
+    hra: salaryComponents.hra,
+    conveyance: FIXED_COMPONENTS.conveyance,
+    education_allowance: FIXED_COMPONENTS.education_allowance,
+    special_allowance: calculations.special_allowance,
+    bonus: calculations.bonus,
+    Gross_Salary: calculations.grossSalary,
+    Total_Deductions: calculations.totalDeductions,
+    leave_travel_allowance: salaryComponents.leave_travel_allowance,
+    meal_vouchers: salaryComponents.meal_vouchers,
+    employer_pf_contribution: salaryComponents.employee_pf_contribution,
+    employer_esi_contribution: salaryComponents.employer_esi_contribution,
+    employee_pf_contribution: salaryComponents.employee_pf_contribution,
+    employee_esi_contribution: salaryComponents.employeeESIContribution,
+    professional_tax: 200,
+    is_esi_applicable: false
     }
-    onClose();
+ 
+
+try{
+
+    const response = await axios.post(`${API_BASE_URL}/salary-breakUp`, payload, {
+      headers: {
+        Authorization: `Bearer ${userToken.token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+   console.log(response,"out of it......................");
+}
+catch(err){
+console.log(err);
+}
+      
+
+   
   };
 
   const handleInputChange = (field, value) => {
     const numValue = parseFloat(value) || 0;
     
     // Prevent changing fixed components in edit mode
-    if (field === 'conveyance' || field === 'educationAllowance') {
+    if (field === 'conveyance' || field === 'education_allowance') {
       return;
     }
     
@@ -203,7 +251,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
       <td className={`px-4 py-3 ${isBold ? 'font-bold' : 'font-semibold'} text-gray-700`}>
         {label}
         {isFixed && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Fixed</span>}
-        {showESINote && !salaryComponents.isESIAplicable && (
+        {showESINote && !salaryComponents.is_esi_applicable && (
           <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Not Applicable</span>
         )}
       </td>
@@ -290,19 +338,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
             </div>
           </div>
 
-          {/* ESI Applicability Note */}
-          {/* {!salaryComponents.isESIAplicable && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-4">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-            
-              </div>
-            </div>
-          )} */}
-
-          {/* Salary Breakdown Table */}
+         
           <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -335,9 +371,9 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
                   </tr>
                   <SalaryRow 
                     label="Basic Salary" 
-                    field="basicSalary"
-                    monthly={salaryComponents.basicSalary}
-                    annual={salaryComponents.basicSalary * 12}
+                    field="basic_salary"
+                    monthly={salaryComponents.basic_salary}
+                    annual={offerCTC / 2}
                   />
                   <SalaryRow 
                     label="HRA" 
@@ -354,16 +390,16 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
                   />
                   <SalaryRow 
                     label="Education Allowance" 
-                    field="educationAllowance"
-                    monthly={salaryComponents.educationAllowance}
-                    annual={salaryComponents.educationAllowance * 12}
+                    field="education_allowance"
+                    monthly={salaryComponents.education_allowance}
+                    annual={salaryComponents.education_allowance * 12}
                     isFixed={true}
                   />
                   <SalaryRow 
                     label="Special Allowance" 
-                    field="specialAllowance"
-                    monthly={calculations.specialAllowance}
-                    annual={calculations.specialAllowance * 12}
+                    field="special_allowance"
+                    monthly={calculations.special_allowance}
+                    annual={calculations.special_allowance * 12}
                   />
                   <SalaryRow 
                     label="GROSS SALARY (sum of 1 to 5)"
@@ -387,27 +423,27 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
                   />
                   <SalaryRow 
                     label="Leave Travel Allowance" 
-                    field="leaveTravelAllowance"
-                    monthly={salaryComponents.leaveTravelAllowance}
-                    annual={salaryComponents.leaveTravelAllowance * 12}
+                    field="leave_travel_allowance"
+                    monthly={salaryComponents.leave_travel_allowance}
+                    annual={salaryComponents.leave_travel_allowance * 12}
                   />
                   <SalaryRow 
                     label="Meal Vouchers" 
-                    field="mealVouchers"
-                    monthly={salaryComponents.mealVouchers}
-                    annual={salaryComponents.mealVouchers * 12}
+                    field="meal_vouchers"
+                    monthly={salaryComponents.meal_vouchers}
+                    annual={salaryComponents.meal_vouchers * 12}
                   />
                   <SalaryRow 
                     label="Employer PF Contribution" 
-                    field="employerPFContribution"
-                    monthly={salaryComponents.employerPFContribution}
-                    annual={salaryComponents.employerPFContribution * 12}
+                    field="employer_pf_contribution"
+                    monthly={salaryComponents.employer_pf_contribution}
+                    annual={salaryComponents.employer_pf_contribution * 12}
                   />
                   <SalaryRow 
                     label="Employer ESI Contribution" 
-                    field="employerESIContribution"
-                    monthly={salaryComponents.employerESIContribution}
-                    annual={salaryComponents.employerESIContribution * 12}
+                    field="employer_esi_contribution"
+                    monthly={salaryComponents.employer_esi_contribution}
+                    annual={salaryComponents.employer_esi_contribution * 12}
                     showESINote={true}
                   />
 
@@ -417,9 +453,9 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
                   </tr>
                   <SalaryRow 
                     label="Employee PF Contribution" 
-                    field="employeePFContribution"
-                    monthly={salaryComponents.employeePFContribution}
-                    annual={salaryComponents.employeePFContribution * 12}
+                    field="employee_pf_contribution"
+                    monthly={salaryComponents.employee_pf_contribution}
+                    annual={salaryComponents.employee_pf_contribution * 12}
                   />
                   <SalaryRow 
                     label="Employee ESI Contribution" 
@@ -430,9 +466,9 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
                   />
                   <SalaryRow 
                     label="Professional Tax" 
-                    field="professionalTax"
-                    monthly={salaryComponents.professionalTax}
-                    annual={salaryComponents.professionalTax * 12}
+                    field="professional_tax"
+                    monthly={salaryComponents.professional_tax}
+                    annual={salaryComponents.professional_tax * 12}
                   />
                   <SalaryRow 
                     label="TOTAL DEDUCTIONS (sum of 1 to 3)"

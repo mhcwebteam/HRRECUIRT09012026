@@ -53,7 +53,7 @@ console.log("prersonalllllllllllllllllll", personalData);
       result = result.filter(user => user.status === statusFilter);
     }
 
-    console.log(result,"ressssssssssssssss");
+  
   
     return result.map((item, index) => ({
 
@@ -66,6 +66,7 @@ console.log("prersonalllllllllllllllllll", personalData);
       ADDRESS: item.address || 'N/A',
       PHONE_NUMBER: item.phone_number || 'N/A',
       DOB: item.dob || 'N/A',
+    DEPT: item.DEPT || 'N/A',
       AADHAR_NUM: item.aadhar_number || 'N/A',
       PAN_NUM: item.pan_number || 'N/A',
       SSC_MARKS: item.ssc_marks || 'N/A',
@@ -258,8 +259,8 @@ console.log("prersonalllllllllllllllllll", personalData);
       ),
     },
  {
-      field: 'DESIGNATION',
-      headerName: 'Designation',
+      field: 'DEPT',
+      headerName: 'Department',
       flex: 1,
       minWidth: 140,
       renderCell: (params) => (
