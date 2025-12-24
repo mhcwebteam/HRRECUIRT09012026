@@ -45,32 +45,41 @@ const RecruitmentMail = () => {
  const { HrData,setSelectedRecord  } = useContext(ContextData);
 
 
-  useEffect(() => {
-    
-    if (HrData && Array.isArray(HrData)) {
-      
-      
-      const shortlistedData = HrData.filter(row => {
-        const status = row.ACTION_STATUS?.toLowerCase() || 
-                      row.STATUS?.toLowerCase() || 
-                      row.CURRENT_STATUS?.toLowerCase();
-        return status === 'shortlisted';
-      });
-      const rowsWithId = shortlistedData.map((row, index) => ({
-        ...row,
-        id: row.CHILD_CASEID || row.CHILD_CASEID || `row_${index}`
-      }));
-      
-      setData(rowsWithId);
-      setFilteredData(rowsWithId);
-      setLoading(false);
-    } else {
-      console.log("HrData is empty or not an array");
-      setData([]);
-      setFilteredData([]);
-      setLoading(false);
-    }
-  }, [HrData]);
+
+ 
+
+
+useEffect(() => {
+  if (Array.isArray(HrData) && HrData.length > 0) {
+
+    const shortlistedData = HrData.filter(row => {
+      const status =
+        row.ACTION_STATUS ||
+        row.STATUS ||
+        row.CUR_STATUS;
+
+      return status?.toUpperCase() === 'COMPLETED';
+    });
+
+    const rowsWithId = shortlistedData.map((row, index) => ({
+      ...row,
+      id: row.CHILD_CASEID || `row_${index}`,
+    }));
+
+    console.log("Filtered HR Data:", rowsWithId);
+
+    setData(rowsWithId);
+    setFilteredData(rowsWithId);
+    setLoading(false);
+
+  } else {
+    console.log("HrData is empty or not an array");
+    setData([]);
+    setFilteredData([]);
+    setLoading(false);
+  }
+}, [HrData]);
+
 
 
 

@@ -1,16 +1,27 @@
-
-
-
-import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../Config/Config';
-import axios from 'axios';
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../Config/Config";
 
 const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
+
+
+  console.log("data", data)
   const FIXED_COMPONENTS = {
     conveyance: 1600,
     education_allowance: 200
   };
- const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
+  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
+
+  // Add state to track if we're editing an existing record
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingSalaryBreakupId, setExistingSalaryBreakupId] = useState(null);
+  const [newSalaryBreakupId, setNewSalaryBreakupId] = useState(null);
+
+  // Function to generate random ID
+  const generateRandomId = () => {
+    return 'SB_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+  };
+
   const calculateSalaryBreakdown = (offerCTC) => {
     console.log(offerCTC, "offer ctc");
 
@@ -46,8 +57,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
     const bonus = Math.round((offerCTC * 0.04) / 12);
 
-
-    
     return {
       basic_salary,
       hra,
@@ -68,7 +77,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
   const [offerCTC, setOfferCTC] = useState(0);
 
-
   const [salaryComponents, setSalaryComponents] = useState({
     basic_salary: 0,
     hra: 0,
@@ -88,6 +96,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
   const [remarks, setRemarks] = useState('');
   const [isViewMode, setIsViewMode] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
     if (open && data) {
@@ -95,13 +104,27 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
       setOfferCTC(offerAmount);
       const breakdown = calculateSalaryBreakdown(offerAmount);
       setSalaryComponents(breakdown);
+      
+      // Check if we have an existing salary breakup ID for editing
+      if (data.id) {
+        setIsEditing(true);
+        setExistingSalaryBreakupId(data.id);
+        console.log("Editing existing salary breakup:", data.salary_breakup_id);
+      } else {
+        setIsEditing(false);
+        setExistingSalaryBreakupId(null);
+      
+        const newId = generateRandomId();
+        setNewSalaryBreakupId(newId);
+        console.log("Creating new salary breakup with ID:", newId);
+      }
     }
   }, [open, data]);
 
   const calculations = {
     bonus: Math.round(salaryComponents.basic_salary * 8.33 / 100),
 
-    special_allowance:   Math.round( Math.max(0,
+    special_allowance: Math.round(Math.max(0,
       (offerCTC || 0) / 12 - (
         (salaryComponents?.basic_salary || 0) +
         (salaryComponents?.hra || 0) +
@@ -126,8 +149,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
           ((salaryComponents?.basic_salary || 0) * 8.33 / 100)
         )
       )),
-
-     
 
     otherBenefits: salaryComponents.bonus + 
       salaryComponents.leave_travel_allowance + 
@@ -172,53 +193,79 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
   if (!open) return null;
 
+  const handleSubmit = async (status) => {
+    console.log("Data ID:", data.id);
+    console.log("Existing Salary Breakup ID:", existingSalaryBreakupId);
+    console.log("New Salary Breakup ID:", newSalaryBreakupId);
+    console.log("Is Editing:", isEditing);
 
-    
-
-  const handleSubmit = async () => {
-console.log("dataaaaaaaaaa", data.id)
     const payload = {
- salary_breakup_id: data.id,
-        status: "approved",
-        remarks: remarks,
-        offer_ctc: offerCTC,
+      status: status,
+      remarks: remarks,
+      offer_ctc: offerCTC,
+      basic_salary: salaryComponents.basic_salary,
+      hra: salaryComponents.hra,
+      conveyance: FIXED_COMPONENTS.conveyance,
+      education_allowance: FIXED_COMPONENTS.education_allowance,
+      special_allowance: calculations.special_allowance,
+      bonus: calculations.bonus,
+      Gross_Salary: calculations.grossSalary,
+      Total_Deductions: calculations.totalDeductions,
+      Net_Salary: calculations.netSalaryMonthly,
+      leave_travel_allowance: salaryComponents.leave_travel_allowance,
+      meal_vouchers: salaryComponents.meal_vouchers,
+      employer_pf_contribution: salaryComponents.employer_pf_contribution,
+      employer_esi_contribution: salaryComponents.employer_esi_contribution,
+      employee_pf_contribution: salaryComponents.employee_pf_contribution,
+      employee_esi_contribution: salaryComponents.employeeESIContribution,
+      professional_tax: 200,
+      is_esi_applicable: salaryComponents.is_esi_applicable
+    };
 
-    basic_salary: salaryComponents.basic_salary,
-    hra: salaryComponents.hra,
-    conveyance: FIXED_COMPONENTS.conveyance,
-    education_allowance: FIXED_COMPONENTS.education_allowance,
-    special_allowance: calculations.special_allowance,
-    bonus: calculations.bonus,
-    Gross_Salary: calculations.grossSalary,
-    Total_Deductions: calculations.totalDeductions,
-    leave_travel_allowance: salaryComponents.leave_travel_allowance,
-    meal_vouchers: salaryComponents.meal_vouchers,
-    employer_pf_contribution: salaryComponents.employee_pf_contribution,
-    employer_esi_contribution: salaryComponents.employer_esi_contribution,
-    employee_pf_contribution: salaryComponents.employee_pf_contribution,
-    employee_esi_contribution: salaryComponents.employeeESIContribution,
-    professional_tax: 200,
-    is_esi_applicable: false
+    // Add salary_breakup_id based on mode
+    if (isEditing && existingSalaryBreakupId) {
+      // Editing existing record - use existing ID
+      payload.salary_breakup_id = existingSalaryBreakupId;
+    } else if (!isEditing && newSalaryBreakupId) {
+      // Creating new record - use generated random ID
+      payload.salary_breakup_id = newSalaryBreakupId;
     }
- 
 
-try{
+    setIsSubmitting(true);
 
-    const response = await axios.post(`${API_BASE_URL}/salary-breakUp`, payload, {
-      headers: {
-        Authorization: `Bearer ${userToken.token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    try {
+      const response = await axios.post(`${API_BASE_URL}/salary-breakUp`, payload, {
+        headers: {
+          Authorization: `Bearer ${userToken.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-   console.log(response,"out of it......................");
-}
-catch(err){
-console.log(err);
-}
-      
+      console.log(response.data, "Response from server");
 
-   
+      // Show success message
+      if (response.data.message) {
+        alert(response.data.message);
+      } else {
+        alert('Salary breakup saved successfully!');
+      }
+
+      // Close modal and refresh data
+      onClose();
+      if (onStatusChange) {
+        onStatusChange({
+          id: data.id,
+          salary_breakup_id: isEditing ? existingSalaryBreakupId : newSalaryBreakupId,
+          ...payload
+        });
+      }
+    } catch (err) {
+      console.error('Error saving salary breakup:', err);
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error occurred';
+      alert('Error saving salary breakup: ' + errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -282,7 +329,14 @@ console.log(err);
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h2 className="text-2xl font-bold">Salary Stackup</h2>
+            <div>
+              <h2 className="text-2xl font-bold">Salary Stackup</h2>
+              {isEditing ? (
+                <p className="text-sm text-emerald-100">Editing existing salary breakup (ID: {existingSalaryBreakupId})</p>
+              ) : (
+                <p className="text-sm text-emerald-100">Creating new salary breakup (ID: {newSalaryBreakupId})</p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -338,7 +392,7 @@ console.log(err);
             </div>
           </div>
 
-         
+          {/* Salary Breakdown */}
           <div className="bg-white rounded-2xl shadow-md p-6 mb-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -373,7 +427,7 @@ console.log(err);
                     label="Basic Salary" 
                     field="basic_salary"
                     monthly={salaryComponents.basic_salary}
-                    annual={offerCTC / 2}
+                    annual={salaryComponents.basic_salary * 12}
                   />
                   <SalaryRow 
                     label="HRA" 
@@ -555,6 +609,7 @@ console.log(err);
               placeholder="Add any remarks or notes here..."
               rows={3}
               className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+              disabled={isViewMode}
             />
           </div>
         </div>
@@ -567,13 +622,15 @@ console.log(err);
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-200 transition-all"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={() => handleSubmit('rejected')}
-              className="px-6 py-2.5 rounded-xl font-semibold text-white bg-red-500 hover:bg-red-600 transition-all flex items-center gap-2"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 rounded-xl font-semibold text-white bg-red-500 hover:bg-red-600 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -582,7 +639,8 @@ console.log(err);
             </button>
             <button
               onClick={() => handleSubmit('approved')}
-              className="px-6 py-2.5 rounded-xl font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition-all flex items-center gap-2"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 rounded-xl font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

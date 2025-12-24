@@ -32,8 +32,8 @@ const CandidateApproval = () => {
   const [modalOpen, setModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
       const [submitting, setSubmitting] = useState({});
-  const { personalData,  } = useContext(ContextData);
-   const { HrData  } = useContext(ContextData);
+  const { personalData  } = useContext(ContextData);
+;
 
   const filteredData = useMemo(() => {
     if (!personalData || personalData.length === 0) return [];
@@ -56,7 +56,7 @@ const CandidateApproval = () => {
     return result.map((item, index) => ({
       id: item.id || item.SNO || `row-${index}`,
       SNO: item.SNO || index + 1,
-      CASEID: item.caseId || item.CASEID || 'N/A',
+      CHILD_CASEID: item.child_caseid || 'N/A',
       NAME: item.name || item.NAME || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
       EMAIL: item.email || item.EMAIL || 'N/A',
       ADDRESS: item.address || item.ADDRESS || 'N/A',
@@ -165,7 +165,7 @@ const CandidateApproval = () => {
       ),
     },
     {
-      field: 'CASEID',
+      field: 'CHILD_CASEID',
       headerName: 'Case ID',
       flex: 1,
       minWidth: 120,

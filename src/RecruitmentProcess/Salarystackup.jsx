@@ -33,7 +33,7 @@ const Salarystackup = () => {
       const [submitting, setSubmitting] = useState({});
   const { personalData  } = useContext(ContextData);
 
-console.log("prersonalllllllllllllllllll", personalData);
+console.log("prersonalllllllllllllllllll", selectedUser);
   const filteredData = useMemo(() => {
     if (!personalData || personalData.length === 0) return [];
 
@@ -53,6 +53,7 @@ console.log("prersonalllllllllllllllllll", personalData);
       result = result.filter(user => user.status === statusFilter);
     }
 
+    console.log(result,"resultttttttttttttt");
   
   
     return result.map((item, index) => ({
@@ -128,6 +129,7 @@ console.log("prersonalllllllllllllllllll", personalData);
 
 
  const handleViewDetails = (user) => {
+  console.log('user',user)
     setSelectedUser(user);
     setModalOpen(true);
   };
@@ -172,7 +174,7 @@ console.log("prersonalllllllllllllllllll", personalData);
       ),
     },
     {
-      field: 'CASEID',
+      field: 'CHILD_CASEID',
       headerName: 'Case ID',
       flex: 1,
       minWidth: 120,
