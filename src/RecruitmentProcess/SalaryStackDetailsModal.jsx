@@ -1,17 +1,15 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../Config/Config";
+import Verification from "./Verification";
 
 const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
-
-
-  console.log("data", data)
+  //console.log("data", data)
   const FIXED_COMPONENTS = {
     conveyance: 1600,
     education_allowance: 200
   };
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
-
   // Add state to track if we're editing an existing record
   const [isEditing, setIsEditing] = useState(false);
   const [existingSalaryBreakupId, setExistingSalaryBreakupId] = useState(null);
@@ -52,11 +50,8 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
     const deductions = employee_pf_contribution + employeeESIContribution + professional_tax;
     const targetGross = monthlyCTC - otherBenefits + deductions;
     const special_allowance = Math.round(targetGross - basic_salary - hra - conveyance - education_allowance);
-
     console.log(special_allowance,"special!!!!");
-
     const bonus = Math.round((offerCTC * 0.04) / 12);
-
     return {
       basic_salary,
       hra,
@@ -113,7 +108,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
       } else {
         setIsEditing(false);
         setExistingSalaryBreakupId(null);
-      
         const newId = generateRandomId();
         setNewSalaryBreakupId(newId);
         console.log("Creating new salary breakup with ID:", newId);
@@ -123,7 +117,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
   const calculations = {
     bonus: Math.round(salaryComponents.basic_salary * 8.33 / 100),
-
     special_allowance: Math.round(Math.max(0,
       (offerCTC || 0) / 12 - (
         (salaryComponents?.basic_salary || 0) +
@@ -134,7 +127,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
         ((salaryComponents?.basic_salary || 0) * 8.33 / 100)
       )
     )),
-
     grossSalary: Math.round((salaryComponents?.basic_salary || 0) + 
       (salaryComponents?.hra || 0) + 
       (salaryComponents?.conveyance || 0) + 
@@ -149,17 +141,14 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
           ((salaryComponents?.basic_salary || 0) * 8.33 / 100)
         )
       )),
-
     otherBenefits: salaryComponents.bonus + 
       salaryComponents.leave_travel_allowance + 
       salaryComponents.meal_vouchers + 
       salaryComponents.employer_pf_contribution + 
       salaryComponents.employer_esi_contribution,
-    
-    totalDeductions: salaryComponents.employee_pf_contribution + 
+      totalDeductions: salaryComponents.employee_pf_contribution + 
       salaryComponents.employeeESIContribution + 
       salaryComponents.professional_tax,
-    
     get netSalaryMonthly() {
       return this.grossSalary - this.totalDeductions;
     },
@@ -200,6 +189,8 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
     console.log("Is Editing:", isEditing);
 
     const payload = {
+      childCaseId:data.CHILD_CASEID,
+      VerificationId:data.verification_id,
       status: status,
       remarks: remarks,
       offer_ctc: offerCTC,
@@ -230,9 +221,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
       // Creating new record - use generated random ID
       payload.salary_breakup_id = newSalaryBreakupId;
     }
-
     setIsSubmitting(true);
-
     try {
       const response = await axios.post(`${API_BASE_URL}/salary-breakUp`, payload, {
         headers: {
@@ -240,9 +229,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
           'Content-Type': 'application/json',
         },
       });
-
       console.log(response.data, "Response from server");
-
       // Show success message
       if (response.data.message) {
         alert(response.data.message);
@@ -270,7 +257,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
   const handleInputChange = (field, value) => {
     const numValue = parseFloat(value) || 0;
-    
     // Prevent changing fixed components in edit mode
     if (field === 'conveyance' || field === 'education_allowance') {
       return;
@@ -408,7 +394,6 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
               )}
             </div>
             <div className="border-b border-gray-200 mb-4"></div>
-
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

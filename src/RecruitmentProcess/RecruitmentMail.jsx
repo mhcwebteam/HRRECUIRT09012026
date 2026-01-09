@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useMemo, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
@@ -40,15 +37,7 @@ const RecruitmentMail = () => {
   const [emailInputs, setEmailInputs] = useState({});
   const [submitting, setSubmitting] = useState({});
 
-
-
  const { HrData,setSelectedRecord  } = useContext(ContextData);
-
-
-
- 
-
-
 useEffect(() => {
   if (Array.isArray(HrData) && HrData.length > 0) {
 
@@ -79,11 +68,6 @@ useEffect(() => {
     setLoading(false);
   }
 }, [HrData]);
-
-
-
-
-
   useEffect(() => {
     if (!userToken.token) navigate('/');
   }, [navigate, userToken?.token]);
@@ -92,14 +76,10 @@ useEffect(() => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
     setPaginationModel(prev => ({ ...prev, page: 0 }));
-
     if (!searchValue) {
       setFilteredData(data);
       return;
     }
-
-
-
     const filtered = data.filter(row => {
       const search = searchValue.toLowerCase();
       return (
@@ -113,12 +93,9 @@ useEffect(() => {
         (row.DEPT && row.DEPT.toLowerCase().includes(search)) ||
         (row.MANPOWER_DESG && row.MANPOWER_DESG.toLowerCase().includes(search))
       );
-    });
-    
+    }); 
     setFilteredData(filtered);
   };
-
-
   const handleEmailChange = (caseId, email) => {
     setEmailInputs(prev => ({
       ...prev,
@@ -127,27 +104,39 @@ useEffect(() => {
   };
 
 const handleSubmitEmail = async (caseId, rowData) => {
-
   const email = emailInputs[caseId];
-
-  
   if (!email) {
     Swal.fire('Error', 'Please enter email', 'error');
     return;
   }
 
+  // Validate email format
+  if (!validateEmail(email)) {
+    Swal.fire('Error', 'Please enter a valid email address', 'error');
+    return;
+  }
+
+  // Show confirmation dialog
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `Do you want to send the onboarding form link to ${email}?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, Send Email',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#10b981',
+    cancelButtonColor: '#6b7280',
+  });
+
+  // If user cancels, return early
+  if (!result.isConfirmed) {
+    return;
+  }
   setSubmitting(prev => ({ ...prev, [caseId]: true }));
-
-
-const payload2 = {
-   email: email,
-  child_caseId: caseId,
- 
-}
-
-
-
-
+  const payload2 = {
+    email: email,
+    child_caseId: caseId,
+  }
   try {
     const response = await axios.post(
       `${API_BASE_URL}/emp-email`,
@@ -455,8 +444,7 @@ const payload2 = {
       filterable: false,
       renderCell: (params) => {
         const isSubmitting = submitting[params.row.CHILD_CASEID] || false;
-        const email = emailInputs[params.row.CHILD_CASEID] || '';
-        
+        const email        = emailInputs[params.row.CHILD_CASEID]       || '';
         return (
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
             <Button

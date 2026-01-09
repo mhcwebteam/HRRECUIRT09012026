@@ -1,11 +1,13 @@
 import React, { createContext, useState } from "react";
-import {
+import 
+{
   useHrhistory,
   usePersonalDetails,
   usePostPersonalDetails,
   useSubProjects,
   useUserProjects
 } from "../Apis/userApi";
+
 
 export const ContextData = createContext({
   projects: [],
@@ -18,25 +20,24 @@ export const ContextData = createContext({
   selectedRecord: null,
   setSelectedRecord: () => {},
 });
-
-export const AppProvider = ({ children }) => {
+export const AppProvider = ({ children }) => 
+  {
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
-
   const [selectedRecord, setSelectedRecord] = useState(null);
-
-  // Fetching all required data using custom hooks
+  // Fetchng all required data using custom hooks
   const { data, isLoading } = useUserProjects(userToken?.token);
   const {
     data: subProjects,
-    isLoading: isLoadingSub,
-  } = useSubProjects(userToken?.token, data?.data?.[5]);
-  const {
+    isLoading: isLoadingSub} = useSubProjects(userToken?.token, data?.data?.[5]);
+  const 
+  {
     data: PersonalInfo,
     isLoading: isLoadingInfo,
   } = usePersonalDetails(userToken?.token);
   const { data: Hrhistory } = useHrhistory(userToken?.token);
+  console.log(Hrhistory);
   const { data: Personpost } = usePostPersonalDetails(userToken?.token);
-console.log("selectedRecordselectedRecordselectedRecord",selectedRecord)
+//console.log("selectedRecordselectedRecordselectedRecord",selectedRecord)
   return (
     <ContextData.Provider
       value={{
@@ -49,8 +50,7 @@ console.log("selectedRecordselectedRecordselectedRecord",selectedRecord)
         PersonPostData: Personpost || [],
         selectedRecord,
         setSelectedRecord,
-      }}
-    >
+      }}>
       {children}
     </ContextData.Provider>
   );

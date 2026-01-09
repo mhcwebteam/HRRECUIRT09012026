@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
@@ -25,7 +23,6 @@ import { API_BASE_URL } from '../Config/Config.jsx';
 
 
 ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
-
 const Participant = () => {
   const [searchText, setSearchText] = useState('');
   const [data, setData] = useState([]);
@@ -40,7 +37,6 @@ const Participant = () => {
   const [flowData, setFlowData] = useState(null);
   const [flowLoading, setFlowLoading] = useState(false);
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -110,7 +106,6 @@ const Participant = () => {
       setModalOpen(false);
       setManPowerOpen(true);
     }
-
     if (rowData.CASEID) {
       await fetchFlowData(rowData.CASEID, rowData.PROCESSNAME, type);
     }

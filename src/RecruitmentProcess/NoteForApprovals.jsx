@@ -1,535 +1,524 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from "react";
+import Swal from "sweetalert2";
+import axios from "axios";
 import {
   Paper,
   Box,
-  Typography,
   IconButton,
   Tooltip,
   TextField,
   InputAdornment,
-  MenuItem,
-  Button,
-  CircularProgress
-} from '@mui/material';
+  MenuItem, Grid, Chip, Typography
+} from "@mui/material";
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckIcon from '@mui/icons-material/Check';
 import {
   Search,
   CheckCircle,
   Cancel,
   Visibility,
-  Refresh
-} from '@mui/icons-material';
-import { DataGrid } from '@mui/x-data-grid';
-import { ContextData } from '../Context/ContextData';
-import VerificationDetailsModal from './VerificationDetailsModal';
-import SalaryStackDetailsModal from './SalaryStackDetailsModal';
-import { CirclePlus, View } from 'lucide-react';
-import CandidateStackDetailsModal from './CandidateStackDetailsModal';
+  Refresh,
+} from "@mui/icons-material";
+import { DataGrid } from "@mui/x-data-grid";
+import { ContextData } from "../Context/ContextData";
+import CandidateStackDetailsModal from "./CandidateStackDetailsModal";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+
+
+/* ===================================================== */
 
 const NoteForApprovals = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [modalOpen, setModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-      const [submitting, setSubmitting] = useState({});
-  const { personalData,  } = useContext(ContextData);
-   const { HrData  } = useContext(ContextData);
+  /* -------------------- STATE -------------------- */
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+  const [modalOpen,     setModalOpen     ] = useState(false);
+  const [selectedUser,  setSelectedUser  ] = useState(null);
+  const [noteAprvlData, setNoteAprvlData ] = useState([]);
+  const [approveModalOpen ,setApproveModalOpen]=useState(false);
+  const [approveRow,setApproveRow]=useState(null);
+  const [approveOpen, setApproveOpen] = useState(false);
 
-  const filteredData = useMemo(() => {
-    if (!personalData || personalData.length === 0) return [];
 
-    let result = [...personalData];
+  const { personalData } = useContext(ContextData);
 
-    if (searchTerm) {
-      result = result.filter(user =>
+  const [token] = useState(() => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    return userInfo ? userInfo : null;
+  });
+  /* ---------------------------------------API CALL -------------------------------------*/
+  const noteFrAprvlData = async () => {
+    try {
+      const res = await axios.get(
+        "http://172.20.0.9/laravel/myhomedashboardMRF/api/getNt-aprvl-data",
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token?.token}`,
+          },
+        }
+      );
 
-        (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      
-      ));
+      console.log("NOTE FOR APPROVAL API DATA:", res.data.VerifyData);
+      setNoteAprvlData(res.data.VerifyData || []);
+    } catch (err) {
+      console.error("Error fetching approval data", err);
     }
+  };
 
-    if (statusFilter !== 'all') {
-      result = result.filter(user => user.status === statusFilter);
+/*-----------------------------ApprovalS---------------------------------------------*/
+const handleNtFrApprove = async (row) => {
+  try {
+    // 🔵 Before API call (Loading alert)
+    Swal.fire({
+      title: "Processing...",
+      text: "Please wait while approving",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const response = await axios.post(
+      "http://172.20.0.9/laravel/myhomedashboardMRF/api/Note-For-AprvlUpdt",
+      { caseId: row.CHILD_CASEID },
+      {
+        headers: 
+        {
+          Accept: "application/json",
+          Authorization: `Bearer ${token.token}`,
+        },
+      }
+    );
+    // 🟢 After success
+    Swal.fire({
+      icon: "success",
+      title: "Approved Successfully",
+      text: response.data?.message || "Note for approval updated successfully",
+      confirmButtonColor: "#2563eb",
+    });
+    setApproveModalOpen(false);
+    noteFrAprvlData();
+  } catch (err) {
+    console.error("Error In Update Note For Aprvl", err);
+    // 🔴 On error
+    Swal.fire({
+      icon: "error",
+      title: "Approval Failed",
+      text: err.response?.data?.message || "Something went wrong. Please try again.",
+      confirmButtonColor: "#dc2626",
+    });
+  }
+};
+
+/*-------------------------------ApprovalE--------------------------------------------------*/
+
+  
+  /* -------------------- USE EFFECT -------------------- */
+  useEffect(() => 
+  {
+    if (token?.token) {
+      noteFrAprvlData();
+    }
+  }, [token]);
+/**------------------------SHIFING CURRENT POSITIONS------------------------------------ */
+const assignApprover = async (row, role) => {
+  try {
+    const payload = {
+      child_case_id: row.CHILD_CASEID,
+      verification_id: row.id,
+      approver_role: role,
+    };
+    console.log("Assign Approver Payload:", payload);
+    await axios.post(
+      "http://172.20.0.9/laravel/myhomedashboardMRF/api/assign-approver",
+      payload,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token?.token}`,
+        },
+      }
+    );
+    alert(`${role} assigned successfully`);
+    noteFrAprvlData(); // refresh list
+  } catch (err) {
+    console.error("Approver Assign Error", err);
+    alert("Failed to assign approver");
+  }
+};
+
+  /* -------------------- FILTERED DATA -------------------- */
+  const filteredData = useMemo(() => {
+    if (!Array.isArray(noteAprvlData)) return [];
+    let result = [...noteAprvlData];
+    if (searchTerm) {
+      result = result.filter(
+        (item) =>
+          item.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.CHILD_CASEID?.includes(searchTerm)
+      );
+    }
+    if (statusFilter !== "all") {
+      result = result.filter(
+        (item) => item.status?.toLowerCase() === statusFilter
+      );
     }
     return result.map((item, index) => ({
-      id: item.id || item.SNO || `row-${index}`,
-      SNO: item.SNO || index + 1,
-      CASEID: item.caseId || item.CASEID || 'N/A',
-      NAME: item.name || item.NAME || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
-      EMAIL: item.email || item.EMAIL || 'N/A',
-      ADDRESS: item.address || item.ADDRESS || 'N/A',
-      PHONE_NUMBER: item.phoneNumber || item.phone || item.PHONE_NUMBER || 'N/A',
-      DOB: item.dob || item.DOB || item.dateOfBirth || 'N/A',
-      AADHAR_NUM: item.AADHAR_NUM || 'N/A',
-      PAN_NUM: item.PAN_NUM || 'N/A',
-      SSC_SCORE: item.SSC_SCORE || 'N/A',
-      INTER_SCORE: item.INTER_SCORE || 'N/A',
-      BTECH_SCORE: item.BTECH_SCORE || 'N/A',
-      POST_GRADUCTION: item.POST_GRADUCTION || 'N/A',
-      CURRENT_CTC: item.CURRENT_CTC || 'N/A',
-      EXP_CTC: item.EXP_CTC || 'N/A',
-     OFFER_CTC: item.OFFER_CTC|| 'N/A',
-      NOTICE_PERIOD: item.NOTICE_PERIOD || 'N/A',
-      PREVIOUS_COMPANY: item.PREVIOUS_COMPANY || 'N/A',
-      DURATION: item.DURATION || 'N/A',
-
-      STATUS: item.status || item.STATUS || 'pending',
-      remarks: item.remarks || 'No remarks',
-      submitted_date: item.submitted_date || item.created_at || 'N/A'
+      id: item.verification_id, // REQUIRED BY DATAGRID
+      SNO: index + 1,
+      CHILD_CASEID: item.CHILD_CASEID,
+      PLANT: item.PLANT,
+      NAME: item.NAME,
+      EMAIL: item.EMAIL,
+      PHONE_NUMBER: item.PHONE_NUMBER,
+      DEPT: item.DEPT,
+      CURRENT_CTC: item.CURRENT_CTC,
+      EXP_CTC: item.EXP_CTC,
+      OFFER_CTC: item.OFFER_CTC,
+      HR: item.HR,
+      DIRECTOR: item.DIRECTOR,
+      EVC: item.EVC,
+      STATUS: item.status,
+      SUBMITTED_DATE: item.created_at,
     }));
-  }, [personalData, searchTerm, statusFilter]);
+  }, [noteAprvlData, searchTerm, statusFilter]);
 
-  const getStatusChip = (status) => {
+  /* -------------------- STATUS CHIP -------------------- */
+  const getStatusChip = (status) => 
+  {
     const statusValue = status?.toLowerCase();
     const config = {
-      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" /> },
-      pending: { color: '#f59e0b', icon: <Refresh className="w-4 h-4" /> },
-      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" /> },
-      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" /> },
-      'not uploaded': { color: '#6b7280', icon: <Cancel className="w-4 h-4" /> }
+      verified: { color: "#10b981", icon: <CheckCircle fontSize="small" /> },
+      pending:  { color: "#f59e0b",  icon:  <Refresh fontSize="small" /> },
+      rejected: { color: "#ef4444", icon: <Cancel fontSize="small" /> },
     };
-
     const { color, icon } = config[statusValue] || config.pending;
-
     return (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%'
-      }}>
-        <Box sx={{
-          color: '#ffffff',
+      <Box
+        sx={{
           backgroundColor: color,
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '11px',
+          color: "#fff",
+          px: 1.5,
+          py: 0.5,
+          borderRadius: "12px",
+          fontSize: "11px",
           fontWeight: 600,
-          textTransform: 'capitalize',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
-        }}>
-          {icon}
-          {statusValue?.charAt(0).toUpperCase() + statusValue?.slice(1) || 'Pending'}
-        </Box>
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+        }}
+      >
+        {icon}
+        {statusValue || "pending"}
       </Box>
     );
   };
 
-
- const handleViewDetails = (user) => {
-    setSelectedUser(user);
-    setModalOpen(true);
-  };
-
-   const handleStatusChange = (updateData) => {
-    console.log('Status updated:', updateData);
-  
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString || dateString === 'N/A') return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('en-GB');
-    } catch {
-      return dateString;
-    }
-  };
-
-  const formatNumber = (value) => {
-    if (!value || value === 'N/A') return 'N/A';
-    return value.toString();
-  };
-
-  const columns = useMemo(() => [
+  /* ------------------------- COLUMNS -------------------- */
+  const columns = [
+    { field: "SNO", headerName: "S.NO", width: 80 },
     {
-      field: 'SNO',
-      headerName: 'S.NO',
-      width: 80,
+        field: "APPROVE_ACTION",
+        headerName: "Approve",
+        width: 140,
+        sortable: false,
+        renderCell: (params) => (
+          <Button
+            variant="contained"
+            size="small"
+            color="success"
+            onClick={() => {
+              setApproveRow(params.row);
+              setApproveModalOpen(true);
+            }}
+          >
+            Approve
+          </Button>
+        ),
+      },
+    { field: "CHILD_CASEID", headerName: "Case ID", minWidth: 160 },
+
+    { field: "PLANT", headerName: "Plant", minWidth: 220 },
+
+    { field: "NAME", headerName: "Candidate Name", minWidth: 180 },
+
+    { field: "EMAIL", headerName: "Email", minWidth: 220 },
+
+     { field: "HR", headerName: "HR", minWidth: 220 },
+
+    { field: "DIRECTOR", headerName: "DIRECTOR", minWidth: 180 },
+
+    { field: "EVC", headerName: "EVC", minWidth: 220 },
+
+    { field: "PHONE_NUMBER", headerName: "Phone", minWidth: 140 },
+
+    {
+      field: "CURRENT_CTC",
+      headerName: "Current CTC",
+      width: 130,
+      renderCell: (p) => `₹${p.value ?? 0}`,
+    },
+
+    {
+      field: "EXP_CTC",
+      headerName: "Expected CTC",
+      width: 130,
+      renderCell: (p) => `₹${p.value ?? 0}`,
+    },
+
+    {
+      field: "OFFER_CTC",
+      headerName: "Offer CTC",
+      width: 130,
+      renderCell: (p) => `₹${p.value ?? 0}`,
+    },
+
+    {
+      field: "STATUS",
+      headerName: "Overall Status",
+      width: 150,
+      renderCell: (p) => getStatusChip(p.value),
+    },
+
+    {
+      field: "View",
+      headerName: "View",
+      width: 90,
       sortable: false,
-      filterable: false,
       renderCell: (params) => (
-        <Box sx={{
-          fontWeight: 600,
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'CASEID',
-      headerName: 'Case ID',
-      flex: 1,
-      minWidth: 120,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#6b7280',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 500
-        }}>
-          {params.value}
-        </Box>
-      ),
-    },
-
-
-    {
-      field: 'PLANT',
-      headerName: 'Plant Name',
-      flex: 1,
-      minWidth: 120,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#6b7280',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 500
-        }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'NAME',
-      headerName: 'Name',
-      flex: 1,
-      minWidth: 150,
-      renderCell: (params) => (
-        <Box sx={{
-          fontWeight: 600,
-          color: '#1f2937',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'EMAIL',
-      headerName: 'Email',
-      flex: 1,
-      minWidth: 200,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontSize: '13px'
-        }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'PHONE_NUMBER',
-      headerName: 'Phone Number',
-      flex: 1,
-      minWidth: 140,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 500
-        }}>
-          {formatNumber(params.value)}
-        </Box>
-      ),
-    },
- {
-      field: 'DESIGNATION',
-      headerName: 'Designation',
-      flex: 1,
-      minWidth: 140,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 500
-        }}>
-          {formatNumber(params.value)}
-        </Box>
-      ),
-    },
-
-    {
-      field: 'CURRENT_CTC',
-      headerName: 'Current CTC',
-      width: 120,
-      renderCell: (params) => {
-    const formattedValue = params.value
-      ? Number(params.value).toLocaleString('en-IN')
-      : '0';
-
-    return (
-      <Box
-        sx={{
-          color: '#059669',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-    },
-   {
-  field: 'EXP_CTC',
-  headerName: 'Expected CTC',
-  width: 120,
-  renderCell: (params) => {
-    const formattedValue = params.value
-      ? Number(params.value).toLocaleString('en-IN')
-      : '0';
-
-    return (
-      <Box
-        sx={{
-          color: '#059669',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-},
-
-{
-  field: 'OFFER_CTC',
-  headerName: 'Offer CTC',
-  width: 120,
-  renderCell: (params) => {
-    const formattedValue = params.value
-      ? Number(params.value).toLocaleString('en-IN')
-      : '0';
-      
-    return (
-      <Box
-        sx={{
-          color: '#dc2626',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-},
-
-{
-  field: 'HR',
-  headerName: 'HR',
-  width: 120,
-renderCell: (params) => getStatusChip(params.value),
-},
-
-{
-  field: 'DIRECTOR',
-  headerName: 'DIRECTOR',
-  width: 120,
-renderCell: (params) => getStatusChip(params.value),
-},
-
-  {
-  field: 'EVC',
-  headerName: 'EVC',
-  width: 120,
-renderCell: (params) => getStatusChip(params.value),
-},
-
-    {
-      field: 'STATUS',
-      headerName: 'Overall Status',
-      width: 140,
-      renderCell: (params) => getStatusChip(params.value),
-    },
-    {
-      field: 'submitted_date',
-      headerName: 'Submitted Date',
-      flex: 1,
-      minWidth: 150,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#6b7280',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontSize: '12px'
-        }}>
-          {formatDate(params.value)}
-        </Box>
+        <Tooltip title="View Details">
+          <IconButton
+            size="small"
+            onClick={() => {
+              setSelectedUser(params.row);
+              setModalOpen(true);
+            }}
+          >
+            <Visibility fontSize="small" />
+          </IconButton>
+        </Tooltip>
       ),
     },
    {
-       field: 'View',
-       headerName: 'View Details',
-       width: 100,
-       sortable: false,
-       renderCell: (params) => (
-         <Tooltip title="View Details">
-           <IconButton
-             size="small"
-             onClick={() => handleViewDetails(params.row)}
-             sx={{
-               color: '#3b82f6',
-               '&:hover': {
-                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-               },
-             }}
-           >
-             <Visibility fontSize="small" />
-           </IconButton>
-         </Tooltip>
-       ),
-     },
-
-
-  ], []);
-
-  return (
-    <Box
-      sx={{
-        maxWidth: "1280px",
-        margin: "0 auto",
-        padding: "20px",
-        borderRadius: "24px",
-        boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-        border: "1px solid #d1d5db",
-        background: "linear-gradient(to bottom right, #fce7f3, #f9fafb, #f3f4f6)",
+  field: "APPROVER",
+  headerName: "Send For Approval",
+  width: 220,
+  sortable: false,
+  renderCell: (params) => (
+    <TextField
+      select
+      size="small"
+      fullWidth
+      value={params.row.APPROVER ?? ""}
+      onChange={(e) => assignApprover(params.row, e.target.value)}
+      SelectProps={{
+        displayEmpty: true,   // ✅ REQUIRED for placeholder
       }}
     >
-      <Paper sx={{
-        width: '100%',
-        padding: 3,
-        borderRadius: '20px',
-        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-        border: '1px solid #e2e8f0',
-      }}>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        
-          
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
-              size="small"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: '#6b7280' }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                minWidth: 250,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                }
-              }}
-            />
-            
-            <TextField
-              select
-              size="small"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              sx={{
-                minWidth: 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                }
-              }}
-            >
-              <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="verified">Verified</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="rejected">Rejected</MenuItem>
-            </TextField>
-          </Box>
-        </Box>
+      {/* ✅ PLACEHOLDER */}
+      <MenuItem value="" disabled>
+        <em>Select Approver</em>
+      </MenuItem>
 
-        <Box
-          sx={{
-            width: "100%",
-            borderRadius: "12px",
-            overflow: "hidden",
-            border: "1px solid #dfe5f1ff",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-          }}
-        >
-          <DataGrid
-            rows={filteredData}
-            columns={columns}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 20, 50]}
-            rowHeight={50}
-            columnHeaderHeight={50}
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-columnHeaders": {
-                borderBottom: "2px solid #e2e8f0",
-              },
-              "& .MuiDataGrid-columnHeader": {
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "#1e293b",
-                backgroundColor: "rgba(188, 198, 238, 0.5)",
-                borderRight: "1px solid #e2e8f0",
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #e2e8f0",
-                borderRight: "1px solid #e2e8f0",
-                fontSize: "13px",
-                color: "#374151",
-              },
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: "#f0f9ff",
-                cursor: "pointer",
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "1px solid #e2e8f0",
-                backgroundColor: "#f0f7fa",
-              },
+      <MenuItem value="HOD">HR / HOD</MenuItem>
+      <MenuItem value="DIRECTOR">Director</MenuItem>
+      <MenuItem value="EVC">EVC</MenuItem>
+    </TextField>
+  ),
+}
+
+  ];
+
+  /* -------------------- JSX -------------------- */
+  return (
+    <Box sx={{ maxWidth: 1300, mx: "auto", p: 2 }}>
+      <Paper sx={{ p: 3, borderRadius: 3 }}>
+        {/* Filters */}
+        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+          <TextField
+            size="small"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
             }}
           />
+
+          <TextField
+            select
+            size="small"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="verified">Verified</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="rejected">Rejected</MenuItem>
+          </TextField>
         </Box>
+
+        {/* DataGrid */}
+        <DataGrid
+          rows={filteredData}
+          columns={columns}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 20, 50]}
+          autoHeight
+        />
       </Paper>
-       <CandidateStackDetailsModal
+
+      {/**--------------------------------------------ApprovalModal Here --------------------------------------**/}
+      <Dialog
+  open={approveModalOpen}
+  onClose={() => setApproveModalOpen(false)}
+  fullWidth
+  maxWidth="sm"
+  PaperProps={{
+    sx: {
+      borderRadius: 2,
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)'
+    }
+  }}
+>
+  <DialogTitle sx={{ pb: 1 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CheckCircleOutlineIcon sx={{ color: 'success.main', fontSize: 28 }} />
+      <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+        Approve Candidate
+      </Typography>
+    </Box>
+  </DialogTitle>
+
+  <DialogContent dividers sx={{ py: 3 }}>
+    {/* Candidate Information Card */}
+    <Box
+      sx={{
+        bgcolor: 'grey.50',
+        borderRadius: 1.5,
+        p: 2,
+        mb: 3,
+        border: '1px solid',
+        borderColor: 'grey.200'
+      }}
+    >
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Case ID
+          </Typography>
+          <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>
+            {approveRow?.CHILD_CASEID}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Candidate Name
+          </Typography>
+          <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>
+            {approveRow?.NAME}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Current Status
+          </Typography>
+          <Chip
+            label={approveRow?.STATUS}
+            size="small"
+            sx={{
+              mt: 0.5,
+              fontWeight: 500,
+              bgcolor: 'info.lighter',
+              color: 'info.dark'
+            }}
+          />
+        </Grid>
+      </Grid>
+    </Box>
+
+    {/* Remarks Input */}
+    <TextField
+      label="Approval Remarks"
+      placeholder="Enter your approval comments or notes..."
+      fullWidth
+      multiline
+      rows={4}
+      variant="outlined"
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          '&:hover fieldset': {
+            borderColor: 'success.main',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: 'success.main',
+          }
+        }
+      }}
+    />
+
+    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+      * These remarks will be recorded with the approval
+    </Typography>
+  </DialogContent>
+
+  <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+    <Button
+      onClick={() => setApproveModalOpen(false)}
+      variant="outlined"
+      color="inherit"
+      sx={{
+        textTransform: 'none',
+        fontWeight: 500,
+        borderColor: 'grey.300',
+        '&:hover': {
+          borderColor: 'grey.400',
+          bgcolor: 'grey.50'
+        }
+      }}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      variant="contained"
+      color="success"
+      onClick={() => handleNtFrApprove(approveRow)}
+      startIcon={<CheckIcon />}
+      sx={{
+        textTransform: 'none',
+        fontWeight: 600,
+        px: 3,
+        boxShadow: 2,
+        '&:hover': {
+          boxShadow: 4
+        }
+      }}
+    >
+      Confirm Approval
+    </Button>
+  </DialogActions>
+</Dialog>
+     {/**-----------------------------------------------End ApprovalModal Here --------------------------------------------------**/}
+      <CandidateStackDetailsModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         data={selectedUser}
-        onStatusChange={handleStatusChange}
       />
     </Box>
   );

@@ -1,10 +1,8 @@
-import { Dialog, DialogContent, IconButton } from "@mui/material";
+import { Dialog, DialogContent, IconButton, Box, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { API_BASE_URL } from "../Config/Config";
 
-const OfferLetterModal = ({ open, onClose, candidate }) => {
-  console.log("OPEN",open,"Close",onClose,"Candidate",candidate);
-  if (!candidate) return null;
+const CandidateApprovalFileModal = ({ open, onClose, fileUrl }) => {
+  if (!fileUrl) return null;
   return (
     <Dialog
       open={open}
@@ -12,6 +10,7 @@ const OfferLetterModal = ({ open, onClose, candidate }) => {
       maxWidth="lg"
       fullWidth
     >
+      {/* Close Button */}
       <IconButton
         onClick={onClose}
         sx={{
@@ -19,16 +18,16 @@ const OfferLetterModal = ({ open, onClose, candidate }) => {
           top: 8,
           right: 8,
           zIndex: 10,
-          backgroundColor: "#fff"
+          backgroundColor: "#fff",
         }}
       >
         <CloseIcon />
       </IconButton>
 
-      <DialogContent sx={{ p: 0, height: "90vh" }}>
+      <DialogContent sx={{ p: 0, height: "85vh" }}>
         <iframe
-          src={`${API_BASE_URL}/offer-letter/pdf/${candidate.CHILD_CASEID}`}
-          title="Offer Letter PDF"
+          src={fileUrl}
+          title="Candidate Approval File"
           width="100%"
           height="100%"
           style={{ border: "none" }}
@@ -38,4 +37,4 @@ const OfferLetterModal = ({ open, onClose, candidate }) => {
   );
 };
 
-export default OfferLetterModal;
+export default CandidateApprovalFileModal;

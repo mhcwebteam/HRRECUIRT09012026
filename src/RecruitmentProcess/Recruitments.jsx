@@ -23,7 +23,6 @@ import {
   UploadFile as UploadFileIcon,
   RequestQuote as RequestQuoteIcon
 } from '@mui/icons-material';
-
 import { useLocation } from 'react-router-dom';
 import RecruitmentMail from './RecruitmentMail';
 import RecruitmentForm from './RecruitmentForm';
@@ -94,19 +93,11 @@ const Recruitments = () => {
       component: 'note-approval', 
       icon: TrendingUpIcon,
     },
-
-       { 
+    { 
       label: 'Offer Letter', 
       component: 'offer-letter', 
       icon: CircleCheckBig,
     },
-
-    {
-      label: 'Form',
-      component: 'form',
-      icon:TrendingUpIcon
-    }
-
   ];
 
   const handleMenuItemClick = (component) => {
@@ -122,57 +113,40 @@ const Recruitments = () => {
     setActiveTab(newValue);
     setActiveRecruitmentComponent(null);
   };
-
   const getColorClasses = (color) => {
     const colorMap = {
-      blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
-      green: { bg: 'bg-green-100', text: 'text-green-600' },
-      orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
-      purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
+      blue:   { bg: 'bg-blue-100',   text: 'text-blue-600'     },
+      green:  { bg: 'bg-green-100',  text: 'text-green-600'    },
+      orange: { bg: 'bg-orange-100', text: 'text-orange-600'   },
+      purple: { bg: 'bg-purple-100', text: 'text-purple-600'   },
     };
     return colorMap[color] || colorMap.blue;
   };
-
-  const renderRecruitmentComponent = () => {
+  const renderRecruitmentComponent = () => 
+  {
     console.log('Current component:', activeRecruitmentComponent);
-    
     switch (activeRecruitmentComponent) {
       case 'recruitment-mail':
         return <RecruitmentMail />;
-    
-
       case 'verification':
        return <Verification />
-
       case 'salary-stackup':
-        
- return <Salarystackup/>
-
+       return <Salarystackup/>
       case 'candidate-approval':
         return <CandidateApproval/>
-        
       case 'note-approval':
         return <NoteForApprovals/>
-
         case 'offer-letter':
-  return <OfferLetter/>
-
-         
-case 'form':
+        return <OfferLetter/>      
+      case 'form':
   // return <RecruitmentForm />
-
-
-
       default:
         return null;
     }
   };
-
   return (
     <div className="">
-  
       <Paper elevation={1} className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-orange-500">
-  
         <Box className="border-b border-gray-200">
           <Tabs 
             value={activeTab} 
@@ -202,13 +176,13 @@ case 'form':
               {RecruitmentMenuItems.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = activeRecruitmentComponent === item.component;
-                
                 return (
                   <Button
                     key={item.component}
                     variant={isActive ? "contained" : "outlined"}
                     size="medium"
-                    onClick={() => {
+                    onClick={() => 
+                    {
                       console.log('Button clicked:', item.component);
                       handleMenuItemClick(item.component);
                     }}
@@ -217,8 +191,7 @@ case 'form':
                         ? 'bg-orange-500 hover:bg-orange-600 border-orange-500' 
                         : 'bg-white hover:bg-orange-50 border-gray-300 text-gray-700'
                     }`}
-                    startIcon={<IconComponent />}
-                  >
+                    startIcon={<IconComponent />}>
                     {item.label}
                   </Button>
                 );
@@ -246,13 +219,11 @@ case 'form':
         </Box>
       ) : (
         <>
-    
           {activeTab === 0 && (
             <Grid container spacing={3} className="mb-6">
               {stats.map((stat, index) => {
                 const IconComponent = stat.icon;
                 const colorClasses = getColorClasses(stat.color);
-                
                 return (
                   <Grid item xs={12} sm={6} lg={3} key={index}>
                     <Card className="shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-orange-200">
@@ -285,7 +256,6 @@ case 'form':
               })}
             </Grid>
           )}
-
           {/* Recent Activity */}
           {activeTab === 0 && (
             <Card className="shadow-md border border-gray-100">
@@ -318,5 +288,4 @@ case 'form':
     </div>
   );
 };
-
 export default Recruitments;

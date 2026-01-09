@@ -2,7 +2,6 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "../Config/Config";
 
-
 export const useUserProjects = (token) =>
   useQuery({
     queryKey: ["projects", token],
@@ -15,17 +14,16 @@ export const useUserProjects = (token) =>
     enabled: !!token,
   });
 
-
 export const useSubProjects = (token, project) => {
-
   return useQuery({
     queryKey: ["subProjects", token, project],
     queryFn: async () => {
       const res = await axios.get(`${API_BASE_URL}/subProject/${project}`, {
-        headers: {
+        headers: 
+        {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
+           Accept       : "application/json",
+           Authorization: `Bearer ${token}`,
         },
       });
       return res.data; 
@@ -33,34 +31,28 @@ export const useSubProjects = (token, project) => {
     enabled: !!token && !!project, 
   });
 };
-
-
-// 
-
-export const usePersonalDetails = (token) => {
+export const usePersonalDetails = (token) => 
+{
 return useQuery({
-
     queryKey: ["details", token],
-    queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/emp-verify-data`, {
+    queryFn: async () => 
+    {
+      const res = await axios.get(`${API_BASE_URL}/emp-verify-data`, 
+      {
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
+          Accept        : "application/json",
+          Authorization : `Bearer ${token}`,
         },
       });
       return res.data.data; 
     },
     enabled: !!token 
   });
-  
-
 }
-
-
-export const usePersonVerification = (token) => {
+export const usePersonVerification = (token) => 
+{
 return useQuery({
-
     queryKey: ["details", token],
     queryFn: async () => {
       const res = await axios.get(`${API_BASE_URL}/verify-getData`, {
@@ -70,20 +62,14 @@ return useQuery({
           Authorization: `Bearer ${token}`,
         },
       });
-
       console.log(res,"resresresresresresresresres");
       return res.data.data; 
     },
     enabled: !!token 
   });
-  
-
 }
-
-
 export const usePostPersonalDetails = (token) => {
 return useQuery({
-
     queryKey: ["details", token],
     queryFn: async () => {
       const res = await axios.post(`${API_BASE_URL}/recruitStore`, {
@@ -97,33 +83,23 @@ return useQuery({
     },
     enabled: !!token 
   });
-  
-
 }
-
 export const useHrhistory = (token) => {
 return useQuery({
-
     queryKey: ["history", token],
     queryFn: async () => {
-      
       const response = await axios.get(`${API_BASE_URL}/hr_requisition_list`, {
           headers: {
             "Content-Type": "application/json",
             Accept: 'application/json',
-            Authorization: `Bearer ${token}`
+            //Authorization: `Bearer ${token}`
           }
-        });
-
-     console.log("fffffffffffffffffffff",response);
-
-  
+        })
+      console.log("fffffffffffffffffffff",response);
       return response.data.data; 
     },
     enabled: !!token 
   });
-  
-
 }
 
 

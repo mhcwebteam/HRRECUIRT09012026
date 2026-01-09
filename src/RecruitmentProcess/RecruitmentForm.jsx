@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import {
   Upload,
   User,
@@ -14,9 +15,8 @@ import { ContextData } from '../Context/ContextData';
 import { useParams } from 'react-router-dom';
 
 const RecruitmentForm = () => {
-
   const {case_Id} = useParams();
- const { HrData } = useContext(ContextData);
+ const  { HrData} = useContext(ContextData);
   const [formData, setFormData] = useState({
     CHILD_CASEID: "",
     PLANT: "",
@@ -39,25 +39,19 @@ const RecruitmentForm = () => {
     PREVIOUS_COMPANY: '',
     DURATION: '',
     
-
     AADHAR_PATH: null,
     PAN_PATH: null,
-    '10TH_FILENAME': null,
+   '10TH_FILENAME': null,
     INTER_FILENAME: null,
     BTECH_FILENAME: null,
     PG_FILENAME: null,
     PHOTO: null,
     EXP_LETTER: null,
     RELIEVING_LETTER: '',
-    PAYSLIPS: []
+    PAYSLIPS: ""
   });
 
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
- 
-
-
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log(name,"nameddddddddd", value)
@@ -74,7 +68,8 @@ const RecruitmentForm = () => {
         setFormData((prev) => ({
           ...prev,
           PLANT: hr.PLANT || "",
-          CHILD_CASEID: hr.CHILD_CASEID || case_Id
+          CHILD_CASEID: hr.CHILD_CASEID || case_Id,
+          DEPT: hr.DEPT 
         }));
       }
     }
@@ -82,93 +77,184 @@ const RecruitmentForm = () => {
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-
-
-    
-
     if (name === 'PAYSLIPS') {
       setFormData(prev => ({
         ...prev,
         PAYSLIPS: [...files]
       }));
     } 
-   else {
-setFormData(prev => ({
+   else 
+    {
+     setFormData(prev => ({
         ...prev,
         [name]: files[0]
       }));
    }
-      
-    
   };
+//Validation Errors----
+const validateForm = () => {
+  const errors = {};
+  // ===== REQUIRED TEXT FIELDS =====
+  const requiredFields = [
+    "NAME",
+    "EMAIL",
+    "PHONE_NUMBER",
+    "DOB",
+    "ADDRESS",
+    "AADHAR_NUM",
+    "PAN_NUM",
+  ];
+
+  requiredFields.forEach((field) => {
+    if (!formData[field] || formData[field].toString().trim() === "") {
+      errors[field] = `${field.replace("_", " ")} is required`;
+    }
+  });
+
+  // ===== EMAIL =====
+  if (formData.EMAIL && !/^\S+@\S+\.\S+$/.test(formData.EMAIL)) {
+    errors.EMAIL = "Invalid email format";
+  }
+
+  // ===== PHONE =====
+  if (formData.PHONE_NUMBER && formData.PHONE_NUMBER.length !== 10) {
+    errors.PHONE_NUMBER = "Phone number must be 10 digits";
+  }
+
+  // ===== AADHAAR =====
+  if (formData.AADHAR_NUM && formData.AADHAR_NUM.length !== 12) {
+    errors.AADHAR_NUM = "Aadhaar must be 12 digits";
+  }
+
+  // ===== PAN =====
+  // if (
+  //   formData.PAN_NUM &&
+  //   !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(formData.PAN_NUM)
+  // ) {
+  //   errors.PAN_NUM = "Invalid PAN format";
+  // }
+
+  // ===== NUMERIC FIELDS =====
+  const numericFields = [
+    "SSC_MARKS",
+    "INTER_MARKS",
+    "BTECH_MARKS",
+    "PG_MARKS",
+    "CURRENT_CTC",
+    "EXP_CTC",
+    "NOTICE_PERIOD",
+    "DURATION",
+  ];
+
+  numericFields.forEach((field) => {
+    if (formData[field] && isNaN(formData[field])) {
+      errors[field] = `${field.replace("_", " ")} must be numeric`;
+    }
+  });
+
+  // ===== REQUIRED FILES =====
+  const requiredFiles = ["AADHAR_PATH", "PAN_PATH", "PHOTO"];
+
+  requiredFiles.forEach((file) => {
+    if (!formData[file]) {
+      errors[file] = `${file.replace("_", " ")} is required`;
+    }
+  });
+
+  return errors;
+};
+
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    //alert(e.target.value);
+    //console.log("FormData:::::",formData);
+  e.preventDefault();
 
-    try {
-      const data = new FormData();
+  // 🔥 TEST CHECK
+  console.log("Submit clicked");
 
+  //const errors = validateForm();
 
-      const textFields = [
-        'CHILD_CASEID', 'PLANT', 'NAME', 'EMAIL', 'PHONE_NUMBER', 'DOB', 'DEPT', 'ADDRESS',
-        'AADHAR_NUM', 'PAN_NUM', 'SSC_MARKS', 'INTER_MARKS', 'BTECH_MARKS', 'PG_MARKS',
-        'CURRENT_CTC', 'EXP_CTC', 'OFFER_CTC', 'NOTICE_PERIOD', 'PREVIOUS_COMPANY', 'DURATION'
-      ];
+  // ❌ STOP IF VALIDATION FAILS
+  // if (Object.keys(errors).length > 0) {
+  //   await Swal.fire({
+  //     title: "Validation Errors",
+  //     html: `<ul style="text-align:left">
+  //       ${Object.values(errors).map(err => `<li>• ${err}</li>`).join("")}
+  //     </ul>`,
+  //     icon: "error",
+  //   });
+  //   return;
+  // }
 
-      textFields.forEach(field => {
-        if (formData[field] !== '' && formData[field] !== null) {
-          data.append(field, String(formData[field]));
-          
-        }
-      });
+  // ✅ CONFIRMATION
+  const confirm = await Swal.fire({
+    title: "Are you sure?",
+    text: "You want to submit this form",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, Submit",
+    cancelButtonText: "Cancel",
+    confirmButtonColor: "#2563eb",
+  });
 
-      // Add file fields
-      const fileFields = [
-        'AADHAR_PATH', 'PAN_PATH', '10TH_FILENAME', 'INTER_FILENAME', 
-        'BTECH_FILENAME', 'PG_FILENAME', 'PHOTO', 'EXP_LETTER', 'RELIEVING_LETTER'
-      ];
+  if (!confirm.isConfirmed) return;
 
-      fileFields.forEach(field => {
-        if (formData[field] instanceof File) {
-          data.append(field, formData[field]);
-        }
-      });
+  try {
+    const data = new FormData();
 
-      // Handle PAYSLIPS array
-      if (formData.PAYSLIPS.length > 0) {
-        formData.PAYSLIPS.forEach((file, index) => {
+    // ===== APPEND ALL FIELDS =====
+    Object.entries(formData).forEach(([key, value]) => {
+      if (!value) return;
+
+      if (value instanceof File) 
+      {
+        data.append(key, value);
+      } 
+      else if (Array.isArray(value)) {
+        value.forEach((file) => {
           if (file instanceof File) {
-            data.append('PAYSLIPS[]', file);
+            data.append(key, file);
           }
         });
+      } 
+      else {
+        data.append(key, String(value));
       }
-
-     
-
-      const response = await axios.post(`${API_BASE_URL}/recruitStore`, data, {
-        headers: { 
+    });
+    console.log("Data::::::",data);
+    const response = await axios.post(
+      `${API_BASE_URL}/recruitStore`,
+      data,
+      {
+        headers: {
           Authorization: `Bearer ${userToken.token}`,
-          'Content-Type': 'multipart/form-data'
+          "Content-Type": "multipart/form-data",
         },
-      });
- console.log("Submitting form data...",userToken.token);
-      console.log("Response:", response);
-      
-      if (response.data.success) {
-        alert("Form submitted successfully!");
-        resetForm();
-      } else {
-        alert("Submission failed: " + response.data.message);
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.errors ? 
-                          JSON.stringify(error.response.data.errors) : 
-                          error.message;
-      alert("Error submitting form: " + errorMessage);
+    );
+
+    if (response.data.success) {
+      await Swal.fire({
+        title: "Success",
+        text: "Data saved successfully",
+        icon: "success",
+      });
+      resetForm();
+    } else {
+      await Swal.fire("Failed", response.data.message, "error");
     }
-  };
+  } catch (error) {
+    console.error(error);
+    await Swal.fire(
+      "Error",
+      error.response?.data?.message || "Something went wrong",
+      "error"
+    );
+  }
+};
+
+
 
   const resetForm = () => {
     setFormData({
@@ -211,242 +297,186 @@ setFormData(prev => ({
                 border border-gray-300 
                 bg-gradient-to-br from-pink-100 via-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* === BASIC INFORMATION === */}
-          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-blue-500">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-blue-500 text-white p-3 rounded-lg">
-                <User size={24} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">Basic Information</h2>
-            </div>
+  <form onSubmit={handleSubmit} className="space-y-8">
+  {/* ================= BASIC INFORMATION ================= */}
+  <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-blue-500">
+    <h2 className="text-xl font-bold mb-6">Basic Information</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <InputField
-                label="CHILD_CASEID"
-                name="CHILD_CASEID"
-                type="text"
-                value={case_Id}
-                onChange={handleInputChange}
-                disabled={true}
-              />
-              <InputField
-                label="Plant Name"
-                name="PLANT"
-                type="text"
-                value={formData.PLANT}
-                onChange={handleInputChange}
-                disabled = {true}
-              
-              />
-              <InputField
-                label="Full Name"
-                name="NAME"
-                type="text"
-                value={formData.NAME}
-                placeholder="As per Aadhar"
-                onChange={handleInputChange}
-                required
-              />
-              <InputField
-                label="Email"
-                name="EMAIL"
-                type="email"
-                value={formData.EMAIL}
-                onChange={handleInputChange}
-                required
-              />
-              <InputField
-                label="Phone"
-                name="PHONE_NUMBER"
-                type="tel"
-                value={formData.PHONE_NUMBER}
-                onChange={handleInputChange}
-                required
-              />
-              <InputField
-                label="Date Of Birth"
-                name="DOB"
-                type="date"
-                value={formData.DOB}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Department"
-                name="DEPT"
-                type="text"
-                value={formData.DEPT}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Aadhaar Number"
-                name="AADHAR_NUM"
-                type="text"
-                value={formData.AADHAR_NUM}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, ""); 
-                  if (val.length <= 12) handleInputChange({ target: { name: "AADHAR_NUM", value: val } });
-                }}
-                required
-              />
-              <InputField
-                label="PAN Number"
-                name="PAN_NUM"
-                type="text"
-                value={formData.PAN_NUM}
-                onChange={(e) => {
-                  const val = e.target.value.toUpperCase();
-                  if (val.length <= 10) handleInputChange({ target: { name: "PAN_NUM", value: val } });
-                }}
-                required
-              />
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <InputField
+        label="Child Case ID"
+        name="CHILD_CASEID"
+        value={formData.CHILD_CASEID}
+        onChange={handleInputChange}
+        disabled
+      />
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-              <textarea
-                name="ADDRESS"
-                value={formData.ADDRESS}
-                onChange={handleInputChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter full address"
-              ></textarea>
-            </div>
+      <InputField
+        label="Plant"
+        name="PLANT"
+        value={formData.PLANT}
+        onChange={handleInputChange}
+        disabled
+      />
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FileUpload label="Aadhaar Card" name="AADHAR_PATH" onChange={handleFileChange} />
-              <FileUpload label="PAN Card" name="PAN_PATH" onChange={handleFileChange} />
-              <FileUpload label="Passport-size Photo" name="PHOTO" onChange={handleFileChange} />
-            </div>
-          </div>
+      <InputField
+        label="Department"
+        name="DEPT"
+        value={formData.DEPT}
+        onChange={handleInputChange}
+        disabled
+      />
 
-          {/* === EDUCATION DETAILS === */}
-          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-purple-500">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-purple-500 text-white p-3 rounded-lg">
-                <BookOpen size={24} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">Education Details</h2>
-            </div>
+      <InputField
+        label="Full Name"
+        name="NAME"
+        value={formData.NAME}
+        onChange={handleInputChange}
+        required
+      />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <InputField
-                label="SSC Marks"
-                name="SSC_MARKS"
-                type="number"
-                value={formData.SSC_MARKS}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Inter Marks"
-                name="INTER_MARKS"
-                type="number"
-                value={formData.INTER_MARKS}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="B.Tech Marks"
-                name="BTECH_MARKS"
-                type="number"
-                value={formData.BTECH_MARKS}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="PG Marks"
-                name="PG_MARKS"
-                type="number"
-                value={formData.PG_MARKS}
-                onChange={handleInputChange}
-              />
-            </div>
+      <InputField
+        label="Email"
+        name="EMAIL"
+        type="email"
+        value={formData.EMAIL}
+        onChange={handleInputChange}
+        required
+      />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <FileUpload label="10th Marksheet" name="10TH_FILENAME" onChange={handleFileChange} />
-              <FileUpload label="Intermediate Marksheet" name="INTER_FILENAME" onChange={handleFileChange} />
-              <FileUpload label="Degree (B.Tech)" name="BTECH_FILENAME" onChange={handleFileChange} />
-              <FileUpload label="Post Graduation" name="PG_FILENAME" onChange={handleFileChange} />
-            </div>
-          </div>
+      <InputField
+        label="Phone Number"
+        name="PHONE_NUMBER"
+        value={formData.PHONE_NUMBER}
+        maxLength={10}
+        onChange={(e) => {
+          const val = e.target.value.replace(/\D/g, "");
+          if (val.length <= 10) {
+            handleInputChange({
+              target: { name: "PHONE_NUMBER", value: val },
+            });
+          }
+        }}
+        required
+      />
 
-          {/* === EXPERIENCE & CTC === */}
-          <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-green-500">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-green-500 text-white p-3 rounded-lg">
-                <Award size={24} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">Experience & CTC</h2>
-            </div>
+      <InputField
+        label="Date of Birth"
+        name="DOB"
+        type="date"
+        value={formData.DOB}
+        onChange={handleInputChange}
+        required
+      />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <InputField
-                label="Previous Company"
-                name="PREVIOUS_COMPANY"
-                type="text"
-                value={formData.PREVIOUS_COMPANY}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Duration (Months)"
-                name="DURATION"
-                type="number"
-                value={formData.DURATION}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Current CTC"
-                name="CURRENT_CTC"
-                type="number"
-                value={formData.CURRENT_CTC}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Expected CTC"
-                name="EXP_CTC"
-                type="number"
-                value={formData.EXP_CTC}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Offered CTC"
-                name="OFFER_CTC"
-                type="number"
-                value={formData.OFFER_CTC}
-                onChange={handleInputChange}
-              />
-              <InputField
-                label="Notice Period (Days)"
-                name="NOTICE_PERIOD"
-                type="number"
-                value={formData.NOTICE_PERIOD}
-                onChange={handleInputChange}
-              />
-            </div>
+      <InputField
+        label="Aadhaar Number"
+        name="AADHAR_NUM"
+        value={formData.AADHAR_NUM}
+        onChange={(e) => {
+          const val = e.target.value.replace(/\D/g, "");
+          if (val.length <= 12) {
+            handleInputChange({
+              target: { name: "AADHAR_NUM", value: val },
+            });
+          }
+        }}
+        required
+      />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FileUpload label="Experience Letter" name="EXP_LETTER" onChange={handleFileChange} />
-              <FileUpload label="Relieving Letter" name="RELIEVING_LETTER" onChange={handleFileChange} />
-              <FileUpload label="Payslips" name="PAYSLIPS" onChange={handleFileChange} />
-            </div>
-          </div>
+      <InputField
+        label="PAN Number"
+        name="PAN_NUM"
+        value={formData.PAN_NUM}
+        onChange={(e) => {
+          const val = e.target.value.toUpperCase();
+          if (val.length <= 10) {
+            handleInputChange({
+              target: { name: "PAN_NUM", value: val },
+            });
+          }
+        }}
+        required
+      />
+    </div>
 
-     
-          <div className="flex gap-4 pt-4 justify-end">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-semibold"
-            >
-              Reset
-            </button>
-            <button
-              type="submit"
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-md"
-            >
-              Submit Form
-            </button>
-          </div>
-        </form>
+    <div className="mt-4">
+      <label className="text-sm font-medium">Address *</label>
+      <textarea
+        name="ADDRESS"
+        value={formData.ADDRESS}
+        onChange={handleInputChange}
+        rows={3}
+        className="w-full border rounded-md px-3 py-2"
+        required
+      />
+    </div>
+
+    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <FileUpload label="Aadhaar Card" name="AADHAR_PATH" onChange={handleFileChange} />
+      <FileUpload label="PAN Card" name="PAN_PATH" onChange={handleFileChange} />
+      <FileUpload label="Photo" name="PHOTO" onChange={handleFileChange} />
+    </div>
+  </div>
+
+  {/* ================= EDUCATION DETAILS ================= */}
+  <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-purple-500">
+    <h2 className="text-xl font-bold mb-6">Education Details</h2>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <InputField label="SSC Marks" name="SSC_MARKS" type="number" value={formData.SSC_MARKS} onChange={handleInputChange} />
+      <InputField label="Inter Marks" name="INTER_MARKS" type="number" value={formData.INTER_MARKS} onChange={handleInputChange} />
+      <InputField label="B.Tech Marks" name="BTECH_MARKS" type="number" value={formData.BTECH_MARKS} onChange={handleInputChange} />
+      <InputField label="PG Marks" name="PG_MARKS" type="number" value={formData.PG_MARKS} onChange={handleInputChange} />
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <FileUpload label="10th Marksheet" name="10TH_FILENAME" onChange={handleFileChange} />
+      <FileUpload label="Inter Marksheet" name="INTER_FILENAME" onChange={handleFileChange} />
+      <FileUpload label="Degree" name="BTECH_FILENAME" onChange={handleFileChange} />
+      <FileUpload label="PG Certificate" name="PG_FILENAME" onChange={handleFileChange} />
+    </div>
+  </div>
+
+  {/* ================= EXPERIENCE ================= */}
+  <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-green-500">
+    <h2 className="text-xl font-bold mb-6">Experience & Salary</h2>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <InputField label="Previous Company" name="PREVIOUS_COMPANY" value={formData.PREVIOUS_COMPANY} onChange={handleInputChange} />
+      <InputField label="Duration (Months)" name="DURATION" type="number" value={formData.DURATION} onChange={handleInputChange} />
+      <InputField label="Current CTC" name="CURRENT_CTC" type="number" value={formData.CURRENT_CTC} onChange={handleInputChange} />
+      <InputField label="Expected CTC" name="EXP_CTC" type="number" value={formData.EXP_CTC} onChange={handleInputChange} />
+      <InputField label="Notice Period (Days)" name="NOTICE_PERIOD" type="number" value={formData.NOTICE_PERIOD} onChange={handleInputChange} />
+    </div>
+
+    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <FileUpload label="Experience Letter" name="EXP_LETTER" onChange={handleFileChange} />
+      <FileUpload label="Relieving Letter" name="RELIEVING_LETTER" onChange={handleFileChange} />
+      <FileUpload label="Payslips" name="PAYSLIPS" onChange={handleFileChange} />
+    </div>
+  </div>
+
+  {/* ================= ACTION BUTTONS ================= */}
+  <div className="flex justify-end gap-4">
+    <button
+      type="button"
+      onClick={resetForm}
+      className="px-6 py-3 bg-gray-200 rounded-md"
+    >
+      Reset
+    </button>
+
+    <button
+      type="submit"
+      className="px-8 py-3 bg-blue-600 text-white rounded-md"
+    >
+      Submit Form
+    </button>
+  </div>
+
+</form>
+
       </div>
     </div>
   );

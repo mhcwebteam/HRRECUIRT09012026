@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
+import {API_BASE_URL} from '../Config/Config.jsx';
+import axios from 'axios';
 import {
   Paper,
   Box,
@@ -29,37 +31,33 @@ const Salarystackup = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [modalOpen, setModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-      const [submitting, setSubmitting] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [submitting, setSubmitting] = useState({});
   const { personalData  } = useContext(ContextData);
-
-console.log("prersonalllllllllllllllllll", selectedUser);
-  const filteredData = useMemo(() => {
+  const [token,setToken]=useState(()=>{
+  const userInfo=localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo):null;
+  })
+  //console.log("prersonalllllllllllllllllll", selectedUser);
+  const filteredData = useMemo(() => 
+  {
     if (!personalData || personalData.length === 0) return [];
-
     let result = [...personalData];
-
+    //console.log("RESULTDATA::::",result);
     if (searchTerm) {
-      result = result.filter(user =>
-
+        result = result.filter(user =>
         (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      
+         user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
       ));
     }
-
     if (statusFilter !== 'all') {
       result = result.filter(user => user.status === statusFilter);
     }
-
-    console.log(result,"resultttttttttttttt");
-  
-  
+    //console.log(result,"resultttttttttttttt");
     return result.map((item, index) => ({
-
       id: item.id || `row-${index}`,
       SNO: index + 1,
+      verification_id:item.Verification_Id,
       CHILD_CASEID: item.child_caseid || 'N/A',
       PLANT: item.plant || 'N/A', 
       NAME: item.name || 'N/A',
@@ -67,7 +65,7 @@ console.log("prersonalllllllllllllllllll", selectedUser);
       ADDRESS: item.address || 'N/A',
       PHONE_NUMBER: item.phone_number || 'N/A',
       DOB: item.dob || 'N/A',
-    DEPT: item.DEPT || 'N/A',
+      DEPT: item.DEPT || 'N/A',
       AADHAR_NUM: item.aadhar_number || 'N/A',
       PAN_NUM: item.pan_number || 'N/A',
       SSC_MARKS: item.ssc_marks || 'N/A',
@@ -89,18 +87,17 @@ console.log("prersonalllllllllllllllllll", selectedUser);
     }));
   }, [personalData, searchTerm, statusFilter]);
 
-  const getStatusChip = (status) => {
+  const getStatusChip = (status) => 
+  {
     const statusValue = status?.toLowerCase();
     const config = {
-      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" /> },
-      pending: { color: '#f59e0b', icon: <Refresh className="w-4 h-4" /> },
-      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" /> },
-      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" /> },
+      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" />  },
+      pending:  { color: '#f59e0b', icon: <Refresh className="w-4 h-4" />      },
+      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" />       },
+      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" />  },
       'not uploaded': { color: '#6b7280', icon: <Cancel className="w-4 h-4" /> }
     };
-
     const { color, icon } = config[statusValue] || config.pending;
-
     return (
       <Box sx={{
         display: 'flex',
@@ -126,17 +123,48 @@ console.log("prersonalllllllllllllllllll", selectedUser);
       </Box>
     );
   };
-
-
+  //Sending the Mail For Condidate Approval here 
+  const handleSendEmail = async (row) => 
+  {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/cand-aprvl-email`,
+      {
+        case_id : row.CHILD_CASEID,
+        email   : row.EMAIL,      // adjust field name
+        name    : row.NAME,        // optional
+      },
+      {
+        headers:
+        {
+             "Accept":"application/json",
+             Authorization:`Bearer ${token.token}`
+        }
+      }
+    );
+    console.log('CandApprovalMail',response);
+    if (response.data.success) 
+    {
+      alert('Email sent successfully');
+    } else {
+      alert('Failed to send email');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Error while sending email');
+  } finally {
+    // Stop loader
+    //setSubmitting(prev => ({ ...prev, [case_id]: false }));
+  }
+};
  const handleViewDetails = (user) => {
-  console.log('user',user)
+
+    console.log('user',user)
     setSelectedUser(user);
     setModalOpen(true);
   };
 
    const handleStatusChange = (updateData) => {
     console.log('Status updated:', updateData);
-  
   };
 
   const formatDate = (dateString) => {
@@ -190,8 +218,6 @@ console.log("prersonalllllllllllllllllll", selectedUser);
         </Box>
       ),
     },
-
-
     {
       field: 'PLANT',
       headerName: 'Plant Name',
@@ -260,7 +286,7 @@ console.log("prersonalllllllllllllllllll", selectedUser);
         </Box>
       ),
     },
- {
+    {
       field: 'DEPT',
       headerName: 'Department',
       flex: 1,
@@ -286,7 +312,6 @@ console.log("prersonalllllllllllllllllll", selectedUser);
     const formattedValue = params.value
       ? Number(params.value).toLocaleString('en-IN')
       : '0';
-
     return (
       <Box
         sx={{
@@ -351,9 +376,6 @@ console.log("prersonalllllllllllllllllll", selectedUser);
     );
   },
 },
-
-  
-
     {
       field: 'STATUS',
       headerName: 'Overall Status',
@@ -399,25 +421,25 @@ console.log("prersonalllllllllllllllllll", selectedUser);
          </Tooltip>
        ),
      },
-
-
-       {
+    {
       field: 'ACTIONS',
       headerName: 'Actions',
       flex: 1,
       minWidth: 120,
       sortable: false,
       filterable: false,
-      renderCell: (params) => {
+      renderCell: (params) => 
+      {
+       // alert(params.row);
+       
         const isSubmitting = submitting[params.row.CASEID] || false;
         // const email = emailInputs[params.row.CASEID] || '';
-        
         return (
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
             <Button
               variant="contained"
               size="small"
-           
+              onClick={()=>handleSendEmail(params.row)}
               sx={{
                 background: isSubmitting 
                   ? '#9ca3af' 
@@ -455,7 +477,6 @@ console.log("prersonalllllllllllllllllll", selectedUser);
       },
     },
   ], []);
-
   return (
     <Box
       sx={{
@@ -476,10 +497,7 @@ console.log("prersonalllllllllllllllllll", selectedUser);
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
         border: '1px solid #e2e8f0',
       }}>
-        
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        
-          
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <TextField
               size="small"
@@ -500,7 +518,6 @@ console.log("prersonalllllllllllllllllll", selectedUser);
                 }
               }}
             />
-            
             <TextField
               select
               size="small"

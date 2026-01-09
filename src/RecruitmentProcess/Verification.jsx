@@ -23,7 +23,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import { ContextData } from '../Context/ContextData';
 import VerificationDetailsModal from './VerificationDetailsModal';
 
-const Verification = () => {
+const Verification = () => 
+{
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
@@ -31,13 +32,10 @@ const Verification = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const { personalData } = useContext(ContextData);
-
-
-  const filteredData = useMemo(() => {
+  const filteredData = useMemo(() => 
+  {
     if (!personalData || personalData.length === 0) return [];
-
     let result = [...personalData];
-
     if (searchTerm) {
       result = result.filter(user =>
         (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,16 +44,14 @@ const Verification = () => {
         user.phone_number?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
-
-    if (statusFilter !== 'all') {
+    if (statusFilter !== 'all') 
+    {
       result = result.filter(user => user.status === statusFilter);
     }
-
-
     return result.map((item, index) => ({
-
       id: item.id || `row-${index}`,
       SNO: index + 1,
+      Verification_Id: item.Verification_Id,
       CHILD_CASEID: item.child_caseid || 'N/A',
       PLANT: item.plant || 'N/A', 
       NAME: item.name || 'N/A',
@@ -78,29 +74,18 @@ const Verification = () => {
       STATUS: item.status || 'pending',
       remarks: item.remarks || 'No remarks',
       submitted_date: item.created_at || 'N/A',
-      
       documents: item.documents || {}
     }));
   }, [personalData, searchTerm, statusFilter]);
-
-
-
-  
-
-
   const getStatusChip = (status) => {
- 
-  
     const config = {
       verified: { color: '#10b981', icon: <CheckCircle sx={{ width: 16, height: 16 }} /> },
-      pending: { color: '#f59e0b', icon: <Refresh sx={{ width: 16, height: 16 }} /> },
+      pending:  { color: '#f59e0b', icon: <Refresh sx={{ width: 16, height: 16 }} /> },
       rejected: { color: '#ef4444', icon: <Cancel sx={{ width: 16, height: 16 }} /> },
       uploaded: { color: '#3b82f6', icon: <CheckCircle sx={{ width: 16, height: 16 }} /> },
       'not uploaded': { color: '#6b7280', icon: <Cancel sx={{ width: 16, height: 16 }} /> }
     };
-
     const { color, icon } = config[status] || config.pending;
-
     return (
       <Box sx={{
         display: 'flex',
@@ -126,13 +111,10 @@ const Verification = () => {
       </Box>
     );
   };
-
   const handleViewDetails = (user) => {
-   
     setSelectedUser(user);
     setModalOpen(true);
   };
-
   const handleStatusChange = (updateData) => {
     console.log('Status updated:', updateData);
   };
@@ -146,12 +128,10 @@ const Verification = () => {
       return dateString;
     }
   };
-
   const formatNumber = (value) => {
     if (!value || value === 'N/A') return 'N/A';
     return value.toString();
   };
-
   const columns = useMemo(() => [
     {
       field: 'SNO',
@@ -247,7 +227,6 @@ const Verification = () => {
         </Box>
       ),
     },
-
       {
       field: 'PG_MARKS',
       headerName: 'PG %',
@@ -326,7 +305,6 @@ const Verification = () => {
         </Tooltip>
       ),
     }
-
   ], []);
 
   if (loading) {
@@ -360,8 +338,6 @@ const Verification = () => {
       }}>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        
-          
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <TextField
               size="small"

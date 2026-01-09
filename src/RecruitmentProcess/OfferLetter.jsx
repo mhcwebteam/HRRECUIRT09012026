@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
+//import OfferLetterModal from './OfferLetterModal.jsx'
+import axios from "axios";
+import Swal from 'sweetalert2';
 import {
   Paper,
   Box,
@@ -24,10 +27,7 @@ import {
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import { ContextData } from '../Context/ContextData';
-import VerificationDetailsModal from './VerificationDetailsModal';
-import SalaryStackDetailsModal from './SalaryStackDetailsModal';
-import { CirclePlus, View } from 'lucide-react';
-import CandidateStackDetailsModal from './CandidateStackDetailsModal';
+import {API_BASE_URL} from '../Config/Config.jsx';
 import OfferLetterModal from './OfferLetterModal';
 
 const OfferLetter = () => {
@@ -40,86 +40,121 @@ const OfferLetter = () => {
   const [joiningDates, setJoiningDates] = useState({});
   const [offerLetterOpen, setOfferLetterOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [ofrList,setOfferLetterData]=useState(null);
+  const [Token,setToken]=useState(()=>{
+    const authToken=JSON.parse(localStorage.getItem("userInfo"));
+    return authToken?authToken:null;
+  })
   
   const { personalData } = useContext(ContextData);
   const { HrData } = useContext(ContextData);
 
   const handleJoiningDateChange = (caseId, date) => {
+    alert(date);
+    alert(caseId);
     setJoiningDates(prev => ({
       ...prev,
       [caseId]: date
     }));
   };
-
-  const handleViewOfferLetter = (user) => {
-    const joiningDate = joiningDates[user.CASEID];
-    if (joiningDate) {
-      setSelectedCandidate({
-        ...user,
-        joiningDate: joiningDate
+  //----------------handleOfferLterEmail-----------------//
+const handleOfferLterEmail=async(rowData)=>
+{
+  try
+  {
+    const confirm = await Swal.fire({
+        title: "Are you sure?",
+        text: "You want to Send this Mail",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Send",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#2563eb",
       });
-      setOfferLetterOpen(true);
-    } else {
-      alert('Please enter Date of Joining first');
+      if (!confirm.isConfirmed) return;
+      const  payload =
+      {
+        "CHILD_CASEID":rowData.CHILD_CASEID,
+        "EMail"       :rowData.EMAIL
+      }
+    const ofrMailSend = await axios.post(`${API_BASE_URL}/ofr-ltr-issue-mail`,payload,
+      {
+      headers:
+      {
+         "Content-Type" :"application/json",
+         "Accept"       :"application/json",
+         "Authorization":`Bearer ${Token.token}`
+       }})
+    if (ofrMailSend.data.success) 
+      {
+         await Swal.fire({
+           title: "Success",
+           text: "Mail Sent successfully",
+           icon: "success",
+         });
+         resetForm();
+       } else {
+         await Swal.fire("Failed", response.data.message, "error");
+       }
+     } catch (error) {
+       console.error(error);
+       await Swal.fire(
+         "Error",
+         error.response?.data?.message || "Something went wrong",
+         "error"
+       );
+     }
+}
+  //---------------Fetch the Offer Letter from Api--------------//
+  const fetchOfrData = async()=>
+    {
+    try
+    {
+      const ofrdata = await axios.get(`${API_BASE_URL}/offer-issue-list`,
+      {
+        headers:
+        {
+            "Accept"       : "application/json",
+            "Authorization": `Bearer ${Token.token}`,
+        }
+      })
+      setOfferLetterData(ofrdata.data.evcVerifiedData);
     }
+    catch(err)
+    {
+      console.error("Error In Fetching Offer List");
+    }
+  }
+//useEffect Calling here ----
+  useEffect(()=>
+  {
+    if(Token.token)
+    {
+      fetchOfrData();
+    }
+  },[]);
+
+  //console.log("OFFFerList Data:::",ofrList);
+  //---------------------View the Offer Letter from Backend--------------------//
+  const handleViewOfferLetter = (user) => 
+  {
+    setOfferLetterOpen(true);
+     setSelectedCandidate({
+        ...user,
+      });
   };
 
-  const filteredData = useMemo(() => {
-    if (!personalData || personalData.length === 0) return [];
-
-    let result = [...personalData];
-
-    if (searchTerm) {
-      result = result.filter(user =>
-        (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
-      ));
-    }
-
-    if (statusFilter !== 'all') {
-      result = result.filter(user => user.status === statusFilter);
-    }
-    return result.map((item, index) => ({
-      id: item.id || item.SNO || `row-${index}`,
-      SNO: item.SNO || index + 1,
-      CASEID: item.caseId || item.CASEID || 'N/A',
-      NAME: item.name || item.NAME || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
-      EMAIL: item.email || item.EMAIL || 'N/A',
-      ADDRESS: item.address || item.ADDRESS || 'N/A',
-      PHONE_NUMBER: item.phoneNumber || item.phone || item.PHONE_NUMBER || 'N/A',
-      DOB: item.dob || item.DOB || item.dateOfBirth || 'N/A',
-      AADHAR_NUM: item.AADHAR_NUM || 'N/A',
-      PAN_NUM: item.PAN_NUM || 'N/A',
-      SSC_SCORE: item.SSC_SCORE || 'N/A',
-      INTER_SCORE: item.INTER_SCORE || 'N/A',
-      BTECH_SCORE: item.BTECH_SCORE || 'N/A',
-      POST_GRADUCTION: item.POST_GRADUCTION || 'N/A',
-      CURRENT_CTC: item.CURRENT_CTC || 'N/A',
-      EXP_CTC: item.EXP_CTC || 'N/A',
-      OFFER_CTC: item.OFFER_CTC || 'N/A',
-      NOTICE_PERIOD: item.NOTICE_PERIOD || 'N/A',
-      PREVIOUS_COMPANY: item.PREVIOUS_COMPANY || 'N/A',
-      DURATION: item.DURATION || 'N/A',
-      PLANT: item.PLANT || 'Head Office',
-      DESIGNATION: item.DESIGNATION || 'Developers - IT SAP',
-      STATUS: item.status || item.STATUS || 'pending',
-      remarks: item.remarks || 'No remarks',
-      submitted_date: item.submitted_date || item.created_at || 'N/A'
-    }));
-  }, [personalData, searchTerm, statusFilter]);
 
   const getStatusChip = (status) => {
     const statusValue = status?.toLowerCase();
     const config = {
-      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" /> },
-      pending: { color: '#f59e0b', icon: <Refresh className="w-4 h-4" /> },
-      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" /> },
-      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" /> },
+      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" />  },
+      pending:  { color: '#f59e0b', icon: <Refresh className="w-4 h-4"    />   },
+      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4"    />       },
+      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" />  },
       'not uploaded': { color: '#6b7280', icon: <Cancel className="w-4 h-4" /> }
     };
-
     const { color, icon } = config[statusValue] || config.pending;
-
     return (
       <Box sx={{
         display: 'flex',
@@ -190,7 +225,7 @@ const OfferLetter = () => {
       ),
     },
     {
-      field: 'CASEID',
+      field: 'CHILD_CASEID',
       headerName: 'Case ID',
       flex: 1,
       minWidth: 120,
@@ -396,23 +431,6 @@ const OfferLetter = () => {
       renderCell: (params) => getStatusChip(params.value),
     },
     {
-      field: 'submitted_date',
-      headerName: 'Submitted Date',
-      flex: 1,
-      minWidth: 150,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#6b7280',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontSize: '12px'
-        }}>
-          {formatDate(params.value)}
-        </Box>
-      ),
-    },
-    {
       field: 'Date of Joining',
       headerName: 'Date of Joining',
       flex: 1.5,
@@ -423,7 +441,7 @@ const OfferLetter = () => {
           type="date"
           placeholder="Enter Date"
           value={joiningDates[params.row.CASEID] || ''}
-          onChange={(e) => handleJoiningDateChange(params.row.CASEID, e.target.value)}
+          onChange={(e) => handleJoiningDateChange(params.row.CHILD_CASEID, e.target.value)}
           sx={{
             width: '100%',
             '& .MuiOutlinedInput-root': {
@@ -466,191 +484,29 @@ const OfferLetter = () => {
         </Tooltip>
       ),
     },
+   {
+         field: 'actions',
+         headerName: 'Actions',
+         width: 80,
+         sortable: false,
+         renderCell: (params) => (
+           <Tooltip title="View Details">
+             <IconButton
+               size="small"
+               onClick={() => handleOfferLterEmail(params.row)}
+               sx={{
+                 color: '#3b82f6',
+                 '&:hover': {
+                   backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                 },
+               }}
+             >
+               <Visibility fontSize="small" />
+             </IconButton>
+           </Tooltip>
+         ),
+       }
   ], [joiningDates]);
-
-  const OfferLetterPopup = ({ open, onClose, candidate }) => {
-    if (!candidate) return null;
-
-    const handleDownloadPDF = () => {
-      window.print();
-    };
-
-    const formatIndianDate = (dateString) => {
-      const date = new Date(dateString);
-      const day = date.getDate();
-      const month = date.toLocaleString('en-US', { month: 'long' });
-      const year = date.getFullYear();
-      
-      const getOrdinal = (d) => {
-        if (d > 3 && d < 21) return 'th';
-        switch (d % 10) {
-          case 1: return "st";
-          case 2: return "nd";
-          case 3: return "rd";
-          default: return "th";
-        }
-      };
-
-      return `${day}${getOrdinal(day)} ${month} ${year}`;
-    };
-
-    const getAcceptanceDeadline = (joiningDate) => {
-      const date = new Date(joiningDate);
-      date.setDate(date.getDate() - 1);
-      return formatIndianDate(date);
-    };
-
-    return (
-      <Dialog 
-        open={open} 
-        onClose={onClose}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: '16px',
-            overflow: 'hidden'
-          }
-        }}
-      >
-        <DialogContent sx={{ p: 0 }}>
-          <Box sx={{ p: 4 }} id="offer-letter-content">
-            {/* Header */}
-            <Box sx={{ textAlign: 'center', mb: 4, borderBottom: '2px solid #e5e7eb', pb: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1f2937', mb: 1 }}>
-                Tellapur Technology Private Limited
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                (An Initiative by My Home Group & Prathima)
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#6b7280', mt: 1 }}>
-                Regd. Office: #1-123, 8° Floor, 3° Block, My Home Hub, Hi-tech City, Madhapur, Hyderabad - 500 081, Telangana, India.
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                CIN: U45400TG2007PTC053720 | Email ID: info@ttplhyd.com | Web: www.ttplhyd.com | Ph: 040-6639 8686
-              </Typography>
-            </Box>
-
-            {/* Reference and Date */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-              <Typography variant="body2" sx={{ color: '#374151' }}>
-                Ref No: TTPL/HR/F8/August - 01/2025-2026
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#374151' }}>
-                {formatIndianDate(new Date())}
-              </Typography>
-            </Box>
-
-            {/* Candidate Address */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                {candidate.NAME}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#374151', whiteSpace: 'pre-line' }}>
-                {candidate.ADDRESS}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#374151' }}>
-                Phone No: {candidate.PHONE_NUMBER}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#374151' }}>
-                E-mail: {candidate.EMAIL}
-              </Typography>
-            </Box>
-
-            {/* Divider */}
-            <Box sx={{ borderBottom: '1px solid #e5e7eb', mb: 3 }} />
-
-            {/* Offer Title */}
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 'bold', 
-                textAlign: 'center', 
-                mb: 3,
-                color: '#1f2937'
-              }}
-            >
-              Offer of Employment
-            </Typography>
-
-            {/* Salutation */}
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Dear <strong>Mr. {candidate.NAME},</strong>
-            </Typography>
-
-            {/* Main Content */}
-            <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-              This has reference to your application and subsequent interview you had with us, we are pleased to inform you that you have been selected for the position of <strong>"{candidate.DESIGNATION}"</strong> at our <strong>{candidate.PLANT}</strong>. Your CTC is as mutually agreed during final interview. Your appointment will be applicable subject to joining the duties on <strong>{formatIndianDate(candidate.joiningDate)}</strong>.
-            </Typography>
-
-            <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-              Detailed appointment letter mentioning other terms and conditions of your employment will be issued upon joining with us.
-            </Typography>
-
-            {/* Documents List */}
-            <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 2 }}>
-              You are requested to bring the following photocopies at the time of joining:
-            </Typography>
-
-            <Box component="ul" sx={{ pl: 3, mb: 3 }}>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>Educational testimonials.</Typography>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>Experience certificates of the last 2 Companies.</Typography>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>Relieving letter from the last company & TDS Particulars.</Typography>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>PAN, Aadhar and UAN Card (Color Photo Copies).</Typography>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>Bank Statement for 2 months.</Typography>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>Passport size color photographs 8 Nos.</Typography>
-              <Typography component="li" variant="body1" sx={{ mb: 1 }}>Latest Medical reports i.e. CBP & CJE, ABO Typing.</Typography>
-            </Box>
-
-            {/* Acceptance Deadline */}
-            <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-              We request you to send the signed copy of the offer as a token of your acceptance on or before <strong>{getAcceptanceDeadline(candidate.joiningDate)}</strong>.
-            </Typography>
-
-            {/* Signatures */}
-            <Box sx={{ mt: 6 }}>
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  For Tellapur Technology Pvt. Ltd.
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 1 }}>Sudeep Kumar K</Typography>
-                <Typography variant="body1">AVP - HR</Typography>
-              </Box>
-
-              <Box sx={{ borderTop: '1px solid #e5e7eb', pt: 2, mt: 4 }}>
-                <Typography variant="body2" sx={{ fontStyle: 'italic', mb: 2 }}>
-                  I have read this letter and understood the terms of employment. I accept the same without any reservations.
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2">Date:</Typography>
-                  <Typography variant="body2">Signature:</Typography>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, borderTop: '1px solid #e5e7eb' }}>
-          <Button onClick={onClose} sx={{ color: '#6b7280' }}>
-            Close
-          </Button>
-          <Button 
-            onClick={handleDownloadPDF}
-            variant="contained"
-            startIcon={<Download />}
-            sx={{
-              backgroundColor: '#3b82f6',
-              '&:hover': {
-                backgroundColor: '#2563eb'
-              }
-            }}
-          >
-            Download PDF
-          </Button>
-        </DialogActions>
-      </Dialog>
-    );
-  };
-
   return (
     <Box
       sx={{
@@ -724,19 +580,22 @@ const OfferLetter = () => {
           }}
         >
           <DataGrid
-            rows={filteredData}
+            rows={ofrList}
             columns={columns}
             paginationModel={paginationModel}
+            getRowId={(row) => row.CHILD_CASEID}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 20, 50]}
             rowHeight={50}
             columnHeaderHeight={50}
             sx={{
               border: "none",
-              "& .MuiDataGrid-columnHeaders": {
+              "& .MuiDataGrid-columnHeaders": 
+              {
                 borderBottom: "2px solid #e2e8f0",
               },
-              "& .MuiDataGrid-columnHeader": {
+              "& .MuiDataGrid-columnHeader": 
+              {
                 fontWeight: 600,
                 fontSize: "14px",
                 color: "#1e293b",
@@ -762,7 +621,7 @@ const OfferLetter = () => {
         </Box>
       </Paper>
 
-      <OfferLetterPopup
+      <OfferLetterModal
         open={offerLetterOpen}
         onClose={() => setOfferLetterOpen(false)}
         candidate={selectedCandidate}

@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import  { useState, useEffect, useContext, useMemo } from 'react';
+import axios from 'axios';
+import {API_BASE_URL} from '../Config/Config.jsx';
+import CandidateApprovalFileModal from './CandidateApprovalFileModal.jsx';
 import {
   Paper,
   Box,
@@ -20,9 +23,6 @@ import {
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import { ContextData } from '../Context/ContextData';
-import VerificationDetailsModal from './VerificationDetailsModal';
-import SalaryStackDetailsModal from './SalaryStackDetailsModal';
-import { CirclePlus, View } from 'lucide-react';
 import CandidateStackDetailsModal from './CandidateStackDetailsModal';
 
 const CandidateApproval = () => {
@@ -30,69 +30,87 @@ const CandidateApproval = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [modalOpen, setModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-      const [submitting, setSubmitting] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [submitting, setSubmitting] = useState({});
   const { personalData  } = useContext(ContextData);
-;
+  const [candidgetData,setCandidAprvlData]=useState([]);
+  const [token ,userToken]=useState(()=>{
+    const authToken=JSON.parse(localStorage.getItem("userInfo"));
+    return authToken?authToken:null
+  })
+const [fileModalOpen, setFileModalOpen] = useState(false);
+const [selectedFileUrl, setSelectedFileUrl] = useState(null);
 
+// Get the Candidate Approval Data
+console.log("candidgetData:::::",candidgetData);
+const candidAprvlGetData = async () => {
+  try {
+    const candidData = await axios.get(
+      `${API_BASE_URL}/get-cand-aprvl`,
+      {
+        headers: 
+        {
+          Accept: "application/json",
+          Authorization: `Bearer ${token?.token}`,
+        },
+      }
+    );
+   const apiData = candidData?.data?.candidVerifiedData;
+  // 🔥 normalize to array
+  setCandidAprvlData(
+    Array.isArray(apiData) ? apiData : [apiData]
+  );
+  } catch (err) {
+    console.error(
+      "Error In Getting Candid Approval Data:",
+      err.response?.data || err.message
+    );
+  }
+};
+//------------------UseEffect----------------------//
+useEffect(() => {
+  //alert(123);
+  if (token?.token) {
+    candidAprvlGetData();
+  }
+}, [token]);
   const filteredData = useMemo(() => {
-    if (!personalData || personalData.length === 0) return [];
-
-    let result = [...personalData];
-
+    if (!candidgetData || candidgetData?.length === 0) return [];
+    // console.log("candidgetData",candidgetData);
+   // let result = [...candidgetData];
     if (searchTerm) {
-      result = result.filter(user =>
-
+      result = candidgetData.filter(user =>
         (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      
       ));
     }
 
     if (statusFilter !== 'all') {
-      result = result.filter(user => user.status === statusFilter);
+      result = result.filter(user => user.CANDID_APPROVAL_STATUS === statusFilter);
     }
-    return result.map((item, index) => ({
-      id: item.id || item.SNO || `row-${index}`,
-      SNO: item.SNO || index + 1,
-      CHILD_CASEID: item.child_caseid || 'N/A',
-      NAME: item.name || item.NAME || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
-      EMAIL: item.email || item.EMAIL || 'N/A',
-      ADDRESS: item.address || item.ADDRESS || 'N/A',
-      PHONE_NUMBER: item.phoneNumber || item.phone || item.PHONE_NUMBER || 'N/A',
-      DOB: item.dob || item.DOB || item.dateOfBirth || 'N/A',
-      AADHAR_NUM: item.AADHAR_NUM || 'N/A',
-      PAN_NUM: item.PAN_NUM || 'N/A',
-      SSC_SCORE: item.SSC_SCORE || 'N/A',
-      INTER_SCORE: item.INTER_SCORE || 'N/A',
-      BTECH_SCORE: item.BTECH_SCORE || 'N/A',
-      POST_GRADUCTION: item.POST_GRADUCTION || 'N/A',
-      CURRENT_CTC: item.CURRENT_CTC || 'N/A',
-      EXP_CTC: item.EXP_CTC || 'N/A',
-     OFFER_CTC: item.OFFER_CTC|| 'N/A',
-      NOTICE_PERIOD: item.NOTICE_PERIOD || 'N/A',
-      PREVIOUS_COMPANY: item.PREVIOUS_COMPANY || 'N/A',
-      DURATION: item.DURATION || 'N/A',
-
-      STATUS: item.status || item.STATUS || 'pending',
-      remarks: item.remarks || 'No remarks',
-      submitted_date: item.submitted_date || item.created_at || 'N/A'
+    return result.map((item, index) => (
+    {
+      SNO         : item.SNO || index + 1,
+      CHILD_CASEID: item.CHILD_CASEID || 'N/A',
+      PLANT       : item.PLANT || 'N/A',
+      NAME        : item.NAME || 'N/A',
+      EMAIL       : item.EMAIL || 'N/A',
+      STATUS      : item.CANDID_APPROVAL_STATUS || 'pending',
+      REMARKS     : item.CANDID_REMARKS || 'No remarks',
     }));
   }, [personalData, searchTerm, statusFilter]);
 
+  console.log('Filtered Data....',filteredData);
   const getStatusChip = (status) => {
     const statusValue = status?.toLowerCase();
     const config = {
-      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" /> },
-      pending: { color: '#f59e0b', icon: <Refresh className="w-4 h-4" /> },
-      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" /> },
-      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" /> },
+      verified:       { color: '#10b981', icon: <CheckCircle className="w-4 h-4" /> },
+      pending:        { color: '#f59e0b', icon: <Refresh className="w-4 h-4" /> },
+      rejected:       { color: '#ef4444', icon: <Cancel className="w-4 h-4" /> },
+      uploaded:       { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" /> },
       'not uploaded': { color: '#6b7280', icon: <Cancel className="w-4 h-4" /> }
     };
-
     const { color, icon } = config[statusValue] || config.pending;
-
     return (
       <Box sx={{
         display: 'flex',
@@ -119,18 +137,22 @@ const CandidateApproval = () => {
     );
   };
 
-
- const handleViewDetails = (user) => {
-    setSelectedUser(user);
-    setModalOpen(true);
-  };
-
-   const handleStatusChange = (updateData) => {
+const handleViewDetails = (user) => 
+{
+  if (!user.cand_aprvl_file) 
+  {
+    alert("No file uploaded");
+    return;
+  }
+  setSelectedFileUrl(user.cand_aprvl_file);
+  setFileModalOpen(true);
+ };
+   const handleStatusChange = (updateData) => 
+  {
     console.log('Status updated:', updateData);
-  
   };
-
-  const formatDate = (dateString) => {
+  const formatDate = (dateString) => 
+  {
     if (!dateString || dateString === 'N/A') return 'N/A';
     try {
       const date = new Date(dateString);
@@ -139,12 +161,11 @@ const CandidateApproval = () => {
       return dateString;
     }
   };
-
-  const formatNumber = (value) => {
+  const formatNumber = (value) => 
+  {
     if (!value || value === 'N/A') return 'N/A';
     return value.toString();
   };
-
   const columns = useMemo(() => [
     {
       field: 'SNO',
@@ -181,11 +202,26 @@ const CandidateApproval = () => {
         </Box>
       ),
     },
-
-
     {
       field: 'PLANT',
       headerName: 'Plant Name',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{
+          color: '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          fontWeight: 500
+        }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: 'DEPT',
+      headerName: 'Department',
       flex: 1,
       minWidth: 120,
       renderCell: (params) => (
@@ -235,164 +271,40 @@ const CandidateApproval = () => {
       ),
     },
     {
-      field: 'PHONE_NUMBER',
-      headerName: 'Phone Number',
-      flex: 1,
-      minWidth: 140,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 500
-        }}>
-          {formatNumber(params.value)}
-        </Box>
-      ),
-    },
- {
-      field: 'DESIGNATION',
-      headerName: 'Designation',
-      flex: 1,
-      minWidth: 140,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 500
-        }}>
-          {formatNumber(params.value)}
-        </Box>
-      ),
-    },
-
-    {
-      field: 'CURRENT_CTC',
-      headerName: 'Current CTC',
-      width: 120,
-      renderCell: (params) => {
-    const formattedValue = params.value
-      ? Number(params.value).toLocaleString('en-IN')
-      : '0';
-
-    return (
-      <Box
-        sx={{
-          color: '#059669',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-    },
-   {
-  field: 'EXP_CTC',
-  headerName: 'Expected CTC',
-  width: 120,
-  renderCell: (params) => {
-    const formattedValue = params.value
-      ? Number(params.value).toLocaleString('en-IN')
-      : '0';
-
-    return (
-      <Box
-        sx={{
-          color: '#059669',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-},
-
-{
-  field: 'OFFER_CTC',
-  headerName: 'Offer CTC',
-  width: 120,
-  renderCell: (params) => {
-    const formattedValue = params.value
-      ? Number(params.value).toLocaleString('en-IN')
-      : '0';
-      
-    return (
-      <Box
-        sx={{
-          color: '#dc2626',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-},
-
-  
-
-    {
-      field: 'STATUS',
+      field: 'CANDID_APPROVAL_STATUS',
       headerName: 'Overall Status',
       width: 140,
       renderCell: (params) => getStatusChip(params.value),
     },
     {
-      field: 'submitted_date',
-      headerName: 'Submitted Date',
-      flex: 1,
-      minWidth: 150,
-      renderCell: (params) => (
-        <Box sx={{
-          color: '#6b7280',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontSize: '12px'
-        }}>
-          {formatDate(params.value)}
-        </Box>
-      ),
+      field: 'CANDID_REMARKS',
+      headerName: 'Remarks',
+      width: 140,
+      renderCell: (params) => getStatusChip(params.value),
     },
    {
-       field: 'View',
-       headerName: 'View Details',
-       width: 100,
-       sortable: false,
-       renderCell: (params) => (
-         <Tooltip title="View Details">
-           <IconButton
-             size="small"
-             onClick={() => handleViewDetails(params.row)}
-             sx={{
-               color: '#3b82f6',
-               '&:hover': {
-                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-               },
-             }}
-           >
-             <Visibility fontSize="small" />
-           </IconButton>
-         </Tooltip>
-       ),
-     },
-
-
-       {
+    field: 'View',
+    headerName: 'View Details',
+    width: 100,
+    sortable: false,
+    renderCell: (params) => (
+      <Tooltip title="View Details">
+        <IconButton
+          size="small"
+          onClick={() => handleViewDetails(params.row)}
+          sx={{
+            color: '#3b82f6',
+            '&:hover': {
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            },
+          }}
+        >
+          <Visibility fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ),
+   },
+    {
       field: 'ACTIONS',
       headerName: 'Actions',
       flex: 1,
@@ -400,9 +312,7 @@ const CandidateApproval = () => {
       sortable: false,
       filterable: false,
       renderCell: (params) => {
-        const isSubmitting = submitting[params.row.CASEID] || false;
-        // const email = emailInputs[params.row.CASEID] || '';
-        
+        const isSubmitting = submitting[params.row.CASEID] || false;  
         return (
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
             <Button
@@ -469,8 +379,6 @@ const CandidateApproval = () => {
       }}>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        
-          
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <TextField
               size="small"
@@ -502,8 +410,7 @@ const CandidateApproval = () => {
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
                 }
-              }}
-            >
+              }}>
               <MenuItem value="all">All Status</MenuItem>
               <MenuItem value="verified">Verified</MenuItem>
               <MenuItem value="pending">Pending</MenuItem>
@@ -522,9 +429,10 @@ const CandidateApproval = () => {
           }}
         >
           <DataGrid
-            rows={filteredData}
+            rows={candidgetData}
             columns={columns}
             paginationModel={paginationModel}
+            getRowId={(row) => row.CHILD_CASEID}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 20, 50]}
             rowHeight={50}
@@ -559,12 +467,20 @@ const CandidateApproval = () => {
           />
         </Box>
       </Paper>
+      <CandidateApprovalFileModal
+        open={fileModalOpen}
+        onClose={() => setFileModalOpen(false)}
+        fileUrl={selectedFileUrl}
+      />
+
+      
        <CandidateStackDetailsModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         data={selectedUser}
         onStatusChange={handleStatusChange}
       />
+      
     </Box>
   );
 };
