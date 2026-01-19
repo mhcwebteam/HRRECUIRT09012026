@@ -23,7 +23,7 @@ import {
   UploadFile as UploadFileIcon,
   RequestQuote as RequestQuoteIcon
 } from '@mui/icons-material';
-import { useLocation } from 'react-router-dom';
+import { useLocation ,useParams} from 'react-router-dom';
 import RecruitmentMail from './RecruitmentMail';
 import RecruitmentForm from './RecruitmentForm';
 import { CircleCheckBig, ScrollText, Signature } from 'lucide-react';
@@ -33,13 +33,20 @@ import CandidateApproval from './CandidateApproval';
 import NoteForApprovals from './NoteForApprovals';
 import OfferLetter from './OfferLetter';
 
-const Recruitments = () => {
+const Recruitments = () => 
+{
   const location = useLocation();
   const [onboardingEnabled, setOnboardingEnabled] = useState(true);
   const [activeRecruitmentComponent, setActiveRecruitmentComponent] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [hoveredTab, setHoveredTab] = useState(null);
-
+  const queryParams = new URLSearchParams(location.search);
+  const process = queryParams.get('process');   
+  useEffect(() => {
+    if (process) {
+      setActiveRecruitmentComponent(process);
+    }
+  }, [process]);
   const stats = [
     { 
       label: 'Total Employees', 
@@ -66,7 +73,6 @@ const Recruitments = () => {
       color: 'purple' 
     },
   ];
-
   const RecruitmentMenuItems = [
     { 
       label: 'Recruitment Mail', 
@@ -85,12 +91,12 @@ const Recruitments = () => {
     },
     { 
       label: 'Candidate Approval', 
-      component: 'candidate-approval', 
+      component: 'Candidate Approval', 
       icon: Signature,
     },
     { 
       label: 'Note For Approval', 
-      component: 'note-approval', 
+      component: 'Note For Approval', 
       icon: TrendingUpIcon,
     },
     { 
@@ -99,7 +105,6 @@ const Recruitments = () => {
       icon: CircleCheckBig,
     },
   ];
-
   const handleMenuItemClick = (component) => {
     console.log('Clicked component:', component);
     setActiveRecruitmentComponent(component);
@@ -109,7 +114,8 @@ const Recruitments = () => {
     setOnboardingEnabled(event.target.checked);
   };
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (event, newValue) => 
+  {
     setActiveTab(newValue);
     setActiveRecruitmentComponent(null);
   };
@@ -132,9 +138,9 @@ const Recruitments = () => {
        return <Verification />
       case 'salary-stackup':
        return <Salarystackup/>
-      case 'candidate-approval':
+      case 'Candidate Approval':
         return <CandidateApproval/>
-      case 'note-approval':
+      case 'Note For Approval':
         return <NoteForApprovals/>
         case 'offer-letter':
         return <OfferLetter/>      
@@ -163,7 +169,7 @@ const Recruitments = () => {
           >
             <Tab 
               label="Recruitment Process" 
-              icon={<PeopleIcon />} 
+              icon={<PeopleIcon/>} 
               iconPosition="start"
             />
           </Tabs>
@@ -186,7 +192,7 @@ const Recruitments = () => {
                       console.log('Button clicked:', item.component);
                       handleMenuItemClick(item.component);
                     }}
-                    className={`normal-case transition-all duration-200 ${
+                     className={`normal-case transition-all duration-200 ${
                       isActive 
                         ? 'bg-orange-500 hover:bg-orange-600 border-orange-500' 
                         : 'bg-white hover:bg-orange-50 border-gray-300 text-gray-700'
@@ -200,7 +206,6 @@ const Recruitments = () => {
           </Box>
         )}
       </Paper>
-
       {/* Show active component */}
       {activeRecruitmentComponent ? (
         <Box>
@@ -244,8 +249,7 @@ const Recruitments = () => {
                             </Typography>
                           </Box>
                           <Box 
-                            className={`w-12 h-12 rounded-lg ${colorClasses.bg} flex items-center justify-center transition-colors`}
-                          >
+                            className={`w-12 h-12 rounded-lg ${colorClasses.bg} flex items-center justify-center transition-colors`}>
                             <IconComponent className={colorClasses.text} />
                           </Box>
                         </Box>

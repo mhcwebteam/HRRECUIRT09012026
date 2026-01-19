@@ -54,7 +54,7 @@ const Salarystackup = () => {
       result = result.filter(user => user.status === statusFilter);
     }
     //console.log(result,"resultttttttttttttt");
-    return result.map((item, index) => ({
+    return result.filter(item => item.overallDocments_aprvl && item.overallDocments_aprvl ==1).map((item, index) => ({
       id: item.id || `row-${index}`,
       SNO: index + 1,
       verification_id:item.Verification_Id,
@@ -81,7 +81,6 @@ const Salarystackup = () => {
       STATUS: item.status || 'pending',
       remarks: item.remarks || 'No remarks',
       submitted_date: item.created_at || 'N/A',
-      
       // Include documents for modal
       documents: item.documents || {}
     }));
@@ -91,11 +90,11 @@ const Salarystackup = () => {
   {
     const statusValue = status?.toLowerCase();
     const config = {
-      verified: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" />  },
-      pending:  { color: '#f59e0b', icon: <Refresh className="w-4 h-4" />      },
-      rejected: { color: '#ef4444', icon: <Cancel className="w-4 h-4" />       },
-      uploaded: { color: '#3b82f6', icon: <CheckCircle className="w-4 h-4" />  },
-      'not uploaded': { color: '#6b7280', icon: <Cancel className="w-4 h-4" /> }
+      verified:       { color: '#10b981',       icon: <CheckCircle className="w-4 h-4" />  },
+      pending:        { color: '#f59e0b',       icon: <Refresh className="w-4 h-4" />      },
+      rejected:       { color: '#ef4444',       icon: <Cancel className="w-4 h-4" />       },
+      uploaded:       { color: '#3b82f6',       icon: <CheckCircle className="w-4 h-4" />  },
+      'not uploaded': { color: '#6b7280',       icon: <Cancel className="w-4 h-4" />       }
     };
     const { color, icon } = config[statusValue] || config.pending;
     return (
@@ -151,18 +150,13 @@ const Salarystackup = () => {
   } catch (error) {
     console.error(error);
     alert('Error while sending email');
-  } finally {
-    // Stop loader
-    //setSubmitting(prev => ({ ...prev, [case_id]: false }));
   }
 };
  const handleViewDetails = (user) => {
-
     console.log('user',user)
     setSelectedUser(user);
     setModalOpen(true);
   };
-
    const handleStatusChange = (updateData) => {
     console.log('Status updated:', updateData);
   };
@@ -303,7 +297,6 @@ const Salarystackup = () => {
         </Box>
       ),
     },
-
     {
       field: 'CURRENT_CTC',
       headerName: 'Current CTC',
@@ -326,7 +319,7 @@ const Salarystackup = () => {
       </Box>
     );
   },
-    },
+  },
    {
   field: 'EXP_CTC',
   headerName: 'Expected CTC',
@@ -335,7 +328,6 @@ const Salarystackup = () => {
     const formattedValue = params.value
       ? Number(params.value).toLocaleString('en-IN')
       : '0';
-
     return (
       <Box
         sx={{
@@ -351,7 +343,6 @@ const Salarystackup = () => {
     );
   },
 },
-
 {
   field: 'OFFER_CTC',
   headerName: 'Offer CTC',
@@ -360,22 +351,20 @@ const Salarystackup = () => {
     const formattedValue = params.value
       ? Number(params.value).toLocaleString('en-IN')
       : '0';
-      
-    return (
-      <Box
-        sx={{
-          color: '#dc2626',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          fontWeight: 600,
-        }}
-      >
-        ₹{formattedValue}
-      </Box>
-    );
-  },
-},
+     return (
+        <Box
+          sx={{
+            color: '#dc2626',
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%',
+            fontWeight: 600,
+          }}>
+          ₹{formattedValue}
+        </Box>
+        );
+      },
+    },
     {
       field: 'STATUS',
       headerName: 'Overall Status',
@@ -431,7 +420,6 @@ const Salarystackup = () => {
       renderCell: (params) => 
       {
        // alert(params.row);
-       
         const isSubmitting = submitting[params.row.CASEID] || false;
         // const email = emailInputs[params.row.CASEID] || '';
         return (

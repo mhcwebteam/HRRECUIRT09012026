@@ -200,6 +200,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Eye, TrendingUp, Users, FileText, ChevronLeft, ChevronRight, Filter, Download, RefreshCw } from 'lucide-react';
 import {API_BASE_URL} from '../Config/Config';
+import { useNavigate } from 'react-router-dom';
+
 // Mock API for demo - replace with your actual API
 
 const HrInbox = () => {
@@ -209,6 +211,8 @@ const HrInbox = () => {
   const [pageSize, setPageSize] = useState(10);
   const [loading,  setLoading] = useState(false);
   const [hrData,   setHrData] = useState([]);
+  const navigate = useNavigate();
+
   const token = useMemo(() => 
   {
     const info = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -240,25 +244,29 @@ const HrInbox = () => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    if (token) {
+  useEffect(() => 
+  {
+    if (token) 
+    {
       hrAprvlFetchData();
     }
   }, [token]);
 
-  useEffect(() => {
+  useEffect(() => 
+  {
     setCurrentPage(0);
   }, [searchTerm, statusFilter]);
 
   const handleViewDetails = (row) => 
   {
-    alert(`Viewing details for ${row.Child_CaseId}\n\nProcess: ${row.Recruit_Process}\nStage: ${row.Stages}`);
+    if (!row?.Recruit_Process) return;
+    navigate(`/RecruitmentProcess?process=${row.Recruit_Process}`);
   };
-
   const filteredRows = useMemo(() => 
   {
     let data = [...hrData];
-    if (searchTerm) {
+    if (searchTerm) 
+    {
       const term = searchTerm.toLowerCase();
       data = data.filter(
         (row) =>
@@ -266,7 +274,8 @@ const HrInbox = () => {
           (row.Recruit_Process || '').toLowerCase().includes(term)
       );
     }
-    if (statusFilter !== 'all') {
+    if (statusFilter !== 'all') 
+    {
       data = data.filter((row) => row.Stages === statusFilter);
     }
     return data;
