@@ -4,13 +4,14 @@ import { X, Eye, Download, FileText, Check,CheckCircle, XCircle, Clock } from 'l
 import { API_BASE_URL,API_BASE_URLss} from '../Config/Config';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import Verification from './Verification';
 
 const VerificationDetailsModal = ({ open, onClose, data, onStatusChange }) => {
   // console.log("DATAATATATATATA",data);
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
   const [remarks, setRemarks] = useState(data?.remarks || '');
   const [updateDocuments, setDocuments] = useState([]);
-
+  const [localData, setLocalData] = useState(data);
   const [viewingDoc, setViewingDoc] = useState(null);
   const [viewingDocName, setViewingDocName] = useState('');
   const hasDocument = true;
@@ -18,6 +19,11 @@ const VerificationDetailsModal = ({ open, onClose, data, onStatusChange }) => {
   useEffect(() => {
     setDocuments(data?.documents || []);
   }, [data?.documents]);
+
+
+    useEffect(() => {
+    setLocalData(data);
+  }, [data]);
 
   // console.log("updateDocumentsupdateDocumentsupdateDocumentsupdateDocuments",updateDocuments);
   const isApproved = true; // or false
@@ -59,8 +65,10 @@ const handleSubmit = async () => {
   }
 };
 //----------------------------------HandleApprove------------------------------------------//
-const handleApprove = async (Document_Id) => 
+const handleApprove = async (Document_Id,Verify_Id) => 
 {
+
+
   const result = await Swal.fire({
     title: 'Are you sure?',
     text: 'Do you want to approve this document?',
@@ -80,8 +88,12 @@ const handleApprove = async (Document_Id) =>
   {
     const payload = 
     {
+  Verification_Id: Verify_Id,
+      // child_caseId: data.CHILD_CASEID,
       Document_Id: Document_Id,
     };
+
+  
   const response = await axios.post(
       `${API_BASE_URL}/verify-Doc-Status`,
       payload,
@@ -92,7 +104,9 @@ const handleApprove = async (Document_Id) =>
         },
       }
     );
-    //--------------------------------Success Alert-----------------------------//
+
+    console.log(response,"respondeddddddddddddddddddddddd");
+
     await Swal.fire({
       icon: 'success',
       title: 'Approved!',
@@ -101,7 +115,7 @@ const handleApprove = async (Document_Id) =>
       showConfirmButton: false,
     });
     //-----------------------------Update State-------------------------------//
-    setIsApproved(true);
+    // setIsApproved(true);
   }
    catch (error) 
   {
@@ -236,7 +250,8 @@ const handleApprove = async (Document_Id) =>
               // Not Approved → Approve Button
               <button
                 onClick={() => handleApprove(documentId,Verification_Id,title,documentPath)}
-                className="flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium">
+                className="flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                >
                 <Check className="w-4 h-4"/>
                 Approve
               </button>
@@ -253,23 +268,23 @@ const handleApprove = async (Document_Id) =>
   };
   // Education data from backend
   const educationDocuments = [
-    { title: '10th Certificate',           path: data?.documents?.['10th_certi'], marks: data?.SSC_MARKS     ,documentId:data?.documents?.Tenth_DocId, docStatus:data?.documents?.Tenth_Status},
-    { title: 'Intermediate Certificate',   path: data?.documents?.Inter_certi,    marks: data?.INTER_MARKS   ,documentId:data?.documents?.Inter_DocId ,docStatus:data?.documents?.Inter_Status},
-    { title: 'B.Tech/Degree Certificate ', path: data?.documents?.Gradu_certi,    marks: data?.BTECH_MARKS   ,documentId:data?.documents?.grad_DocId,  docStatus:data?.documents?.Grad_Status},
-    { title: 'PG Certificate',             path: data?.documents?.Pg_certi,       marks: data?.PG_MARKS      ,documentId:data?.documents?.pg_DocId,    docStatus:data?.documents?.Pg_Status},
+    { title: '10th Certificate',           path: data?.documents?.['10th_certi'], marks: data?.SSC_MARKS     ,documentId:data?.documents?.Tenth_DocId, docStatus:data?.documents?.Tenth_Status,Verification_Id:data.Verification_Id },
+    { title: 'Intermediate Certificate',   path: data?.documents?.Inter_certi,    marks: data?.INTER_MARKS   ,documentId:data?.documents?.Inter_DocId ,docStatus:data?.documents?.Inter_Status ,Verification_Id:data.Verification_Id },
+    { title: 'B.Tech/Degree Certificate ', path: data?.documents?.Gradu_certi,    marks: data?.BTECH_MARKS   ,documentId:data?.documents?.grad_DocId,  docStatus:data?.documents?.Grad_Status ,Verification_Id:data.Verification_Id },
+    { title: 'PG Certificate',             path: data?.documents?.Pg_certi,       marks: data?.PG_MARKS      ,documentId:data?.documents?.pg_DocId,    docStatus:data?.documents?.Pg_Status ,Verification_Id:data.Verification_Id },
   ];
   // Identity documents
   const identityDocuments = 
   [
-    { title: 'Aadhar Card', path: data?.documents?.Aadhar_certi    ,  documentId:data?.documents?.Aadhar_DocId, docStatus:data?.documents?.Aadhr_Status},
-    { title: 'PAN Card'   , path: data?.documents?.Pan_certi       ,  documentId:data?.documents?.pan_DocId   , docStatus:data?.documents?.Pan_Status},
+    { title: 'Aadhar Card', path: data?.documents?.Aadhar_certi    ,  documentId:data?.documents?.Aadhar_DocId, docStatus:data?.documents?.Aadhr_Status ,Verification_Id:data.Verification_Id },
+    { title: 'PAN Card'   , path: data?.documents?.Pan_certi       ,  documentId:data?.documents?.pan_DocId   , docStatus:data?.documents?.Pan_Status ,Verification_Id:data.Verification_Id },
   ];
   // Professional documents
   const professionalDocuments = 
   [
-    { title: 'Payslip',           path: data?.documents?.Payslip  ,         documentId:data?.documents?.PaySlip_DocId, docStatus:data?.documents?.PaySlip_Status },
-    { title: 'Experience Letter', path: data?.documents?.Exp_Letter,        documentId:data?.documents?.Exp_DocId    , docStatus:data?.documents?.Exp_Status },
-    { title: 'Relieving Letter',  path: data?.documents?.Relieving_Letter,  documentId:data?.documents?.Reliev_DocId , docStatus:data?.documents?.Reliv_Status },
+    { title: 'Payslip',           path: data?.documents?.Payslip  ,         documentId:data?.documents?.PaySlip_DocId, docStatus:data?.documents?.PaySlip_Status  ,Verification_Id:data.Verification_Id },
+    { title: 'Experience Letter', path: data?.documents?.Exp_Letter,        documentId:data?.documents?.Exp_DocId    , docStatus:data?.documents?.Exp_Status  ,Verification_Id:data.Verification_Id },
+    { title: 'Relieving Letter',  path: data?.documents?.Relieving_Letter,  documentId:data?.documents?.Reliev_DocId , docStatus:data?.documents?.Reliv_Status  ,Verification_Id:data.Verification_Id },
   ];
   return (
     <>

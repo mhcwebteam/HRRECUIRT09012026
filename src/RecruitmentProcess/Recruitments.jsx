@@ -23,30 +23,23 @@ import {
   UploadFile as UploadFileIcon,
   RequestQuote as RequestQuoteIcon
 } from '@mui/icons-material';
-import { useLocation ,useParams} from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import RecruitmentMail from './RecruitmentMail';
 import RecruitmentForm from './RecruitmentForm';
-import { CircleCheckBig, ScrollText, Signature } from 'lucide-react';
+import { CircleCheckBig, ScrollText, Mail, ShieldCheck, DollarSign, UserCheck, FileText, Send } from 'lucide-react';
 import Verification from './Verification';
 import Salarystackup from './Salarystackup';
 import CandidateApproval from './CandidateApproval';
 import NoteForApprovals from './NoteForApprovals';
 import OfferLetter from './OfferLetter';
 
-const Recruitments = () => 
-{
+const Recruitments = () => {
   const location = useLocation();
   const [onboardingEnabled, setOnboardingEnabled] = useState(true);
   const [activeRecruitmentComponent, setActiveRecruitmentComponent] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [hoveredTab, setHoveredTab] = useState(null);
-  const queryParams = new URLSearchParams(location.search);
-  const process = queryParams.get('process');   
-  useEffect(() => {
-    if (process) {
-      setActiveRecruitmentComponent(process);
-    }
-  }, [process]);
+
   const stats = [
     { 
       label: 'Total Employees', 
@@ -73,38 +66,64 @@ const Recruitments = () =>
       color: 'purple' 
     },
   ];
+
   const RecruitmentMenuItems = [
     { 
       label: 'Recruitment Mail', 
       component: 'recruitment-mail', 
-      icon: GroupAddIcon,
+      icon: Mail,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-300',
+      hoverBg: 'hover:bg-purple-100'
     },
     { 
       label: 'Verification', 
       component: 'verification', 
-      icon: AssignmentIcon,
+      icon: ShieldCheck,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-300',
+      hoverBg: 'hover:bg-blue-100'
     },
     { 
       label: 'Salary Stackup', 
       component: 'salary-stackup', 
-      icon: ScrollText,
+      icon: DollarSign,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-300',
+      hoverBg: 'hover:bg-green-100'
     },
     { 
       label: 'Candidate Approval', 
-      component: 'Candidate Approval', 
-      icon: Signature,
+      component: 'candidate-approval', 
+      icon: UserCheck,
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-300',
+      hoverBg: 'hover:bg-orange-100'
     },
     { 
       label: 'Note For Approval', 
-      component: 'Note For Approval', 
-      icon: TrendingUpIcon,
+      component: 'note-approval', 
+      icon: FileText,
+      color: 'from-pink-500 to-pink-600',
+      bgColor: 'bg-pink-50',
+      borderColor: 'border-pink-300',
+      hoverBg: 'hover:bg-pink-100'
     },
     { 
       label: 'Offer Letter', 
       component: 'offer-letter', 
-      icon: CircleCheckBig,
+      icon: Send,
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-300',
+      hoverBg: 'hover:bg-indigo-100'
     },
   ];
+
   const handleMenuItemClick = (component) => {
     console.log('Clicked component:', component);
     setActiveRecruitmentComponent(component);
@@ -114,11 +133,11 @@ const Recruitments = () =>
     setOnboardingEnabled(event.target.checked);
   };
 
-  const handleTabChange = (event, newValue) => 
-  {
+  const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
     setActiveRecruitmentComponent(null);
   };
+
   const getColorClasses = (color) => {
     const colorMap = {
       blue:   { bg: 'bg-blue-100',   text: 'text-blue-600'     },
@@ -128,84 +147,158 @@ const Recruitments = () =>
     };
     return colorMap[color] || colorMap.blue;
   };
-  const renderRecruitmentComponent = () => 
-  {
+
+  const renderRecruitmentComponent = () => {
     console.log('Current component:', activeRecruitmentComponent);
     switch (activeRecruitmentComponent) {
       case 'recruitment-mail':
         return <RecruitmentMail />;
       case 'verification':
-       return <Verification />
+        return <Verification />
       case 'salary-stackup':
-       return <Salarystackup/>
-      case 'Candidate Approval':
+        return <Salarystackup/>
+      case 'candidate-approval':
         return <CandidateApproval/>
-      case 'Note For Approval':
+      case 'note-approval':
         return <NoteForApprovals/>
-        case 'offer-letter':
+      case 'offer-letter':
         return <OfferLetter/>      
       case 'form':
-  // return <RecruitmentForm />
+        // return <RecruitmentForm />
       default:
         return null;
     }
   };
+
   return (
     <div className="">
-      <Paper elevation={1} className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-orange-500">
-        <Box className="border-b border-gray-200">
-          <Tabs 
-            value={activeTab} 
-            onChange={handleTabChange}
-            className="min-h-0"
-            sx={{
-              '& .MuiTab-root': {
-                minHeight: '48px',
-                fontSize: '1rem',
-                fontWeight: 600,
-                textTransform: 'none',
-              }
-            }}
-          >
-            <Tab 
-              label="Recruitment Process" 
-              icon={<PeopleIcon/>} 
-              iconPosition="start"
-            />
-          </Tabs>
+      <style>
+        {`
+          @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+          }
+          
+          @keyframes pulse-glow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.5; }
+          }
+
+          @keyframes slide-in {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .tab-button-active {
+            animation: pulse-subtle 2s ease-in-out infinite;
+          }
+
+          .tab-container {
+            animation: slide-in 0.3s ease-out;
+          }
+        `}
+      </style>
+
+      <Paper elevation={1} className="mb-6 p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 border-l-4 border-purple-500">
+        {/* Header with Icon */}
+        <Box className="mb-3 flex items-center gap-3">
+          <div className="w-1 h-8 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full"></div>
+          <div className="flex items-center gap-2">
+            <PeopleIcon className="text-purple-600" style={{ fontSize: '24px' }} />
+            <Typography 
+              variant="h6" 
+              className="font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
+            >
+              Recruitment Process
+            </Typography>
+          </div>
         </Box>
 
-        {/* Submenu for Onboarding Tab */}
+        {/* Animated Tabs Section */}
         {(activeTab === 0 || hoveredTab === 0) && (
-          <Box className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-            <Box className="flex flex-wrap gap-2">
+          <Box className="tab-container mt-3 p-4 bg-white rounded-xl border-2 border-gray-100 shadow-md">
+            <Box className="flex flex-wrap gap-3">
               {RecruitmentMenuItems.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = activeRecruitmentComponent === item.component;
+                const isHovered = hoveredTab === item.component;
+                
                 return (
-                  <Button
+                  <button
                     key={item.component}
-                    variant={isActive ? "contained" : "outlined"}
-                    size="medium"
-                    onClick={() => 
-                    {
+                    onClick={() => {
                       console.log('Button clicked:', item.component);
                       handleMenuItemClick(item.component);
                     }}
-                     className={`normal-case transition-all duration-200 ${
-                      isActive 
-                        ? 'bg-orange-500 hover:bg-orange-600 border-orange-500' 
-                        : 'bg-white hover:bg-orange-50 border-gray-300 text-gray-700'
-                    }`}
-                    startIcon={<IconComponent />}>
-                    {item.label}
-                  </Button>
+                    onMouseEnter={() => setHoveredTab(item.component)}
+                    onMouseLeave={() => setHoveredTab(null)}
+                    className={`
+                      relative group px-5 py-3 rounded-lg font-semibold text-sm
+                      transition-all duration-300 ease-out
+                      flex items-center gap-2.5 border-2
+                      ${isActive 
+                        ? `bg-gradient-to-r ${item.color} text-white border-transparent shadow-lg scale-105 transform tab-button-active` 
+                        : `${item.bgColor} ${item.borderColor} text-gray-700 ${item.hoverBg} hover:shadow-md hover:scale-102 hover:border-opacity-100`
+                      }
+                    `}
+                  >
+                    {/* Animated background glow for active state */}
+                    {isActive && (
+                      <div 
+                        className="absolute inset-0 rounded-lg bg-white"
+                        style={{
+                          opacity: 0.3,
+                          animation: 'pulse-glow 2s ease-in-out infinite'
+                        }}
+                      ></div>
+                    )}
+                    
+                    {/* Icon with rotation animation */}
+                    <div 
+                      className={`
+                        relative z-10 transition-transform duration-300
+                        ${isHovered || isActive ? 'scale-110 rotate-12' : 'scale-100'}
+                      `}
+                    >
+                      <IconComponent 
+                        size={18} 
+                        className={`${isActive ? 'text-white' : 'text-gray-600'} transition-colors duration-300`}
+                      />
+                    </div>
+                    
+                    {/* Label */}
+                    <span className="relative z-10 tracking-wide">
+                      {item.label}
+                    </span>
+
+                    {/* Active indicator dot */}
+                    {isActive && (
+                      <div className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full opacity-70"></div>
+                    )}
+
+                    {/* Hover glow effect */}
+                    {(isHovered || isActive) && (
+                      <div 
+                        className={`absolute inset-0 rounded-lg blur-md -z-10 bg-gradient-to-r ${item.color}`}
+                        style={{ opacity: 0.2 }}
+                      ></div>
+                    )}
+                  </button>
                 );
               })}
             </Box>
+
+
           </Box>
         )}
       </Paper>
+
       {/* Show active component */}
       {activeRecruitmentComponent ? (
         <Box>
@@ -249,7 +342,8 @@ const Recruitments = () =>
                             </Typography>
                           </Box>
                           <Box 
-                            className={`w-12 h-12 rounded-lg ${colorClasses.bg} flex items-center justify-center transition-colors`}>
+                            className={`w-12 h-12 rounded-lg ${colorClasses.bg} flex items-center justify-center transition-colors`}
+                          >
                             <IconComponent className={colorClasses.text} />
                           </Box>
                         </Box>
@@ -292,4 +386,5 @@ const Recruitments = () =>
     </div>
   );
 };
+
 export default Recruitments;

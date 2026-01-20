@@ -1,15 +1,14 @@
-
 import React, { useState, useMemo, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, Paper, Modal, IconButton, Typography, Button, CircularProgress, TextField, InputAdornment } from '@mui/material';
+import { Box, Paper, Modal, IconButton, Typography, Button, CircularProgress, TextField, InputAdornment, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import SearchIcon from '@mui/icons-material/Search';
 import { Doughnut } from 'react-chartjs-2';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { FaCheckCircle, FaExclamationCircle, FaTimesCircle, FaChartPie } from 'react-icons/fa';
 import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend as ChartLegend, } from 'chart.js';
 import DataFlow from "../Components/DataFlow.jsx"
@@ -25,49 +24,44 @@ ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
 const RecruitmentMail = () => {
   const [searchText, setSearchText] = useState('');
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]); // Separate state for filtered data
+  const [filteredData, setFilteredData] = useState([]);
   const [manpowerOpen, setManPowerOpen] = useState(false);
   const [processCaseId, setProcessAndCaseIdData] = useState('');
   const [loading, setLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const [paginationModel, setPaginationModel] = useState({ pageSize: 5, page: 0 });
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
   const [emailInputs, setEmailInputs] = useState({});
   const [submitting, setSubmitting] = useState({});
 
- const { HrData,setSelectedRecord  } = useContext(ContextData);
-useEffect(() => {
-  if (Array.isArray(HrData) && HrData.length > 0) {
+  const { HrData, setSelectedRecord } = useContext(ContextData);
 
-    const shortlistedData = HrData.filter(row => {
-      const status =
-        row.ACTION_STATUS ||
-        row.STATUS ||
-        row.CUR_STATUS;
+  useEffect(() => {
+    if (Array.isArray(HrData) && HrData.length > 0) {
+      const shortlistedData = HrData.filter(row => {
+        const status = row.ACTION_STATUS || row.STATUS || row.CUR_STATUS;
+        return status?.toUpperCase() === 'COMPLETED';
+      });
 
-      return status?.toUpperCase() === 'COMPLETED';
-    });
+      const rowsWithId = shortlistedData.map((row, index) => ({
+        ...row,
+        id: row.CHILD_CASEID || `row_${index}`,
+      }));
 
-    const rowsWithId = shortlistedData.map((row, index) => ({
-      ...row,
-      id: row.CHILD_CASEID || `row_${index}`,
-    }));
+      console.log("Filtered HR Data:", rowsWithId);
+      setData(rowsWithId);
+      setFilteredData(rowsWithId);
+      setLoading(false);
+    } else {
+      console.log("HrData is empty or not an array");
+      setData([]);
+      setFilteredData([]);
+      setLoading(false);
+    }
+  }, [HrData]);
 
-    console.log("Filtered HR Data:", rowsWithId);
-
-    setData(rowsWithId);
-    setFilteredData(rowsWithId);
-    setLoading(false);
-
-  } else {
-    console.log("HrData is empty or not an array");
-    setData([]);
-    setFilteredData([]);
-    setLoading(false);
-  }
-}, [HrData]);
   useEffect(() => {
     if (!userToken.token) navigate('/');
   }, [navigate, userToken?.token]);
@@ -93,9 +87,10 @@ useEffect(() => {
         (row.DEPT && row.DEPT.toLowerCase().includes(search)) ||
         (row.MANPOWER_DESG && row.MANPOWER_DESG.toLowerCase().includes(search))
       );
-    }); 
+    });
     setFilteredData(filtered);
   };
+
   const handleEmailChange = (caseId, email) => {
     setEmailInputs(prev => ({
       ...prev,
@@ -103,98 +98,90 @@ useEffect(() => {
     }));
   };
 
-const handleSubmitEmail = async (caseId, rowData) => {
-  const email = emailInputs[caseId];
-  if (!email) {
-    Swal.fire('Error', 'Please enter email', 'error');
-    return;
-  }
-
-  // Validate email format
-  if (!validateEmail(email)) {
-    Swal.fire('Error', 'Please enter a valid email address', 'error');
-    return;
-  }
-
-  // Show confirmation dialog
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    text: `Do you want to send the onboarding form link to ${email}?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, Send Email',
-    cancelButtonText: 'Cancel',
-    confirmButtonColor: '#10b981',
-    cancelButtonColor: '#6b7280',
-  });
-
-  // If user cancels, return early
-  if (!result.isConfirmed) {
-    return;
-  }
-  setSubmitting(prev => ({ ...prev, [caseId]: true }));
-  const payload2 = {
-    email: email,
-    child_caseId: caseId,
-  }
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/emp-email`,
-   payload2,
-      {
-        headers: {
-          Authorization: `Bearer ${userToken.token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
-    console.log(response,"pay1");
-
-    if (response.data) {
-      Swal.fire({
-        title: 'Success!',
-        text: 'Onboarding form link sent to employee email!',
-        icon: 'success',
-        confirmButtonText: 'OK',
-      });
-
-      // Clear email input
-      setEmailInputs(prev => ({ ...prev, [caseId]: '' }));
+  const handleSubmitEmail = async (caseId, rowData) => {
+    const email = emailInputs[caseId];
+    if (!email) {
+      Swal.fire('Error', 'Please enter email', 'error');
+      return;
     }
-  } catch (error) {
-    console.error('Email send error:', error);
-    Swal.fire('Error', 'Failed to send email', 'error');
-  } finally {
-    setSubmitting(prev => ({ ...prev, [caseId]: false }));
-  }
-};
 
+    if (!validateEmail(email)) {
+      Swal.fire('Error', 'Please enter a valid email address', 'error');
+      return;
+    }
 
-  // Email validation function
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to send the onboarding form link to ${email}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Send Email',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    setSubmitting(prev => ({ ...prev, [caseId]: true }));
+    const payload2 = {
+      email: email,
+      child_caseId: caseId,
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/emp-email`,
+        payload2,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken.token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      console.log(response, "pay1");
+
+      if (response.data) {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Onboarding form link sent to employee email!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+        setEmailInputs(prev => ({ ...prev, [caseId]: '' }));
+      }
+    } catch (error) {
+      console.error('Email send error:', error);
+      Swal.fire('Error', 'Failed to send email', 'error');
+    } finally {
+      setSubmitting(prev => ({ ...prev, [caseId]: false }));
+    }
+  };
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Handle manpower view open
   const handleOpenManpower = async (rowData, type) => {
     setSelectedRowData(rowData);
-    setProcessAndCaseIdData({ 
-      processname: rowData.PROCESSNAME, 
-      caseId: row.CHILD_CASEID, 
-      type: type 
+    setProcessAndCaseIdData({
+      processname: rowData.PROCESSNAME,
+      caseId: row.CHILD_CASEID,
+      type: type
     });
     setManPowerOpen(true);
   };
 
-  // Handle modal close
   const handleCloseModal = () => {
     setManPowerOpen(false);
     setSelectedRowData(null);
   };
 
-  // Calculate counts based on actual data
   const statusCounts = useMemo(() => {
     const counts = {
       total: filteredData.length,
@@ -215,56 +202,16 @@ const handleSubmitEmail = async (caseId, rowData) => {
     return counts;
   }, [filteredData]);
 
-  const donutData = {
-    labels: ['Completed', 'Pending'],
-    datasets: [{
-      data: [statusCounts.completed, statusCounts.pending],
-      backgroundColor: ['#65a590ff', '#f0b248ff'],
-      hoverBackgroundColor: ['#389477ff', '#cf8939ff'],
-      borderWidth: 2,
-      borderColor: '#ffffff',
-    }],
-  };
-
-  const donutOptions = {
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          font: { size: 10 },
-          padding: 10,
-          color: '#374151',
-        },
-      },
-      tooltip: {
-        titleFont: { size: 11 },
-        bodyFont: { size: 10 },
-      },
-    },
-    maintainAspectRatio: false,
-    responsive: true,
-  };
-
-  const stackedBarData = [
-    { name: 'Data', completed: statusCounts.completed, pending: statusCounts.pending },
-  ];
-
   const columns = [
     {
       field: 'SNO',
       headerName: 'S.NO',
       flex: 0.5,
-      minWidth: 80,
+      minWidth: 70,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Box sx={{
-          fontWeight: 600,
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <Box sx={{ fontWeight: 600, color: '#374151' }}>
           {params.api.getAllRowIds().indexOf(params.id) + 1}
         </Box>
       ),
@@ -275,13 +222,7 @@ const handleSubmitEmail = async (caseId, rowData) => {
       flex: 1,
       minWidth: 120,
       renderCell: (params) => (
-        <Box sx={{
-          fontWeight: 500,
-          color: '#1f2937',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <Box sx={{ fontWeight: 500, color: '#1f2937' }}>
           {params.value}
         </Box>
       ),
@@ -290,14 +231,9 @@ const handleSubmitEmail = async (caseId, rowData) => {
       field: 'RAISER',
       headerName: 'Raiser',
       flex: 1,
-      minWidth: 120,
+      minWidth: 110,
       renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <Box sx={{ color: '#374151' }}>
           {params.value}
         </Box>
       ),
@@ -306,14 +242,9 @@ const handleSubmitEmail = async (caseId, rowData) => {
       field: 'RAISER_DATE',
       headerName: 'Raiser Date',
       flex: 1,
-      minWidth: 120,
+      minWidth: 110,
       renderCell: (params) => (
-        <Box sx={{
-          color: '#6b7280',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <Box sx={{ color: '#6b7280' }}>
           {params.value ? new Date(params.value).toLocaleDateString('en-GB') : ''}
         </Box>
       ),
@@ -321,15 +252,10 @@ const handleSubmitEmail = async (caseId, rowData) => {
     {
       field: 'PLANT',
       headerName: 'Plant',
-      flex: 1,
-      minWidth: 120,
+      flex: 1.2,
+      minWidth: 140,
       renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <Box sx={{ color: '#374151' }}>
           {params.value}
         </Box>
       ),
@@ -337,16 +263,10 @@ const handleSubmitEmail = async (caseId, rowData) => {
     {
       field: 'DEPT',
       headerName: 'Department',
-      flex: 1.2,
-      minWidth: 140,
+      flex: 1,
+      minWidth: 120,
       renderCell: (params) => (
-        <Box sx={{
-          color: '#374151',
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <Box sx={{ color: '#374151', fontWeight: 500 }}>
           {params.value}
         </Box>
       ),
@@ -355,142 +275,155 @@ const handleSubmitEmail = async (caseId, rowData) => {
       field: 'MANPOWER_DESG',
       headerName: 'Designation',
       flex: 1.2,
-      minWidth: 140,
+      minWidth: 130,
       renderCell: (params) => (
         <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%'
+          color: '#374151',
+          padding: '2px 8px',
+          borderRadius: '6px',
+          fontSize: '12px',
+          fontWeight: 600,
         }}>
-          <Box sx={{
-            color: '#374151',
-            padding: '4px 8px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: 600,
-            minWidth: '30px',
-            textAlign: 'center',
-          }}>
-            {params.value || 'N/A'}
-          </Box>
+          {params.value || 'N/A'}
         </Box>
       ),
     },
     {
       field: 'ACTION_STATUS',
       headerName: 'Status',
-      flex: 1,
-      minWidth: 120,
+      flex: 0.8,
+      minWidth: 100,
       renderCell: (params) => (
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%'
-        }}>
-          <Box sx={{
-            color: '#ffffff',
-            backgroundColor: '#10b981',
-            padding: '4px 12px',
-            borderRadius: '12px',
+        <Button
+          variant="contained"
+          size="small"
+          sx={{
+            background: '#10b981',
+            color: 'white',
             fontSize: '11px',
-            fontWeight: 600,
+            padding: '3px 10px',
+            borderRadius: '4px',
             textTransform: 'capitalize',
-          }}>
-            {params.value || 'Shortlisted'}
-          </Box>
-        </Box>
+            fontWeight: 600,
+            minWidth: 'auto',
+            boxShadow: 'none',
+            '&:hover': {
+              background: '#059669',
+              boxShadow: 'none',
+            },
+          }}
+        >
+          Shortlisted
+        </Button>
       ),
     },
     {
       field: 'USER_EMAIL',
       headerName: 'User Email',
       flex: 1.5,
-      minWidth: 200,
-      renderCell: (params) => (
-        <TextField
-          size="small"
-          type="email"
-          placeholder="Enter email address"
-          value={emailInputs[params.row.CHILD_CASEID] || ''}
-          onChange={(e) => handleEmailChange(params.row.CHILD_CASEID, e.target.value)}
-          sx={{
-            width: '100%',
-            '& .MuiOutlinedInput-root': {
-              fontSize: '12px',
-              height: '35px',
-              marginTop:'8px',
-              '& fieldset': {
-                borderColor: '#d1d5db',
+      minWidth: 180,
+      renderCell: (params) => {
+        const currentEmail = emailInputs[params.row.CHILD_CASEID] || '';
+        return (
+          <Tooltip 
+            title={currentEmail || 'No email entered'} 
+            arrow 
+            placement="top"
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  backgroundColor: '#1f2937',
+                  fontSize: '12px',
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  '& .MuiTooltip-arrow': {
+                    color: '#1f2937',
+                  },
+                },
               },
-              '&:hover fieldset': {
-                borderColor: '#667eea',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#667eea',
-              },
-            },
-          }}
-        />
-      ),
+            }}
+          >
+            <TextField
+              size="small"
+              type="email"
+              placeholder="Enter email address"
+              value={currentEmail}
+              onChange={(e) => handleEmailChange(params.row.CHILD_CASEID, e.target.value)}
+              sx={{
+                width: '100%',
+                '& .MuiOutlinedInput-root': {
+                  fontSize: '12px',
+                  height: '32px',
+                  '& fieldset': {
+                    borderColor: '#d1d5db',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#667eea',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#667eea',
+                  },
+                },
+              }}
+            />
+          </Tooltip>
+        );
+      },
     },
     {
       field: 'ACTIONS',
       headerName: 'Actions',
       flex: 1,
-      minWidth: 120,
+      minWidth: 110,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
         const isSubmitting = submitting[params.row.CHILD_CASEID] || false;
-        const email        = emailInputs[params.row.CHILD_CASEID]       || '';
+        const email = emailInputs[params.row.CHILD_CASEID] || '';
         return (
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => handleSubmitEmail(params.row.CHILD_CASEID, params.row)}
-              disabled={isSubmitting || !email}
-              sx={{
-                background: isSubmitting 
-                  ? '#9ca3af' 
-                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: 'white',
-                fontSize: '10px',
-                padding: '4px 12px',
-                borderRadius: '6px',
-                textTransform: 'capitalize',
-                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                '&:hover': {
-                  background: isSubmitting 
-                    ? '#9ca3af' 
-                    : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  transform: isSubmitting ? 'none' : 'translateY(-1px)',
-                  boxShadow: isSubmitting ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.4)',
-                },
-                '&:disabled': {
-                  background: '#9ca3af',
-                  color: '#e5e7eb',
-                }
-              }}
-            >
-              {isSubmitting ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <CircularProgress size={12} sx={{ color: 'white' }} />
-                  Sending...
-                </Box>
-              ) : (
-                'Send Email'
-              )}
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => handleSubmitEmail(params.row.CHILD_CASEID, params.row)}
+            disabled={isSubmitting || !email}
+            sx={{
+              background: isSubmitting
+                ? '#9ca3af'
+                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              fontSize: '10px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              textTransform: 'capitalize',
+              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
+              minWidth: '90px',
+              '&:hover': {
+                background: isSubmitting
+                  ? '#9ca3af'
+                  : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                transform: isSubmitting ? 'none' : 'translateY(-1px)',
+                boxShadow: isSubmitting ? 'none' : '0 4px 10px rgba(16, 185, 129, 0.4)',
+              },
+              '&:disabled': {
+                background: '#9ca3af',
+                color: '#e5e7eb',
+              }
+            }}
+          >
+            {isSubmitting ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <CircularProgress size={12} sx={{ color: 'white' }} />
+                Sending...
+              </Box>
+            ) : (
+              'Send Email'
+            )}
+          </Button>
         );
       },
     },
   ];
 
-  // Modal style
   const modalStyle = {
     position: 'absolute',
     top: '50%',
@@ -521,27 +454,21 @@ const handleSubmitEmail = async (caseId, rowData) => {
   };
 
   return (
-    <Box
-      sx={{
-        maxWidth: "1280px",
-        margin: "0 auto",
-        padding: "20px",
-        borderRadius: "24px",
-        boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-        border: "1px solid #d1d5db",
-        background: "linear-gradient(to bottom right, #fce7f3, #f9fafb, #f3f4f6)",
-      }}
-    >
+    <Box sx={{
+      maxWidth: "1400px",
+      margin: "0 auto",
+      padding: "12px",
+    }}>
       <Paper sx={{
         width: '100%',
-        padding: 3,
-        borderRadius: '20px',
+        padding: 2,
+        borderRadius: '12px',
         background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
       }}>
-        {/* Enhanced Search bar */}
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* Compact Search bar */}
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ flex: 1, maxWidth: '400px' }}>
             <TextField
               variant="outlined"
@@ -553,12 +480,14 @@ const handleSubmitEmail = async (caseId, rowData) => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ color: '#667eea' }} />
+                    <SearchIcon sx={{ color: '#667eea', fontSize: '20px' }} />
                   </InputAdornment>
                 ),
                 sx: {
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   backgroundColor: '#f8fafc',
+                  height: '38px',
+                  fontSize: '13px',
                   '&:hover': {
                     backgroundColor: '#f1f5f9',
                   },
@@ -571,7 +500,6 @@ const handleSubmitEmail = async (caseId, rowData) => {
                 "& .MuiOutlinedInput-root": {
                   "& fieldset": {
                     borderColor: "#cedef2ff",
-                    boxShadow: "0 1px 1px rgba(0, 0, 0, 0.08)",
                   },
                   "&:hover fieldset": {
                     borderColor: "#d1d6ebff",
@@ -586,30 +514,29 @@ const handleSubmitEmail = async (caseId, rowData) => {
           <Typography variant="body2" sx={{
             color: '#64748b',
             minWidth: 'fit-content',
-            fontWeight: 500
+            fontWeight: 500,
+            fontSize: '13px'
           }}>
             {filteredData.length} shortlisted candidates
           </Typography>
         </Box>
 
-        <Box
-          sx={{
-            width: "100%",
-            borderRadius: "12px",
-            overflow: "hidden",
-            border: "1px solid #dfe5f1ff",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-          }}
-        >
+        <Box sx={{
+          width: "100%",
+          borderRadius: "10px",
+          overflow: "hidden",
+          border: "1px solid #dfe5f1ff",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+        }}>
           <DataGrid
             rows={filteredData}
             columns={columns}
-            getRowId={(row) => row.id} // Use the id we created
+            getRowId={(row) => row.id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 20, 50]}
-            rowHeight={50}
-            columnHeaderHeight={50}
+            pageSizeOptions={[10, 20, 50]}
+            rowHeight={42}
+            columnHeaderHeight={44}
             sx={{
               border: "none",
               "& .MuiDataGrid-columnHeaders": {
@@ -617,16 +544,19 @@ const handleSubmitEmail = async (caseId, rowData) => {
               },
               "& .MuiDataGrid-columnHeader": {
                 fontWeight: 600,
-                fontSize: "14px",
+                fontSize: "13px",
                 color: "#1e293b",
                 backgroundColor: "rgba(188, 198, 238, 0.5)",
                 borderRight: "1px solid #e2e8f0",
               },
               "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #e2e8f0",
-                borderRight: "1px solid #e2e8f0",
-                fontSize: "13px",
+                borderBottom: "1px solid #f1f5f9",
+                borderRight: "1px solid #f1f5f9",
+                fontSize: "12px",
                 color: "#374151",
+                padding: "0 8px",
+                display: "flex",
+                alignItems: "center",
               },
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#f0f9ff",
@@ -634,7 +564,8 @@ const handleSubmitEmail = async (caseId, rowData) => {
               },
               "& .MuiDataGrid-footerContainer": {
                 borderTop: "1px solid #e2e8f0",
-                backgroundColor: "#f0f7fa",
+                backgroundColor: "#f8fafc",
+                minHeight: "48px",
               },
             }}
           />

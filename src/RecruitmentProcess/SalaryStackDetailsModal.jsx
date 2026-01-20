@@ -4,7 +4,7 @@ import { API_BASE_URL } from "../Config/Config";
 import Verification from "./Verification";
 
 const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
-  //console.log("data", data)
+  console.log("data3333333333333", data);
   const FIXED_COMPONENTS = {
     conveyance: 1600,
     education_allowance: 200

@@ -32,6 +32,9 @@ const Verification = () =>
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const { personalData } = useContext(ContextData);
+
+
+  console.log(personalData,"perrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
   const filteredData = useMemo(() => 
   {
     if (!personalData || personalData.length === 0) return [];
@@ -79,11 +82,11 @@ const Verification = () =>
   }, [personalData, searchTerm, statusFilter]);
   const getStatusChip = (status) => {
     const config = {
-      verified: { color: '#10b981', icon: <CheckCircle sx={{ width: 16, height: 16 }} /> },
-      pending:  { color: '#f59e0b', icon: <Refresh sx={{ width: 16, height: 16 }} /> },
-      rejected: { color: '#ef4444', icon: <Cancel sx={{ width: 16, height: 16 }} /> },
-      uploaded: { color: '#3b82f6', icon: <CheckCircle sx={{ width: 16, height: 16 }} /> },
-      'not uploaded': { color: '#6b7280', icon: <Cancel sx={{ width: 16, height: 16 }} /> }
+      verified: { color: '#10b981'},
+      pending:  { color: '#f59e0b' },
+      rejected: { color: '#ef4444'},
+      uploaded: { color: '#3b82f6'},
+      'not uploaded': { color: '#6b7280'}
     };
     const { color, icon } = config[status] || config.pending;
     return (
@@ -96,12 +99,13 @@ const Verification = () =>
         <Box sx={{
           color: '#ffffff',
           backgroundColor: color,
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '11px',
+          padding: '4px 10px',
+          borderRadius: '6px',
+          fontSize: '10px',
           fontWeight: 600,
           textTransform: 'capitalize',
           display: 'flex',
+          height: '25px',
           alignItems: 'center',
           gap: '4px'
         }}>
@@ -136,10 +140,11 @@ const Verification = () =>
     {
       field: 'SNO',
       headerName: 'S.NO',
-      width: 80,
+      flex: 0.5,
+minWidth: 70,
       sortable: false,
       renderCell: (params) => (
-        <Box sx={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', height: '100%' }}>
+        <Box sx={{ fontWeight: 600, color: '#374151' }}>
           {params.value}
         </Box>
       ),
@@ -148,9 +153,9 @@ const Verification = () =>
       field: 'CHILD_CASEID',
       headerName: 'Case ID',
       flex: 1,
-      minWidth: 120,
+      minWidth: 130,
       renderCell: (params) => (
-        <Box sx={{ color: '#6b7280', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 500 }}>
+        <Box sx={{ color: '#1f2937', fontWeight: 500 }}>
           {params.value}
         </Box>
       ),
@@ -159,9 +164,9 @@ const Verification = () =>
       field: 'NAME',
       headerName: 'Name',
       flex: 1,
-      minWidth: 180,
+      minWidth: 150,
       renderCell: (params) => (
-        <Box sx={{ fontWeight: 600, color: '#1f2937', display: 'flex', alignItems: 'center', height: '100%' }}>
+        <Box sx={{ fontWeight: 600, color: '#1f2937'}}>
           {params.value}
         </Box>
       ),
@@ -169,10 +174,10 @@ const Verification = () =>
     {
       field: 'EMAIL',
       headerName: 'Email',
-      flex: 1,
+      flex: 1.5,
       minWidth: 200,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontSize: '13px' }}>
+        <Box sx={{ color: '#374151', fontSize: '12px' }}>
           {params.value}
         </Box>
       ),
@@ -180,9 +185,10 @@ const Verification = () =>
     {
       field: 'PHONE_NUMBER',
       headerName: 'Phone',
-      width: 130,
+      flex:0.8,
+    minWidth: 120,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 500 }}>
+        <Box sx={{ color: '#374151', fontWeight: 500 }}>
           {formatNumber(params.value)}
         </Box>
       ),
@@ -190,9 +196,10 @@ const Verification = () =>
     {
       field: 'AADHAR_NUM',
       headerName: 'Aadhar',
-      width: 140,
+       flex:1,
+    minWidth: 130,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontFamily: 'monospace', fontSize: '11px' }}>
+        <Box sx={{ color: '#374151', fontFamily: 'monospace', fontSize: '11px' }}>
           {formatNumber(params.value)}
         </Box>
       ),
@@ -202,7 +209,7 @@ const Verification = () =>
       headerName: 'SSC %',
       width: 80,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+        <Box sx={{ color: '#374151', fontWeight: 600, fontSize: '12px' }}>
           {params.value}
         </Box>
       ),
@@ -212,7 +219,7 @@ const Verification = () =>
       headerName: 'Inter %',
       width: 80,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+        <Box sx={{ color: '#374151', fontWeight: 600, fontSize: '12px' }}>
           {params.value}
         </Box>
       ),
@@ -220,9 +227,9 @@ const Verification = () =>
     {
       field: 'BTECH_MARKS',
       headerName: 'BTech/Degree %',
-      width: 80,
+      width: 130,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+        <Box sx={{ color: '#374151', fontWeight: 600, fontSize: '12px' }}>
           {params.value}
         </Box>
       ),
@@ -232,7 +239,7 @@ const Verification = () =>
       headerName: 'PG %',
       width: 80,
       renderCell: (params) => (
-        <Box sx={{ color: '#374151', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+        <Box sx={{ color: '#374151', fontWeight: 600, fontSize: '12px' }}>
           {params.value}
         </Box>
       ),
@@ -242,7 +249,7 @@ const Verification = () =>
       headerName: 'Curr CTC',
       width: 100,
       renderCell: (params) => (
-        <Box sx={{ color: '#059669', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+        <Box sx={{ color: '#059669', fontWeight: 600, fontSize: '12px' }}>
           ₹{formatNumber(params.value)}L
         </Box>
       ),
@@ -252,33 +259,34 @@ const Verification = () =>
       headerName: 'Exp CTC',
       width: 100,
       renderCell: (params) => (
-        <Box sx={{ color: '#dc2626', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+        <Box sx={{ color: '#dc2626', fontWeight: 600, fontSize: '12px' }}>
           ₹{formatNumber(params.value)}L
         </Box>
       ),
     },
-    {
-      field: 'OFFER_CTC',
-      headerName: 'Offer CTC',
-      width: 100,
-      renderCell: (params) => (
-        <Box sx={{ color: '#7c3aed', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
-          ₹{formatNumber(params.value)}L
-        </Box>
-      ),
-    },
+    // {
+    //   field: 'OFFER_CTC',
+    //   headerName: 'Offer CTC',
+    //   width: 100,
+    //   renderCell: (params) => (
+    //     <Box sx={{ color: '#7c3aed', display: 'flex', alignItems: 'center', height: '100%', fontWeight: 600, fontSize: '12px' }}>
+    //       ₹{formatNumber(params.value)}L
+    //     </Box>
+    //   ),
+    // },
     {
       field: 'STATUS',
       headerName: 'Status',
-      width: 120,
+      minWidth:110,
+      flex:0.8,
       renderCell: (params) => getStatusChip(params.value),
     },
     {
       field: 'submitted_date',
       headerName: 'Submitted',
-      width: 120,
+      width: 110,
       renderCell: (params) => (
-        <Box sx={{ color: '#6b7280', display: 'flex', alignItems: 'center', height: '100%', fontSize: '11px' }}>
+        <Box sx={{ color: '#6b7280',  fontSize: '11px' }}>
           {formatDate(params.value)}
         </Box>
       ),
@@ -319,64 +327,65 @@ const Verification = () =>
   return (
     <Box
       sx={{
-        maxWidth: "1280px",
+        maxWidth: "1400px",
         margin: "0 auto",
-        padding: "20px",
-        borderRadius: "24px",
-        boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-        border: "1px solid #d1d5db",
-        background: "linear-gradient(to bottom right, #fce7f3, #f9fafb, #f3f4f6)",
+        padding: "12px",
+      
       }}
     >
       <Paper sx={{
         width: '100%',
-        padding: 3,
-        borderRadius: '20px',
+        padding: 2,
+        borderRadius: '12px',
         background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
       }}>
         
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 ,gap:2}}>
+         <Box sx={{ flex: 1, maxWidth: '400px' }}>
             <TextField
+              variant="outlined"
               size="small"
               placeholder="Search name, email, phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              fullWidth
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search sx={{ color: '#6b7280' }} />
+                    <Search sx={{ color: '#667eea', fontSize: '20px' }} />
                   </InputAdornment>
                 ),
+                sx: {
+                  borderRadius: '10px',
+                  backgroundColor: '#f8fafc',
+                  height: '38px',
+                  fontSize: '13px',
+                  '&:hover': {
+                    backgroundColor: '#f1f5f9',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: '#ffffff',
+                  }
+                }
               }}
               sx={{
-                minWidth: 250,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                }
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "#cedef2ff",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#d1d6ebff",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#667eea",
+                  },
+                },
               }}
             />
-            
-            <TextField
-              select
-              size="small"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              sx={{
-                minWidth: 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                }
-              }}
-            >
-              <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="verified">Verified</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="rejected">Rejected</MenuItem>
-            </TextField>
           </Box>
+          
         </Box>
 
         {filteredData.length === 0 ? (
