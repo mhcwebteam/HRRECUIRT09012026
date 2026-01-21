@@ -39,7 +39,7 @@ const Salarystackup = () => {
   const { personalData  } = useContext(ContextData);
   // Change from string to object to store offer CTC for each row
   const [offerCtcValues, setOfferCtcValues] = useState({});
-
+const [confirmedOffers, setConfirmedOffers] = useState({});
   const [token,setToken]=useState(()=>{
     const userInfo=localStorage.getItem('userInfo');
     return userInfo ? JSON.parse(userInfo):null;
@@ -60,6 +60,24 @@ const Salarystackup = () => {
   // }, [personalData]);
 
 
+
+  const handleLocalSave = (rowId) => {
+  const typedValue = offerCtcValues[rowId];
+  if (!typedValue) {
+    alert("Please enter an amount");
+    return;
+  }
+  
+  // Mark this row as "Confirmed" locally
+  setConfirmedOffers(prev => ({
+    ...prev,
+    [rowId]: typedValue
+  }));
+  
+  alert(`Total Amount ₹${typedValue} saved for this session.`);
+};
+
+
   useEffect(() => {
   if (personalData && personalData.length > 0) {
     setOfferCtcValues(personalData[0].offer_ctc || '');
@@ -69,7 +87,7 @@ const Salarystackup = () => {
 
 
 
-
+  console.log("offerctccccccccccccccc",personalData);
  const filteredData = useMemo(() => 
 {
   if (!personalData || personalData.length === 0) return [];
@@ -84,6 +102,10 @@ const Salarystackup = () => {
   if (statusFilter !== 'all') {
     result = result.filter(user => user.status === statusFilter);
   }
+
+
+
+
   
   return result.map((item, index) => {
     const rowId = item.id || `row-${index}`;
@@ -109,7 +131,8 @@ const Salarystackup = () => {
       CURRENT_CTC: item.current_ctc || 'N/A',
       EXP_CTC: item.expected_ctc || 'N/A',
       // ✅ Use offerCtcValues if available, otherwise fall back to item.offer_ctc
-      OFFER_CTC: offerCtcValues[rowId] || item.offer_ctc || 'N/A',
+      // Inside your filteredData useMemo:
+OFFER_CTC: confirmedOffers[rowId] || item.offer_ctc || 'N/A',
       NOTICE_PERIOD: item.notice_period || 'N/A',
       PREVIOUS_COMPANY: item.previous_company || 'N/A',
       DURATION: item.duration || 'N/A',
@@ -220,12 +243,29 @@ const Salarystackup = () => {
 // }
 
 
+const handleViewDetails = (row) => {
+  // Check chestunnam: State lo emaina kotha value unda?
+  // 1. confirmedOffers (Save kottina value)
+  // 2. offerCtcValues (Type chestunna value - just in case Save kottakunda Modal open chesthe)
+  // 3. Row actual value
+  
+  const currentOfferValue = confirmedOffers[row.id] || offerCtcValues[row.id] || row.OFFER_CTC;
 
-  const handleViewDetails = (user) => {
-    // totalAmount()
-    setSelectedUser(user);
-    setModalOpen(true);
+  const userDataWithOffer = {
+    ...row,
+    OFFER_CTC: currentOfferValue // Ikkada update chestunnam, so modal lo Null radu
   };
+
+  setSelectedUser(userDataWithOffer);
+  setModalOpen(true);
+};
+
+
+  // const handleViewDetails = (user) => {
+  //   // totalAmount()
+  //   setSelectedUser(user);
+  //   setModalOpen(true);
+  // };
 
   const handleStatusChange = (updateData) => {
     console.log('Status updated:', updateData);
@@ -364,49 +404,54 @@ const Salarystackup = () => {
         );
       },
     },
-    {
-      field: 'OFFER_CTC',
-      headerName: 'Offer CTC',
-      width: 120,
-      renderCell: (params) => (
+{
+  field: 'OFFER_CTC',
+  headerName: 'Offer CTC',
+  width: 220,
+  renderCell: (params) => {
+    const rowId = params.row.id;
+    // Database nunchi vachina value
+    const dbValue = params.row.OFFER_CTC;
+    // Nuvvu Save kottaka vachina temporary local value
+    const localSavedValue = confirmedOffers[rowId];
+
+    // Check: Already value unda (DB lo or just now Saved)?
+    const isLocked = (dbValue && dbValue !== 'N/A' && dbValue !== '0') || localSavedValue;
+
+    if (isLocked) {
+      return (
+        <Typography sx={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>
+          ₹{Number(localSavedValue || dbValue).toLocaleString('en-IN')}
+        </Typography>
+      );
+    }
+
+    // Ledante: TextField chupinchu
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <TextField
+          value={offerCtcValues[rowId] || ''}
+          onChange={(e) => handleOfferCtcChange(rowId, e.target.value)}
           size="small"
-          type="number"
-          placeholder="Enter CTC"
-          value={offerCtcValues[params.row.id] || ''}
-          onChange={(e) => handleOfferCtcChange(params.row.id, e.target.value)}
-          onBlur={() => {
-            console.log(`Offer CTC for ${params.row.NAME}:`, offerCtcValues[params.row.id]);
-          }}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-          }}
-          inputProps={{
-            min: 0,
-            step: 1000,
-          }}
-          sx={{
-            width: '100%',
-            '& .MuiOutlinedInput-root': {
-              fontSize: '12px',
-              height: '35px',
-              '& fieldset': {
-                borderColor: '#d1d5db',
-              },
-              '&:hover fieldset': {
-                borderColor: '#667eea',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#667eea',
-              },
-              '& input': {
-                textAlign: 'right',
-              },
-            },
-          }}
+          placeholder="Enter Amount"
+          sx={{ '& .MuiOutlinedInput-root': { height: '35px' } }}
         />
-      ),
-    },
+        <Button 
+          variant="contained" 
+          size="small"
+          onClick={() => {
+            if(!offerCtcValues[rowId]) return alert("Value entry cheyi bhayya!");
+            // Ee state update valla current cell text field nunchi text ki maripoddi
+            setConfirmedOffers(prev => ({ ...prev, [rowId]: offerCtcValues[rowId] }));
+          }}
+          sx={{ backgroundColor: '#059669', minWidth: '60px' }}
+        >
+          Save
+        </Button>
+      </Box>
+    );
+  }
+},
     {
       field: 'STATUS',
       headerName: 'Overall Status',

@@ -105,7 +105,7 @@ const handleApprove = async (Document_Id,Verify_Id) =>
       }
     );
 
-    console.log(response,"respondeddddddddddddddddddddddd");
+
 
     await Swal.fire({
       icon: 'success',

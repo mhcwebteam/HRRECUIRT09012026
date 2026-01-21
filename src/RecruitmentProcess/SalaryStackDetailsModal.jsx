@@ -21,7 +21,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
   };
 
   const calculateSalaryBreakdown = (offerCTC) => {
-    console.log(offerCTC, "offer ctc");
+ 
 
     const monthlyCTC = offerCTC / 12;
    
@@ -29,7 +29,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
     const education_allowance = FIXED_COMPONENTS.education_allowance;
     
     const basic_salary = Math.round(monthlyCTC * 0.50);
-    console.log("basiccccccccccc",basic_salary);
+
     const hra = Math.round(basic_salary * 0.40);
     
     const employee_pf_contribution = Math.min(Math.round(basic_salary * 0.12), 1800);
@@ -50,7 +50,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
     const deductions = employee_pf_contribution + employeeESIContribution + professional_tax;
     const targetGross = monthlyCTC - otherBenefits + deductions;
     const special_allowance = Math.round(targetGross - basic_salary - hra - conveyance - education_allowance);
-    console.log(special_allowance,"special!!!!");
+   
     const bonus = Math.round((offerCTC * 0.04) / 12);
     return {
       basic_salary,

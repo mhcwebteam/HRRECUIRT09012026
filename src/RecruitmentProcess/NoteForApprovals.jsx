@@ -559,6 +559,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { API_BASE_URL } from "../Config/Config";
 
 
 /* ===================================================== */
@@ -619,7 +620,7 @@ const NoteForApprovals = () => {
         },
       });
       const response = await axios.post(
-        "http://172.20.0.9/laravel/myhomedashboardMRF/api/Note-For-AprvlUpdt",
+        axios.post(`${API_BASE_URL}/Note-For-AprvlUpdt`),
         { caseId: row.CHILD_CASEID },
         {
           headers:
