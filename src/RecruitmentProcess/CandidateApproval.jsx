@@ -1491,7 +1491,7 @@ const CandidateApproval = () => {
 
       field: 'CANDID_APPROVAL_STATUS',
 
-      headerName: 'Overall Status',
+      headerName: 'Candidate Status',
 
       flex: 0.9,
 
@@ -1567,105 +1567,105 @@ const CandidateApproval = () => {
 
     },
 
-    {
+    // {
 
-      field: 'ACTIONS',
+    //   field: 'ACTIONS',
 
-      headerName: 'Actions',
+    //   headerName: 'Actions',
 
-      flex: 1,
+    //   flex: 1,
 
-      minWidth: 110,
+    //   minWidth: 110,
 
-      sortable: false,
+    //   sortable: false,
 
-      filterable: false,
+    //   filterable: false,
 
-      renderCell: (params) => {
+    //   renderCell: (params) => {
 
-        const isSubmitting = submitting[params.row.CASEID] || false;
+    //     const isSubmitting = submitting[params.row.CASEID] || false;
 
-        return (
+    //     return (
 
-          <Button
+    //       <Button
 
-            variant="contained"
+    //         variant="contained"
 
-            size="small"
+    //         size="small"
 
-            disabled={isSubmitting}
+    //         disabled={isSubmitting}
 
-            sx={{
+    //         sx={{
 
-              background: isSubmitting
+    //           background: isSubmitting
 
-                ? '#9ca3af'
+    //             ? '#9ca3af'
 
-                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    //             : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
 
-              color: 'white',
+    //           color: 'white',
 
-              fontSize: '10px',
+    //           fontSize: '10px',
 
-              padding: '4px 10px',
+    //           padding: '4px 10px',
 
-              borderRadius: '6px',
+    //           borderRadius: '6px',
 
-              textTransform: 'capitalize',
+    //           textTransform: 'capitalize',
 
-              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
+    //           boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
 
-              minWidth: '90px',
+    //           minWidth: '90px',
 
-              '&:hover': {
+    //           '&:hover': {
 
-                background: isSubmitting
+    //             background: isSubmitting
 
-                  ? '#9ca3af'
+    //               ? '#9ca3af'
 
-                  : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    //               : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
 
-                transform: isSubmitting ? 'none' : 'translateY(-1px)',
+    //             transform: isSubmitting ? 'none' : 'translateY(-1px)',
 
-                boxShadow: isSubmitting ? 'none' : '0 4px 10px rgba(16, 185, 129, 0.4)',
+    //             boxShadow: isSubmitting ? 'none' : '0 4px 10px rgba(16, 185, 129, 0.4)',
 
-              },
+    //           },
 
-              '&:disabled': {
+    //           '&:disabled': {
 
-                background: '#9ca3af',
+    //             background: '#9ca3af',
 
-                color: '#e5e7eb',
+    //             color: '#e5e7eb',
 
-              }
+    //           }
 
-            }}
+    //         }}
 
-          >
+    //       >
 
-            {isSubmitting ? (
+    //         {isSubmitting ? (
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+    //           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
 
-                <CircularProgress size={12} sx={{ color: 'white' }} />
+    //             <CircularProgress size={12} sx={{ color: 'white' }} />
 
-                Sending...
+    //             Sending...
 
-              </Box>
+    //           </Box>
 
-            ) : (
+    //         ) : (
 
-              'Send Email'
+    //           'Send Email'
 
-            )}
+    //         )}
 
-          </Button>
+    //       </Button>
 
-        );
+    //     );
 
-      },
+    //   },
 
-    },
+    // },
 
   ], [submitting]);
 
