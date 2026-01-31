@@ -5,6 +5,8 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 
 const History = ({ open, onClose, data, onStatusChange }) => {
+
+  console.log(data,"fffffffffffffffffffff");
   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
   const [remarks, setRemarks] = useState(data?.remarks || '');
   const [updateDocuments, setDocuments] = useState([]);
@@ -451,7 +453,7 @@ const History = ({ open, onClose, data, onStatusChange }) => {
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-4">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-xl font-bold mb-1">{data?.NAME || 'N/A'}</h2>
+                <h2 className="text-xl font-bold mb-1">{data?.name || 'N/A'}</h2>
                 <p className="text-indigo-100 text-xs flex items-center gap-2">
                   <span className="font-medium">Case ID:</span>
                   
@@ -505,11 +507,11 @@ const History = ({ open, onClose, data, onStatusChange }) => {
                   <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <InfoRow label="Email Address" value={data?.EMAIL} valueColor="text-indigo-600" />
-                  <InfoRow label="Phone Number" value={data?.PHONE_NUMBER} />
-                  <InfoRow label="Date of Birth" value={data?.DOB} />
-                  <InfoRow label="Address" value={data?.ADDRESS} />
-                  <InfoRow label="Submitted Date" value={data?.submitted_date} />
+                  <InfoRow label="Email Address" value={data?.email} valueColor="text-indigo-600" />
+                  <InfoRow label="Phone Number" value={data?.phone_number} />
+                  <InfoRow label="Date of Birth" value={data?.dob} />
+                  {/* <InfoRow label="Address" value={data?.ADDRESS} />
+                  <InfoRow label="Submitted Date" value={data?.submitted_date} /> */}
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</p>
                     <StatusBadge status={data?.STATUS} />
@@ -527,8 +529,8 @@ const History = ({ open, onClose, data, onStatusChange }) => {
                   <h3 className="text-lg font-bold text-gray-900">Identity Documents</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <InfoRow label="Aadhar Number" value={data?.AADHAR_NUM} />
-                  <InfoRow label="PAN Number" value={data?.PAN_NUM} />
+                  <InfoRow label="Aadhar Number" value={data?.aadhar_number} />
+                  <InfoRow label="PAN Number" value={data?.pan_number} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {identityDocuments.map((doc, index) => (
@@ -581,9 +583,9 @@ const History = ({ open, onClose, data, onStatusChange }) => {
                   <InfoRow label="Previous Company" value={data?.PREVIOUS_COMPANY} />
                   <InfoRow label="Duration" value={data?.DURATION ? `${data.DURATION} months` : 'N/A'} />
                   <InfoRow label="Notice Period" value={data?.NOTICE_PERIOD ? `${data.NOTICE_PERIOD} days` : 'N/A'} />
-                  <InfoRow label="Current CTC" value={data?.CURRENT_CTC ? `₹${data.CURRENT_CTC} LPA` : 'N/A'} valueColor="text-emerald-600" />
-                  <InfoRow label="Expected CTC" value={data?.EXP_CTC ? `₹${data.EXP_CTC} LPA` : 'N/A'} valueColor="text-amber-600" />
-                  <InfoRow label="Offer CTC" value={data?.OFFER_CTC ? `₹${data.OFFER_CTC} LPA` : 'N/A'} valueColor="text-purple-600" />
+                  <InfoRow label="Current CTC" value={data?.current_ctc ? `₹${data.current_ctc} LPA` : 'N/A'} valueColor="text-emerald-600" />
+                  <InfoRow label="Expected CTC" value={data?.expected_ctc ? `₹${data.expected_ctc} LPA` : 'N/A'} valueColor="text-amber-600" />
+                  <InfoRow label="Offer CTC" value={data?.offer_ctc ? `₹${data.offer_ctc} LPA` : 'N/A'} valueColor="text-purple-600" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {professionalDocuments.map((doc, index) => (

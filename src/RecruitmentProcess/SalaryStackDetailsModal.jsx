@@ -688,7 +688,7 @@ import Swal from 'sweetalert2';
 import { jsPDF } from 'jspdf';
 
 const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
-  console.log("data3333333333333", data);
+
   const FIXED_COMPONENTS = {
     conveyance: 1600,
     education_allowance: 200
@@ -842,45 +842,45 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
     setSalaryComponents(breakdown);
   };
 
-  // Generate PDF Preview
+  // Generate PROPERLY ALIGNED PDF Preview
   const handlePreviewPDF = () => {
     try {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      let yPos = 20;
+      let yPos = 10;
 
-      // Header with solid color (reduced height)
-      doc.setFillColor(16, 185, 129); // Emerald color RGB
-      doc.rect(0, 0, pageWidth, 25, 'F');
+      // Header
+      doc.setFillColor(16, 185, 129);
+      doc.rect(0, 0, pageWidth, 20, 'F');
       
       // Title
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('SALARY BREAKUP DOCUMENT', pageWidth / 2, 12, { align: 'center' });
+      doc.text('SALARY BREAKUP DOCUMENT', pageWidth / 2, 10, { align: 'center' });
       
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Generated on: ${new Date().toLocaleString('en-IN')}`, pageWidth / 2, 20, { align: 'center' });
+      doc.text(`Generated on: ${new Date().toLocaleString('en-IN')}`, pageWidth / 2, 16, { align: 'center' });
       
-      yPos = 35;
+      yPos = 26;
 
       // Employee Information Section
       doc.setTextColor(0, 0, 0);
       doc.setFillColor(243, 244, 246);
-      doc.rect(10, yPos, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('EMPLOYEE INFORMATION', 15, yPos + 5.5);
-      
-      yPos += 12;
+      doc.rect(10, yPos, pageWidth - 20, 7, 'F');
       doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EMPLOYEE INFORMATION', 15, yPos + 5);
+      
+      yPos += 10;
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       
-      // Employee details
+      // Employee details with FIXED alignment
       const employeeInfo = [
-        ['Name:', String(data?.NAME || 'N/A'), 'Case ID:', String(data?.CASEID || 'N/A')],
+        ['Name:', String(data?.NAME || 'N/A'), 'Case ID:', String(data.CHILD_CASEID || 'N/A')],
         ['Email:', String(data?.EMAIL || 'N/A'), 'Phone:', String(data?.PHONE_NUMBER || 'N/A')],
         ['Job Title:', String(data?.JOB_TITLE || 'Full Stack Developer'), 'Location:', String(data?.PLANT || 'Head Office')]
       ];
@@ -889,29 +889,30 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
         doc.setFont('helvetica', 'bold');
         doc.text(row[0], 15, yPos);
         doc.setFont('helvetica', 'normal');
-        doc.text(row[1], 45, yPos);
+        const label1Text = doc.splitTextToSize(row[1], 55);
+        doc.text(label1Text, 38, yPos);
         
         doc.setFont('helvetica', 'bold');
-        doc.text(row[2], 110, yPos);
+        doc.text(row[2], 105, yPos);
         doc.setFont('helvetica', 'normal');
-        doc.text(row[3], 135, yPos);
+        doc.text(row[3], 128, yPos);
         
         yPos += 5;
       });
 
-      yPos += 8;
+      yPos += 3;
 
       // Salary Summary Section
       doc.setFillColor(254, 243, 199);
-      doc.rect(10, yPos, pageWidth - 20, 8, 'F');
-      doc.setFontSize(12);
+      doc.rect(10, yPos, pageWidth - 20, 7, 'F');
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(146, 64, 14);
-      doc.text('SALARY SUMMARY', 15, yPos + 5.5);
+      doc.text('SALARY SUMMARY', 15, yPos + 5);
       
-      yPos += 12;
+      yPos += 10;
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       
       const salarySummary = [
         ['Offer CTC (Annual):', `Rs ${offerCTC.toLocaleString('en-IN')}`],
@@ -929,60 +930,67 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
         yPos += 5;
       });
 
-      yPos += 8;
+      yPos += 3;
 
       // Detailed Breakdown Section Header
       doc.setFillColor(16, 185, 129);
-      doc.rect(10, yPos, pageWidth - 20, 8, 'F');
+      doc.rect(10, yPos, pageWidth - 20, 7, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('DETAILED SALARY BREAKDOWN', 15, yPos + 5.5);
-      
-      yPos += 12;
-      doc.setTextColor(0, 0, 0);
-
-      // Table Headers
-      doc.setFillColor(16, 185, 129);
-      doc.setTextColor(255, 255, 255);
-      doc.rect(10, yPos, 90, 7, 'F');
-      doc.rect(100, yPos, 45, 7, 'F');
-      doc.rect(145, yPos, 45, 7, 'F');
-      
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      doc.text('Component', 15, yPos + 5);
-      doc.text('Monthly (INR)', 122.5, yPos + 5, { align: 'center' });
-      doc.text('Annual (INR)', 167.5, yPos + 5, { align: 'center' });
+      doc.text('DETAILED SALARY BREAKDOWN', 15, yPos + 5);
       
-      yPos += 7;
+      yPos += 10;
       doc.setTextColor(0, 0, 0);
 
-      // Helper function to draw a table row
+      // PROPERLY ALIGNED Table Headers
+      const col1X = 10;
+      const col1Width = 100;
+      const col2X = col1X + col1Width;
+      const col2Width = 45;
+      const col3X = col2X + col2Width;
+      const col3Width = 45;
+      
+      doc.setFillColor(16, 185, 129);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(col1X, yPos, col1Width, 6, 'F');
+      doc.rect(col2X, yPos, col2Width, 6, 'F');
+      doc.rect(col3X, yPos, col3Width, 6, 'F');
+      
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Component', col1X + 5, yPos + 4);
+      doc.text('Monthly (INR)', col2X + col2Width/2, yPos + 4, { align: 'center' });
+      doc.text('Annual (INR)', col3X + col3Width/2, yPos + 4, { align: 'center' });
+      
+      yPos += 6;
+      doc.setTextColor(0, 0, 0);
+
+      // Helper function to draw a table row with PROPER alignment
       const drawRow = (label, monthly, annual, isBold = false, bgColor = null, isHeader = false) => {
         if (bgColor) {
           doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-          doc.rect(10, yPos, 180, 6, 'F');
+          doc.rect(col1X, yPos, col1Width + col2Width + col3Width, 5, 'F');
         }
         
         doc.setFont('helvetica', isBold || isHeader ? 'bold' : 'normal');
-        doc.setFontSize(isHeader ? 9 : 8);
+        doc.setFontSize(isHeader ? 8 : 7);
         
         if (isHeader) {
-          doc.text(label, 15, yPos + 4);
+          doc.text(label, col1X + 5, yPos + 3.5);
         } else {
-          doc.text(label, 15, yPos + 4);
-          doc.text(String(monthly), 122.5, yPos + 4, { align: 'center' });
-          doc.text(String(annual), 167.5, yPos + 4, { align: 'center' });
+          doc.text(label, col1X + 5, yPos + 3.5);
+          doc.text(String(monthly), col2X + col2Width/2, yPos + 3.5, { align: 'center' });
+          doc.text(String(annual), col3X + col3Width/2, yPos + 3.5, { align: 'center' });
         }
         
         // Draw borders
         doc.setDrawColor(200, 200, 200);
-        doc.rect(10, yPos, 90, 6);
-        doc.rect(100, yPos, 45, 6);
-        doc.rect(145, yPos, 45, 6);
+        doc.rect(col1X, yPos, col1Width, 5);
+        doc.rect(col2X, yPos, col2Width, 5);
+        doc.rect(col3X, yPos, col3Width, 5);
         
-        yPos += 6;
+        yPos += 5;
       };
 
       // Section I - Compensation Components
@@ -1023,7 +1031,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
       drawRow('V. FIXED COST TO COMPANY', '', '', false, [229, 231, 235], true);
       drawRow('FIXED COST TO COMPANY', (offerCTC / 12).toLocaleString('en-IN'), offerCTC.toLocaleString('en-IN'), true, [243, 244, 246]);
 
-      yPos += 5;
+      yPos += 3;
 
       // Remarks Section
       if (remarks) {
@@ -1033,22 +1041,22 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
         }
 
         doc.setFillColor(249, 250, 251);
-        doc.rect(10, yPos, pageWidth - 20, 8, 'F');
-        doc.setFontSize(11);
+        doc.rect(10, yPos, pageWidth - 20, 6, 'F');
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
-        doc.text('REMARKS', 15, yPos + 5.5);
+        doc.text('REMARKS', 15, yPos + 4);
         
-        yPos += 12;
-        doc.setFontSize(9);
+        yPos += 8;
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         const splitRemarks = doc.splitTextToSize(String(remarks), pageWidth - 30);
         doc.text(splitRemarks, 15, yPos);
       }
 
       // Footer
-      const footerY = pageHeight - 15;
-      doc.setFontSize(8);
+      const footerY = pageHeight - 12;
+      doc.setFontSize(7);
       doc.setTextColor(128, 128, 128);
       doc.text('This is a computer-generated document. No signature is required.', pageWidth / 2, footerY, { align: 'center' });
       doc.text(`Page 1 of ${doc.internal.getNumberOfPages()}`, pageWidth - 15, footerY, { align: 'right' });
@@ -1117,7 +1125,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
       await Swal.fire({
         icon: 'success',
         title: status === 'approved' ? 'Approved!' : 'Rejected!',
-        text: response.data.message || 'Salary breakup saved successfully!',
+        text: response.data.message || 'Salary breakup rejected successfully!',
         confirmButtonColor: '#10b981'
       });
 
@@ -1264,7 +1272,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6">
               <InfoRow label="Name" value={data?.NAME} />
-              <InfoRow label="Case ID" value={data?.CASEID} valueColor="text-emerald-600" />
+              <InfoRow label="Case ID" value={data?.CHILD_CASEID} valueColor="text-emerald-600" />
               <InfoRow label="Job Title" value={data?.JOB_TITLE || 'Full Stack Developer'} />
               <InfoRow label="Email" value={data?.EMAIL} />
               <InfoRow label="Phone" value={data?.PHONE_NUMBER} />
@@ -1493,7 +1501,7 @@ const SalaryStackDetailsModal = ({ open, onClose, data, onStatusChange }) => {
           </div>
         </div>
 
-        {/* Footer Actions - COMPRESSED VERSION */}
+        {/* Footer Actions */}
         <div className="bg-gray-50 px-6 py-3 flex justify-between items-center border-t border-gray-200">
           <div className="text-xs text-gray-600">
             Last updated: {new Date().toLocaleString('en-IN')}

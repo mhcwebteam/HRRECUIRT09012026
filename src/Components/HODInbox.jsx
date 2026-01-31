@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useMemo, useEffect, useContext } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
@@ -13,6 +13,130 @@ import SearchIcon from '@mui/icons-material/Search';
 import { ArrowLeftIcon, BriefcaseIcon, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../Config/Config.jsx';
+
+const AssignToMenu = ({ row, hrEmployees, userToken, onAssignmentComplete }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedName, setSelectedName] = useState('');
+  
+  const handleClick = (event) => {
+    event.stopPropagation(); 
+    event.preventDefault();
+    setAnchorEl(event.currentTarget);
+  };
+  
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelect = async (employee) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/task-Assign-StoreData`,
+        {
+          case_id: row.CHILD_CASEID,
+          assigned_to: employee.Emp_Name,
+          legacy_id: employee.Legacy_Id,
+          current_task: "HR",
+          status: "Pending"
+        },
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${userToken.token}`,
+          },
+        }
+      );
+
+      const message = response.data?.message || `Case assigned to ${employee.Emp_Name}`;
+      
+      setSelectedName(employee.Emp_Name);
+      handleClose();
+
+      Swal.fire({
+        title: 'Assigned!',
+        text: message,
+        icon: 'success',
+        confirmButtonColor: '#10b981',
+      });
+
+      if (onAssignmentComplete) {
+        await onAssignmentComplete();
+      }
+    } catch (error) {
+      console.error("Assignment failed:", error.response?.data || error);
+      Swal.fire({
+        title: 'Error',
+        text: error.response?.data?.message || 'Assignment failed',
+        icon: 'error',
+        confirmButtonColor: '#ef4444',
+      });
+    }
+  };
+
+  return (
+    <div>
+      <Button
+        variant="contained"
+        size="small"
+        onClick={handleClick}
+        sx={{
+          background: '#667eea',
+          color: 'white',
+          fontSize: '11px',
+          padding: '4px 12px',
+          borderRadius: '6px',
+          textTransform: 'none',
+          minWidth: '100px',
+          '&:hover': {
+            background: '#5a67d8',
+          }
+        }}
+      >
+        {selectedName || 'Assign To'} ▼
+      </Button>
+      
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            maxHeight: '200px',
+            overflow: 'auto',
+            minWidth: '200px',
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {hrEmployees && hrEmployees.length > 0 ? (
+          hrEmployees.map((employee, index) => (
+            <MenuItem 
+              key={`${employee.Emp_Name}_${index}_${row.CHILD_CASEID}`}
+              onClick={() => handleSelect(employee)}
+              sx={{
+                fontSize: '12px',
+                padding: '6px 16px',
+                '&:hover': {
+                  backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                }
+              }}
+            >
+              {employee.Emp_Name} ({employee.Legacy_Id})
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem disabled sx={{ fontSize: '12px', padding: '6px 16px' }}>
+            <CircularProgress size={14} sx={{ mr: 1 }} />
+            Loading...
+          </MenuItem>
+        )}
+      </Menu>
+    </div>
+  );
+};
 
 const HODInbox = () => {
   const [searchText, setSearchText] = useState('');
@@ -29,7 +153,7 @@ const HODInbox = () => {
   const [emailInputs, setEmailInputs] = useState({});
   const [submitting, setSubmitting] = useState({});
   const [hrData, setHrData] = useState([]);
-  const [hrEmployees, setHrEmployees] = useState([]); // Store HR employee list
+  const [hrEmployees, setHrEmployees] = useState([]);
 
   // Fetch HR employees list
   useEffect(() => {
@@ -48,7 +172,6 @@ const HODInbox = () => {
           }
         );
 
-        // Extract hrDropDownListData from response
         const hrList = response.data?.hrDropDownListData || [];
         setHrEmployees(hrList);
         console.log("HR Employees List:", hrList);
@@ -60,33 +183,30 @@ const HODInbox = () => {
     fetchHrEmployees();
   }, [userToken?.token]);
 
+  const onBoarding = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/hr_requisition_list`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${userToken.token}`,
+          },
+        }
+      );
 
-const onBoarding = async () => {
-  try {
-    const response = await axios.get(
-      `${API_BASE_URL}/hr_requisition_list`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${userToken.token}`,
-        },
-      }
-    );
+      setHrData(response.data.data);
+      console.log("NOTE FOR APPROVAL API DATA:", response.data);
+    } catch (err) {
+      console.error("Error fetching approval data", err);
+    }
+  };
 
-    setHrData(response.data.data);
-    console.log("NOTE FOR APPROVAL API DATA:", response.data);
-  } catch (err) {
-    console.error("Error fetching approval data", err);
-  }
-};
-
-useEffect(() => {
-  if (!userToken?.token) return;
-  onBoarding();
-}, [userToken?.token]);
-
-
+  useEffect(() => {
+    if (!userToken?.token) return;
+    onBoarding();
+  }, [userToken?.token]);
 
   const handleEmailChange = (caseId, email) => {
     setEmailInputs(prev => ({
@@ -332,132 +452,14 @@ useEffect(() => {
       minWidth: 130,
       sortable: false,
       filterable: false,
-      renderCell: (params) => {
-        // Create a custom cell component with state
-        const CustomActionCell = ({ row }) => {
-          const [anchorEl, setAnchorEl] = useState(null);
-          const [selectedName, setSelectedName] = useState('');
-          
-          const handleClick = (event) => {
-            setAnchorEl(event.currentTarget);
-          };
-          
-          const handleClose = () => {
-            setAnchorEl(null);
-          };
-
-          const handleSelect = async (employee) => {
-            try {
-              const response = await axios.post(
-                `${API_BASE_URL}/task-Assign-StoreData`,
-                {
-                  case_id: row.CHILD_CASEID,
-                  assigned_to: employee.Emp_Name,
-                  legacy_id: employee.Legacy_Id, // Include Legacy_Id if needed
-                  current_task: "HR",
-                  status: "Pending"
-                },
-                {
-                  headers: {
-                    Accept: "application/json",
-                    Authorization: `Bearer ${userToken.token}`,
-                  },
-                }
-              );
-
-              const message = response.data?.message || `Case assigned to ${employee.Emp_Name}`;
-              
-              setSelectedName(employee.Emp_Name);
-              handleClose();
-
-              Swal.fire({
-                title: 'Assigned!',
-                text: message,
-                icon: 'success',
-                confirmButtonColor: '#10b981',
-              });
-
-
-             
-             await onBoarding();
-
-
-              
-            } catch (error) {
-              console.error("Assignment failed:", error.response?.data || error);
-              Swal.fire({
-                title: 'Error',
-                text: error.response?.data?.message || 'Assignment failed',
-                icon: 'error',
-                confirmButtonColor: '#ef4444',
-              });
-            }
-          };
-
-          return (
-            <div>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleClick}
-                sx={{
-                  background: '#667eea',
-                  color: 'white',
-                  fontSize: '11px',
-                  padding: '4px 12px',
-                  borderRadius: '6px',
-                  textTransform: 'none',
-                  minWidth: '100px',
-                  '&:hover': {
-                    background: '#5a67d8',
-                  }
-                }}
-              >
-                {selectedName || 'Assign To'} ▼
-              </Button>
-              
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-                PaperProps={{
-                  sx: {
-                    mt: 1,
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    maxHeight: '200px',
-                    overflow: 'auto',
-                  }
-                }}
-              >
-                {hrEmployees.length > 0 ? (
-                  hrEmployees.map((employee, index) => (
-                    <MenuItem 
-                      key={index}
-                      onClick={() => handleSelect(employee)}
-                      sx={{
-                        fontSize: '12px',
-                        padding: '6px 16px',
-                        '&:hover': {
-                          backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        }
-                      }}
-                    >
-                      {employee.Emp_Name} ({employee.Legacy_Id})
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled sx={{ fontSize: '12px', padding: '6px 16px' }}>
-                    No HR employees found
-                  </MenuItem>
-                )}
-              </Menu>
-            </div>
-          );
-        };
-
-        return <CustomActionCell row={params.row} />;
-      },
+      renderCell: (params) => (
+        <AssignToMenu 
+          row={params.row}
+          hrEmployees={hrEmployees}
+          userToken={userToken}
+          onAssignmentComplete={onBoarding}
+        />
+      ),
     }
   ];
 
@@ -477,8 +479,6 @@ useEffect(() => {
     overflow: 'hidden'
   };
 
-
-
   return (
     <Box sx={{
       maxWidth: "1400px",
@@ -493,9 +493,6 @@ useEffect(() => {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
       }}>
-   
-
-
         <Box sx={{
           width: "100%",
           borderRadius: "10px",
@@ -547,7 +544,6 @@ useEffect(() => {
         </Box>
       </Paper>
 
-      {/* Manpower Modal */}
       <Modal open={manpowerOpen} onClose={handleCloseModal}>
         <Box sx={modalStyle}>
           <Box sx={{
@@ -589,7 +585,6 @@ useEffect(() => {
             overflowY: 'auto',
             backgroundColor: '#f8fafc',
           }}>
-            {/* Add your modal content here */}
             <Typography>Case details would be shown here</Typography>
           </Box>
         </Box>

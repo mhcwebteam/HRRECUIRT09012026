@@ -22,7 +22,7 @@
     "axios": "^1.12.2",
     "chart.js": "^4.5.0",
     "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.3",
+    "jspdf": "^3.0.4",
     "laravel-echo": "^2.2.4",
     "lucide-react": "^0.544.0",
     "pusher-js": "^8.4.0",

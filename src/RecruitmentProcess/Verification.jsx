@@ -22,6 +22,8 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { ContextData } from '../Context/ContextData';
 import VerificationDetailsModal from './VerificationDetailsModal';
+import axios from 'axios';
+import { API_BASE_URL } from '../Config/Config';
 
 const Verification = () => 
 {
@@ -31,37 +33,38 @@ const Verification = () =>
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { personalData } = useContext(ContextData);
-  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
+  // const { personalData } = useContext(ContextData);
+  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
 
 
-const [personalData1, setPersonalData1] = useState([]);
+const [personalData, setPersonalData] = useState([]);
 
 
+// "overallDocments_aprvl": "1",
+//  "verification_status": 1,
+//  "verification_status": "1",
 
 
 useEffect(() => {
   if (!userToken?.token) return;
 
-  const EmpVerify= async () => {
+  const EmpVerify = async () => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/emp-verify-data`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
             Authorization: `Bearer ${userToken.token}`,
           },
         }
       );
 
-      console.log(response,"newone added");
+      console.log(response,":jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
-      setPersonalData1(response?.data);
-    
+      setPersonalData(response.data?.data || []);
     } catch (err) {
-      console.error("Error fetching approval data", err);
+      console.error("Error fetching verify data", err);
+      setPersonalData([]);
     }
   };
 
@@ -69,13 +72,18 @@ useEffect(() => {
 }, [userToken?.token]);
 
 
-   console.log(personalData,"ffffffffffffffffffffff555555555555");
+
+
+console.log("responseresponseresponseresponseresponseresponseresponseresponseresponseresponseresponse",personalData);
+  
   const filteredData = useMemo(() => 
   {
     if (!personalData || personalData.length === 0) return [];
     let result = [...personalData];
 
-  
+    result = result.filter(item => item.verification_status !== "1");
+
+
     if (searchTerm) {
       result = result.filter(user =>
         (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,7 +97,7 @@ useEffect(() => {
       result = result.filter(user => user.status === statusFilter);
     }
 
-    console.log(result,"trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+   
     return result.map((item, index) => ({
       id: item.id || `row-${index}`,
       SNO: index + 1,
@@ -102,6 +110,8 @@ useEffect(() => {
       PHONE_NUMBER: item.phone_number || 'N/A',
       DOB: item.dob || 'N/A',
       AADHAR_NUM: item.aadhar_number || 'N/A',
+   STATUS: item.status,
+         verification_status: item.verification_status,
       PAN_NUM: item.pan_number || 'N/A',
       SSC_MARKS: item.ssc_marks || 'N/A',
       INTER_MARKS: item.inter_marks || 'N/A',
@@ -120,6 +130,7 @@ useEffect(() => {
     }));
   }, [personalData, searchTerm, statusFilter]);
   const getStatusChip = (status) => {
+    
     const config = {
       verified: { color: '#10b981'},
       pending:  { color: '#f59e0b' },
@@ -446,6 +457,8 @@ minWidth: 70,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
             }}
           >
+
+
             <DataGrid
               rows={filteredData}
               columns={columns}

@@ -4,7 +4,7 @@ import SessionTimeout from "../SessionTimeOut" // <-- import here
 const ProtectRoute = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   if (!userInfo || !userInfo.token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
   return (
     <>

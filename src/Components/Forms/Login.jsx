@@ -29,8 +29,8 @@ export default function Login() {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
- setIsLoading(true);
- setError('');
+  setIsLoading(true);
+  setError('');
 
   try {
     const { data } = await axios.post(
@@ -43,9 +43,8 @@ const handleSubmit = async (e) => {
         },
       }
     );
-    console.log(data,"fffffffffffffffffffff");
 
-
+    const empCategory = data.employee?.Emp_Category;
 
     const userInfo = {
       token: data.token,
@@ -53,26 +52,34 @@ const handleSubmit = async (e) => {
       employee: data.employee.Employee_Name,
       Email: data.employee.Email,
       Is_Employee: data.employee.Is_Employee,
-      Emp_Category: data.employee.Emp_Category,
+      Emp_Category: empCategory,
     };
 
     // store first
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
-    // conditional navigation
-    if (data.employee.Emp_Category === "HOD") {
+    // ✅ role-based navigation
+    if (empCategory === "HOD") {
       navigate("/PendingMRFS");
-    } else {
+    } else if (empCategory === "DIRECTOR" || empCategory === "EVC") {
+      navigate("/RecruitmentProcess");
+    } else if (empCategory === "HR") {
       navigate("/HrInbox");
+    } else {
+      navigate("/"); // fallback (optional)
     }
 
   } catch (error) {
     console.error("Login failed:", error.response?.data || error.message);
-     setError(error.response?.data?.message || 'Invalid credentials. Please try again.');
+    setError(
+      error.response?.data?.message || 
+      "Invalid credentials. Please try again."
+    );
   } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
+  }
 };
+
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));

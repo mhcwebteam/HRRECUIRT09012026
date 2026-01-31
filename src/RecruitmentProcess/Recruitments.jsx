@@ -52,32 +52,32 @@ const Recruitments = () => {
   }, [process]);
 
 
-  const stats = [
-    { 
-      label: 'Total Employees', 
-      value: '1,234', 
-      icon: PeopleIcon, 
-      color: 'blue' 
-    },
-    { 
-      label: 'Active Projects', 
-      value: '56', 
-      icon: AssignmentIcon, 
-      color: 'green' 
-    },
-    { 
-      label: 'Pending Requests', 
-      value: '23', 
-      icon: NotificationsIcon, 
-      color: 'orange' 
-    },
-    { 
-      label: 'Growth Rate', 
-      value: '+12%', 
-      icon: TrendingUpIcon, 
-      color: 'purple' 
-    },
-  ];
+  // const stats = [
+  //   { 
+  //     label: 'Total Employees', 
+  //     value: '1,234', 
+  //     icon: PeopleIcon, 
+  //     color: 'blue' 
+  //   },
+  //   { 
+  //     label: 'Active Projects', 
+  //     value: '56', 
+  //     icon: AssignmentIcon, 
+  //     color: 'green' 
+  //   },
+  //   { 
+  //     label: 'Pending Requests', 
+  //     value: '23', 
+  //     icon: NotificationsIcon, 
+  //     color: 'orange' 
+  //   },
+  //   { 
+  //     label: 'Growth Rate', 
+  //     value: '+12%', 
+  //     icon: TrendingUpIcon, 
+  //     color: 'purple' 
+  //   },
+  // ];
 
   const RecruitmentMenuItems = [
     { 
@@ -331,7 +331,7 @@ const Recruitments = () => {
         <>
           {activeTab === 0 && (
             <Grid container spacing={3} className="mb-6">
-              {stats.map((stat, index) => {
+              {/* {stats.map((stat, index) => {
                 const IconComponent = stat.icon;
                 const colorClasses = getColorClasses(stat.color);
                 return (
@@ -363,7 +363,7 @@ const Recruitments = () => {
                     </Card>
                   </Grid>
                 );
-              })}
+              })} */}
             </Grid>
           )}
           {/* Recent Activity */}

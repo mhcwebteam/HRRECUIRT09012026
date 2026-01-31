@@ -507,7 +507,13 @@ const VerificationDetailsModal = ({ open, onClose, data, onStatusChange, setSele
   const isApproved = true;
   if (!open) return null;
 
+
+
+
+
   const handleSubmit = async () => {
+
+    alert(123)
     try {
       const payload = {
         child_caseId: data.CHILD_CASEID,
@@ -527,6 +533,8 @@ const VerificationDetailsModal = ({ open, onClose, data, onStatusChange, setSele
           confirmButtonText: 'OK',
         });
         setRemarks('');
+
+
         onClose();
       }
     } catch (error) {

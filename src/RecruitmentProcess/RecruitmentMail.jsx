@@ -43,8 +43,6 @@ const RecruitmentMail = () => {
  
 
 
-
-
 useEffect(() => {
   if (!userToken?.token) return;
 

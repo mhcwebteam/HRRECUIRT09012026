@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useContext, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Upload, User, Mail, Phone, Briefcase, BookOpen, Award, Plus, Trash2 } from 'lucide-react';
@@ -12,7 +14,6 @@ import { useParams } from 'react-router-dom';
 
 const RecruitmentForm = () => {
   const { case_Id } = useParams();
-  // const { HrData } = useContext(ContextData);
   const [formData, setFormData] = useState({
     CHILD_CASEID: "",
     PLANT: "",
@@ -23,7 +24,7 @@ const RecruitmentForm = () => {
     DOB: '',
     GENDER: '',
     MARITAL_STATUS: '',
-    LANGUAGES_KNOWN: [],
+    LANGUAGES_KNOWN: '',
     DEPT: '',
     ADDRESS: '',
     AADHAR_NUM: '',
@@ -33,8 +34,6 @@ const RecruitmentForm = () => {
     INTER_COLLEGE_NAME: '',
     INTER_MARKS: '',
     GRAD_COLLEGE_NAME: '',
-        CURRENT_CTC: '',
-    EXP_CTC: '',
     BTECH_MARKS: '',
     PG_COLLEGE_NAME: '',
     PG_MARKS: '',
@@ -44,75 +43,67 @@ const RecruitmentForm = () => {
     INTER_FILENAME: null,
     BTECH_FILENAME: null,
     PG_FILENAME: null,
-        CURRENT_CTC: '',
-    EXP_CTC: '',
     PHOTO: null,
   });
 
-const [experiences, setExperiences] = useState([
-  {
-    id: Date.now(),
-    COMPANY_NAME: '',
-    DESIGNATION: '',
-    FROM_DATE: '',
-    TO_DATE: (() => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    })(),
-    DURATION: '',
-    CURRENT_CTC: '',
-    EXP_CTC: '',
-    NOTICE_PERIOD: '',
-    PAYSLIPS: [],
-    RELIEVING_LETTER: null,
-    EXP_LETTER: null,
-    BANK_STATEMENTS: [],
-    isCurrent: true
-  }
-]);
+  const [experiences, setExperiences] = useState([
+    {
+      id: Date.now(),
+      COMPANY_NAME: '',
+      DESIGNATION: '',
+      FROM_DATE: '',
+      TO_DATE: (() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      })(),
+      DURATION: '',
+      CURRENT_CTC: '',
+      EXP_CTC: '',
+      NOTICE_PERIOD: '',
+      PAYSLIPS: [],
+      RELIEVING_LETTER: null,
+      EXP_LETTER: null,
+      BANK_STATEMENTS: [],
+      isCurrent: true
+    }
+  ]);
 
   const [errors, setErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
-
-     const [HrData,setHrData] = useState([]);
-
+  const [HrData, setHrData] = useState([]);
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  console.log(userToken,"tokjeeeeeeeeeeeeeeeeeee")
-
-
   useEffect(() => {
-  if (!userToken?.token) return;
+    if (!userToken?.token) return;
 
-  const Recuritment = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/task-Assign-GtDta`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${userToken.token}`,
-          },
-        }
-      );
+    const Recuritment = async () => {
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/task-Assign-GtDta`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${userToken.token}`,
+            },
+          }
+        );
 
-      setHrData(response.data)
-      console.log("NOTE FOR APPROVAL API DATA:", response.data);
-    } catch (err) {
-      console.error("Error fetching approval data", err);
-    }
-  };
+        setHrData(response.data)
+        console.log("NOTE FOR APPROVAL API DATA:", response.data);
+      } catch (err) {
+        console.error("Error fetching approval data", err);
+      }
+    };
 
-  Recuritment();
-}, [userToken?.token]);
+    Recuritment();
+  }, [userToken?.token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(name, "nameddddddddd", value)
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -126,31 +117,9 @@ const [experiences, setExperiences] = useState([
     }
   };
 
-  const handleLanguagesChange = (e) => {
-    const options = e.target.options;
-    const selectedValues = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selectedValues.push(options[i].value);
-      }
-    }
-    setFormData(prev => ({
-      ...prev,
-      LANGUAGES_KNOWN: selectedValues
-    }));
-
-    if (showErrors && errors.LANGUAGES_KNOWN) {
-      setErrors(prev => ({
-        ...prev,
-        LANGUAGES_KNOWN: ''
-      }));
-    }
-  };
-console.log("hr777777777777777777777",HrData?.TaskAssignmentData)
-useEffect(() => {
+  useEffect(() => {
     if (HrData?.TaskAssignmentData && HrData?.TaskAssignmentData?.length > 0 && case_Id) {
       var hr = HrData?.TaskAssignmentData?.find((ele) => ele.CHILD_CASEID === case_Id);
-      console.log(hr,'hr88888888888888888888')
       if (hr) {
         setFormData((prev) => ({
           ...prev,
@@ -172,8 +141,8 @@ useEffect(() => {
       }));
     }
 
-    const maxSizeRegular = 2 * 1024 * 1024; // 2MB
-    const maxSizePayslips = 4 * 1024 * 1024; // 4MB
+    const maxSizeRegular = 2 * 1024 * 1024;
+    const maxSizePayslips = 4 * 1024 * 1024;
 
     const file = files[0];
     if (!file) return;
@@ -206,15 +175,11 @@ useEffect(() => {
     }));
   };
 
-  // Experience handlers
-
-
   const handleExperienceChange = (id, field, value) => {
     setExperiences(prev => prev.map(exp => {
       if (exp.id === id) {
         const updated = { ...exp, [field]: value };
 
-        // For current company, set TO_DATE to current date when FROM_DATE changes
         if (exp.isCurrent && field === 'FROM_DATE') {
           const today = new Date();
           const year = today.getFullYear();
@@ -223,25 +188,21 @@ useEffect(() => {
           updated.TO_DATE = `${year}-${month}-${day}`;
         }
 
-        // Auto-calculate exact duration if FROM_DATE and TO_DATE are set
         if (field === 'FROM_DATE' || field === 'TO_DATE') {
           if (updated.FROM_DATE && updated.TO_DATE) {
             const fromDate = new Date(updated.FROM_DATE);
             const toDate = new Date(updated.TO_DATE);
 
-            // Calculate exact months and days
             let years = toDate.getFullYear() - fromDate.getFullYear();
             let months = toDate.getMonth() - fromDate.getMonth();
             let days = toDate.getDate() - fromDate.getDate();
 
-            // Adjust for negative days
             if (days < 0) {
               months--;
               const lastMonth = new Date(toDate.getFullYear(), toDate.getMonth(), 0);
               days += lastMonth.getDate();
             }
 
-            // Adjust for negative months
             if (months < 0) {
               years--;
               months += 12;
@@ -251,7 +212,6 @@ useEffect(() => {
 
             if (totalMonths > 0 || days > 0) {
               if (days > 0) {
-                // Round up to next month since they've passed the previous month
                 const roundedMonths = totalMonths + 1;
                 updated.DURATION = `${roundedMonths} (${totalMonths} months ${days} days)`;
               } else {
@@ -277,81 +237,81 @@ useEffect(() => {
     }
   };
 
-const handleExperienceFileChange = (id, field, e) => {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
+  const handleExperienceFileChange = (id, field, e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  const maxSize = (field === 'PAYSLIPS' || field === 'BANK_STATEMENTS') ? 4 * 1024 * 1024 : 2 * 1024 * 1024;
-  const isMultiple = field === 'PAYSLIPS' || field === 'BANK_STATEMENTS';
+    const maxSize = (field === 'PAYSLIPS' || field === 'BANK_STATEMENTS') ? 4 * 1024 * 1024 : 2 * 1024 * 1024;
+    const isMultiple = field === 'PAYSLIPS' || field === 'BANK_STATEMENTS';
 
-  if (isMultiple) {
-    const validFiles = [];
-    const invalidFiles = [];
+    if (isMultiple) {
+      const validFiles = [];
+      const invalidFiles = [];
 
-    Array.from(files).forEach(file => {
+      Array.from(files).forEach(file => {
+        if (file.type !== 'application/pdf') {
+          invalidFiles.push(`${file.name} - Only PDF files are allowed`);
+          return;
+        }
+        if (file.size > maxSize) {
+          invalidFiles.push(`${file.name} - File size must be less than 4MB`);
+          return;
+        }
+        validFiles.push(file);
+      });
+
+      if (invalidFiles.length > 0) {
+        Swal.fire({
+          title: "Invalid Files",
+          html: `<ul style="text-align:left">${invalidFiles.map(err => `<li>• ${err}</li>`).join("")}</ul>`,
+          icon: "error",
+        });
+        e.target.value = '';
+        return;
+      }
+
+      setExperiences(prev => prev.map(exp =>
+        exp.id === id ? {
+          ...exp,
+          [field]: [...(exp[field] || []), ...validFiles]
+        } : exp
+      ));
+    } else {
+      const file = files[0];
+
       if (file.type !== 'application/pdf') {
-        invalidFiles.push(`${file.name} - Only PDF files are allowed`);
+        Swal.fire({
+          title: "Invalid File Type",
+          text: "Only PDF files are allowed",
+          icon: "error",
+        });
+        e.target.value = '';
         return;
       }
+
       if (file.size > maxSize) {
-        invalidFiles.push(`${file.name} - File size must be less than 4MB`);
+        Swal.fire({
+          title: "File Too Large",
+          text: "File size must be less than 2MB",
+          icon: "error",
+        });
+        e.target.value = '';
         return;
       }
-      validFiles.push(file);
-    });
 
-    if (invalidFiles.length > 0) {
-      Swal.fire({
-        title: "Invalid Files",
-        html: `<ul style="text-align:left">${invalidFiles.map(err => `<li>• ${err}</li>`).join("")}</ul>`,
-        icon: "error",
-      });
-      e.target.value = '';
-      return;
+      setExperiences(prev => prev.map(exp =>
+        exp.id === id ? { ...exp, [field]: file } : exp
+      ));
     }
 
-    setExperiences(prev => prev.map(exp =>
-      exp.id === id ? { 
-        ...exp, 
-        [field]: [...(exp[field] || []), ...validFiles] 
-      } : exp
-    ));
-  } else {
-    const file = files[0];
-
-    if (file.type !== 'application/pdf') {
-      Swal.fire({
-        title: "Invalid File Type",
-        text: "Only PDF files are allowed",
-        icon: "error",
+    if (showErrors && errors[`exp_${id}_${field}`]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[`exp_${id}_${field}`];
+        return newErrors;
       });
-      e.target.value = '';
-      return;
     }
-
-    if (file.size > maxSize) {
-      Swal.fire({
-        title: "File Too Large",
-        text: "File size must be less than 2MB",
-        icon: "error",
-      });
-      e.target.value = '';
-      return;
-    }
-
-    setExperiences(prev => prev.map(exp =>
-      exp.id === id ? { ...exp, [field]: file } : exp
-    ));
-  }
-
-  if (showErrors && errors[`exp_${id}_${field}`]) {
-    setErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[`exp_${id}_${field}`];
-      return newErrors;
-    });
-  }
-};
+  };
 
   const addExperience = () => {
     setExperiences(prev => [...prev, {
@@ -361,10 +321,13 @@ const handleExperienceFileChange = (id, field, e) => {
       FROM_DATE: '',
       TO_DATE: '',
       DURATION: '',
-      PAYSLIPS: null,
+      CURRENT_CTC: '',
+      EXP_CTC: '',
+      NOTICE_PERIOD: '',
+      PAYSLIPS: [],
       RELIEVING_LETTER: null,
       EXP_LETTER: null,
-      BANK_STATEMENTS: null,
+      BANK_STATEMENTS: [],
       isCurrent: false
     }]);
   };
@@ -397,8 +360,9 @@ const handleExperienceFileChange = (id, field, e) => {
     if (!formData.MARITAL_STATUS || formData.MARITAL_STATUS.trim() === "") {
       newErrors.MARITAL_STATUS = "Marital Status is required";
     }
-    if (!formData.LANGUAGES_KNOWN || formData.LANGUAGES_KNOWN.length === 0) {
-      newErrors.LANGUAGES_KNOWN = "At least one language is required";
+    // ✅ FIXED: Changed to check string instead of array
+    if (!formData.LANGUAGES_KNOWN || formData.LANGUAGES_KNOWN.trim() === "") {
+      newErrors.LANGUAGES_KNOWN = "Languages Known is required";
     }
 
     if (!formData.EMAIL || formData.EMAIL.trim() === "") {
@@ -460,7 +424,6 @@ const handleExperienceFileChange = (id, field, e) => {
     if (!formData.BTECH_MARKS || formData.BTECH_MARKS.toString().trim() === "") {
       newErrors.BTECH_MARKS = "B.tech/Degree Marks is required";
     }
-    // PG_COLLEGE is no longer mandatory
 
     if (!formData['10TH_FILENAME']) {
       newErrors['10TH_FILENAME'] = "10th Marksheet is required";
@@ -483,20 +446,16 @@ const handleExperienceFileChange = (id, field, e) => {
       if (!exp.FROM_DATE || exp.FROM_DATE.trim() === "") {
         newErrors[`exp_${exp.id}_FROM_DATE`] = "From Date is required";
       }
-     if (!exp.TO_DATE || exp.TO_DATE.trim() === "") {
+      if (!exp.TO_DATE || exp.TO_DATE.trim() === "") {
         newErrors[`exp_${exp.id}_TO_DATE`] = "To Date is required";
       }
 
       if (exp.isCurrent) {
-  
         if (!exp.NOTICE_PERIOD || exp.NOTICE_PERIOD.toString().trim() === "") {
           newErrors[`exp_${exp.id}_NOTICE_PERIOD`] = "Notice Period is required";
         }
         if (!exp.PAYSLIPS || (Array.isArray(exp.PAYSLIPS) && exp.PAYSLIPS.length === 0)) {
           newErrors[`exp_${exp.id}_PAYSLIPS`] = "Pay Slips (3 months) is required";
-        }
-        if (!exp.RELIEVING_LETTER) {
-          newErrors[`exp_${exp.id}_RELIEVING_LETTER`] = "Relieving Letter is required";
         }
         if (!exp.BANK_STATEMENTS || (Array.isArray(exp.BANK_STATEMENTS) && exp.BANK_STATEMENTS.length === 0)) {
           newErrors[`exp_${exp.id}_BANK_STATEMENTS`] = "Bank Statements (3 months) is required";
@@ -512,86 +471,91 @@ const handleExperienceFileChange = (id, field, e) => {
 
     const validationErrors = validateForm();
 
-   
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setShowErrors(true);
+
+      console.log("Validation Errors:", validationErrors); // ✅ Debug log
+
+      const firstErrorField = document.querySelector('.border-red-500');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      Swal.fire({
+        title: "Validation Error",
+        text: "Please fill all required fields correctly",
+        icon: "error",
+      });
+      return;
+    }
 
     try {
       const data = new FormData();
 
-    
       Object.entries(formData).forEach(([key, value]) => {
         if (!value) return;
 
         if (value instanceof File) {
           data.append(key, value);
-        } else if (Array.isArray(value)) {
-          data.append(key, JSON.stringify(value));
         } else {
           data.append(key, String(value));
         }
       });
 
-      // Add experiences data
-    const experiencesArray = experiences.map((exp, index) => {
-      const experienceObj = {
-        companyname: exp.COMPANY_NAME || '',
-        designation: exp.DESIGNATION || '',
-        fromdate: exp.FROM_DATE || '',
-        todate: exp.TO_DATE || '',
-        duration: exp.DURATION || '',
-        currentCTC: exp.CURRENT_CTC || '',
-        expectedCTC: exp.EXP_CTC || '',
-        stage: index,
-        isCurrent: exp.isCurrent || false
-      };
+      const experiencesArray = experiences.map((exp, index) => {
+        const experienceObj = {
+          companyname: exp.COMPANY_NAME || '',
+          designation: exp.DESIGNATION || '',
+          fromdate: exp.FROM_DATE || '',
+          todate: exp.TO_DATE || '',
+          duration: exp.DURATION || '',
+          currentCTC: exp.CURRENT_CTC || '',
+          expectedCTC: exp.EXP_CTC || '',
+          stage: index,
+          isCurrent: exp.isCurrent || false
+        };
 
-      if (exp.isCurrent) {
-        experienceObj.noticePeriod = exp.NOTICE_PERIOD || '';
-        
-        experienceObj.payslips = [];
-        if (exp.PAYSLIPS && Array.isArray(exp.PAYSLIPS)) {
-          exp.PAYSLIPS.forEach((file, fileIndex) => {
-            if (file instanceof File) {
-              // Append binary file
-              // data.append(`experience_${index}_payslip_${fileIndex}`, file);
-              // Store filename in JSON
-              experienceObj.payslips.push({
-                filename: file.name
-              });
-            }
-          });
-        }
-        
-        if (exp.BANK_STATEMENTS && Array.isArray(exp.BANK_STATEMENTS) && exp.BANK_STATEMENTS.length > 0) {
-          const bankStatementFile = exp.BANK_STATEMENTS[0];
-          if (bankStatementFile instanceof File) {
-            // data.append(`experience_${index}_bank_statement`, bankStatementFile);
-            experienceObj.bank_statements = bankStatementFile.name;
+        if (exp.isCurrent) {
+          experienceObj.noticePeriod = exp.NOTICE_PERIOD || '';
+
+          experienceObj.payslips = [];
+          if (exp.PAYSLIPS && Array.isArray(exp.PAYSLIPS)) {
+            exp.PAYSLIPS.forEach((file, fileIndex) => {
+              if (file instanceof File) {
+                experienceObj.payslips.push({
+                  filename: file.name
+                });
+              }
+            });
           }
-        } else {
-          experienceObj.bank_statements = "";
+
+          if (exp.BANK_STATEMENTS && Array.isArray(exp.BANK_STATEMENTS) && exp.BANK_STATEMENTS.length > 0) {
+            const bankStatementFile = exp.BANK_STATEMENTS[0];
+            if (bankStatementFile instanceof File) {
+              experienceObj.bank_statements = bankStatementFile.name;
+            }
+          } else {
+            experienceObj.bank_statements = "";
+          }
+
+          if (exp.RELIEVING_LETTER instanceof File) {
+            experienceObj.relieving_letter = exp.RELIEVING_LETTER.name;
+          } else {
+            experienceObj.relieving_letter = "";
+          }
+
+          if (exp.EXP_LETTER instanceof File) {
+            experienceObj.exp_letter = exp.EXP_LETTER.name;
+          } else {
+            experienceObj.exp_letter = "";
+          }
         }
 
-        if (exp.RELIEVING_LETTER instanceof File) {
-          // data.append(`experience_${index}_relieving_letter`, exp.RELIEVING_LETTER);
-          experienceObj.relieving_letter = exp.RELIEVING_LETTER.name;
-        } else {
-          experienceObj.relieving_letter = "";
-        }
-        
-        if (exp.EXP_LETTER instanceof File) {
-          // data.append(`experience_${index}_exp_letter`, exp.EXP_LETTER);
-          experienceObj.exp_letter = exp.EXP_LETTER.name;
-        } else {
-          experienceObj.exp_letter = "";
-        }
-      }
+        return experienceObj;
+      });
 
-      return experienceObj;
-    });
-
-    // 4. Append experiences as JSON
-
-    data.append('experiences', JSON.stringify(experiencesArray));
+      data.append('experiences', JSON.stringify(experiencesArray));
 
       const response = await axios.post(
         `${API_BASE_URL}/recruitStore`,
@@ -635,7 +599,7 @@ const handleExperienceFileChange = (id, field, e) => {
       DOB: '',
       GENDER: '',
       MARITAL_STATUS: '',
-      LANGUAGES_KNOWN: [],
+      LANGUAGES_KNOWN: '',
       DEPT: '',
       ADDRESS: '',
       AADHAR_NUM: '',
@@ -673,10 +637,10 @@ const handleExperienceFileChange = (id, field, e) => {
         CURRENT_CTC: '',
         EXP_CTC: '',
         NOTICE_PERIOD: '',
-        PAYSLIPS: null,
+        PAYSLIPS: [],
         RELIEVING_LETTER: null,
         EXP_LETTER: null,
-        BANK_STATEMENTS: null,
+        BANK_STATEMENTS: [],
         isCurrent: true
       }
     ]);
@@ -773,29 +737,14 @@ const handleExperienceFileChange = (id, field, e) => {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Languages Known <span className="text-red-500">*</span>
-                </label>
-
-                <input
-                  type="text"
-                  name="LANGUAGES_KNOWN"
-                  value={formData.LANGUAGES_KNOWN}
-                  onChange={handleInputChange}
-                  placeholder="e.g. English, Telugu, Hindi"
-                  className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${showErrors && errors.LANGUAGES_KNOWN
-                    ? 'border-red-500'
-                    : 'border-gray-300'
-                    }`}
-                />
-
-                {showErrors && errors.LANGUAGES_KNOWN && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.LANGUAGES_KNOWN}
-                  </p>
-                )}
-              </div>
+              <InputField
+                label={<>Languages Known <span className="text-red-500">*</span></>}
+                name="LANGUAGES_KNOWN"
+                value={formData.LANGUAGES_KNOWN}
+                onChange={handleInputChange}
+                placeholder="e.g. English, Telugu, Hindi"
+                error={showErrors ? errors.LANGUAGES_KNOWN : ''}
+              />
 
               <InputField
                 label={<>Email <span className="text-red-500">*</span></>}
@@ -923,10 +872,10 @@ const handleExperienceFileChange = (id, field, e) => {
               />
               <InputField
                 label={<>Intermediate College <span className="text-red-500">*</span></>}
-                name="INTER_COLLEGE"
-                value={formData.INTER_COLLEGE}
+                name="INTER_COLLEGE_NAME"
+                value={formData.INTER_COLLEGE_NAME}
                 onChange={handleInputChange}
-                error={showErrors ? errors.INTER_COLLEGE : ''}
+                error={showErrors ? errors.INTER_COLLEGE_NAME : ''}
               />
               <InputField
                 label={<>Inter Marks <span className="text-red-500">*</span></>}
@@ -964,23 +913,6 @@ const handleExperienceFileChange = (id, field, e) => {
                 value={formData.PG_MARKS}
                 onChange={handleInputChange}
               />
-
-
-                  <InputField
-                        label={<>Current CTC <span className="text-red-500">*</span></>}
-                     name= "CURRENT_CTC"
-                        type="number"
-                        value={formData.CURRENT_CTC}
-                         onChange={handleInputChange}
-
-                      />
-                      <InputField
-                        label={<>Expected CTC <span className="text-red-500">*</span></>}
-                     name= "EXP_CTC"
-                        type="number"
-                        value={formData.EXP_CTC}
-                        onChange={handleInputChange}
-                      />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -1020,7 +952,6 @@ const handleExperienceFileChange = (id, field, e) => {
                 className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition text-sm"
               >
                 <Plus size={16} /> Add
-
               </button>
             </div>
 
@@ -1080,19 +1011,14 @@ const handleExperienceFileChange = (id, field, e) => {
                     disabled
                   />
                   {exp.isCurrent && (
-                    <>
-            
-                      <InputField
-                        label={<>Notice Period (Days)</>}
-                        name={`exp_${exp.id}_NOTICE_PERIOD`}
-                        type="number"
-                        value={exp.NOTICE_PERIOD}
-                        onChange={(e) =>
-                          handleExperienceChange(exp.id, 'NOTICE_PERIOD', e.target.value)
-                        }
-
-                      />
-                    </>
+                    <InputField
+                      label={<>Notice Period (Days) <span className="text-red-500">*</span></>}
+                      name={`exp_${exp.id}_NOTICE_PERIOD`}
+                      type="number"
+                      value={exp.NOTICE_PERIOD}
+                      onChange={(e) => handleExperienceChange(exp.id, 'NOTICE_PERIOD', e.target.value)}
+                      error={showErrors ? errors[`exp_${exp.id}_NOTICE_PERIOD`] : ''}
+                    />
                   )}
                 </div>
 
@@ -1108,7 +1034,7 @@ const handleExperienceFileChange = (id, field, e) => {
                         error={showErrors ? errors[`exp_${exp.id}_PAYSLIPS`] : ''}
                       />
                       <ExperienceFileUpload
-                        label={<>Relieving Letter </>}
+                        label="Relieving Letter"
                         name={`exp_${exp.id}_RELIEVING_LETTER`}
                         onChange={(e) => handleExperienceFileChange(exp.id, 'RELIEVING_LETTER', e)}
                       />
@@ -1155,7 +1081,7 @@ const handleExperienceFileChange = (id, field, e) => {
   );
 };
 
-const InputField = ({ label, name, type = "text", value, onChange, error, disabled = false, maxLength }) => (
+const InputField = ({ label, name, type = "text", value, onChange, error, disabled = false, maxLength, placeholder }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label}
@@ -1167,6 +1093,7 @@ const InputField = ({ label, name, type = "text", value, onChange, error, disabl
       onChange={onChange}
       disabled={disabled}
       maxLength={maxLength}
+      placeholder={placeholder}
       className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
         } ${error ? 'border-red-500' : 'border-gray-300'}`}
     />
@@ -1216,7 +1143,7 @@ const ExperienceFileUpload = ({ label, name, onChange, multiple = false, maxSize
   };
 
   return (
-   <div>
+    <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <label className="flex items-center gap-2 cursor-pointer">
         <input
@@ -1240,4 +1167,3 @@ const ExperienceFileUpload = ({ label, name, onChange, multiple = false, maxSize
 };
 
 export default RecruitmentForm;
-

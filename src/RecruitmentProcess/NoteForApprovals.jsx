@@ -61,7 +61,6 @@ const NoteForApprovals = () => {
   });
 
 
-  console.log("noteAprvlDatanoteAprvlDatanoteAprvlData",noteAprvlData);
 
   
   /* ---------------------------------------API CALL -------------------------------------*/
@@ -81,76 +80,76 @@ const NoteForApprovals = () => {
 
       console.log("NOTE FOR APPROVAL API DATA:", res);
       setNoteAprvlData(res.data.VerifyData || []);
+
+
     } catch (err) {
       console.error("Error fetching approval data", err);
     }
   };
 
   /*-----------------------------ApprovalS---------------------------------------------*/
-  const handleNtFrApprove = async (row) => {
 
-    alert(token?.token)
-    try {
-      // 🔵 Before API call (Loading alert)
-      Swal.fire({
-        title: "Processing...",
-        text: "Please wait while approving",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
+
+
+const handleNtFrApprove = async (row) => {
+  alert(133);
+  try {
+    // 🔵 Loading Swal
+    Swal.fire({
+      title: "Processing...",
+      text: "Please wait while approving",
+      allowOutsideClick: false,
+      //didOpen: () => Swal.showLoading(),
+    });
+
+    // 🔵 Approve API
+    await axios.post(
+      `${API_BASE_URL}/Note-For-AprvlUpdt`,
+      { caseId: row.CHILD_CASEID },
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token.token}`,
         },
-      });
-
-      
-const response = await axios.post(
-  `${API_BASE_URL}/Note-For-AprvlUpdt`,
-  { caseId: row.CHILD_CASEID },
-  {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token.token}`,
-    },
-  }
-);
-
-
- setNoteAprvlData(prevData => 
-      prevData.filter(item => item.CHILD_CASEID !== row.CHILD_CASEID)
+      }
     );
-      setApproveModalOpen(false); // added on 30-01-2026
 
-      // 🟢 After success
-      Swal.fire({
-        icon: "success",
-        title: "Approved Successfully",
-        text: response.data?.message || "Note for approval updated successfully",
-        confirmButtonColor: "#2563eb",
-      });
-      setApproveModalOpen(false);
-      // noteFrAprvlData();
-    } catch (err) {
-      console.error("Error In Update Note For Aprvl", err);
-      // 🔴 On error
-      Swal.fire({
-        icon: "error",
-        title: "Approval Failed",
-        text: err.response?.data?.message || "Something went wrong. Please try again.",
-        confirmButtonColor: "#dc2626",
-      });
-    }
-  };
+    // 🟢 Success Swal (WAIT till shown)
+    await Swal.fire({
+      icon: "success",
+      title: "Approved Successfully",
+      text: "Note for approval updated successfully",
+      timer: 1500,
+      showConfirmButton: false,
+    });
 
-  /*-------------------------------ApprovalE--------------------------------------------------*/
+    // 🟢 Refresh table data AFTER Swal
+    await noteFrAprvlData();
+
+    // 🟢 Close modal
+    setApproveModalOpen(false);
+
+  } catch (err) {
+    console.error("Error In Update Note For Aprvl", err);
+
+    Swal.fire({
+      icon: "error",
+      title: "Approval Failed",
+      text: err.response?.data?.message || "Something went wrong. Please try again.",
+    });
+  }
+};
+
+ 
 
 
-  /* -------------------- USE EFFECT -------------------- */
   useEffect(() => {
     if (token?.token) {
       noteFrAprvlData();
     }
   }, [token]);
   
-  /**------------------------SHIFING CURRENT POSITIONS------------------------------------ */
+ 
   const assignApprover = async (row, role) => {
     try {
       const payload = {
