@@ -1,27 +1,20 @@
+
+
+
 import React, { useState, useMemo, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, Paper, Modal, IconButton, Typography, Button, CircularProgress, TextField, InputAdornment, Tooltip } from '@mui/material';
+import { Box, Paper, Modal, IconButton, Typography, Button, CircularProgress, TextField, InputAdornment, Tooltip, Menu, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import SearchIcon from '@mui/icons-material/Search';
-import { Doughnut } from 'react-chartjs-2';
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { FaCheckCircle, FaExclamationCircle, FaTimesCircle, FaChartPie } from 'react-icons/fa';
-import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend as ChartLegend, } from 'chart.js';
-import DataFlow from "../Components/DataFlow.jsx"
-import ManPowerView from '../ManpowerComponent/ManPowerView.jsx';
 import { ArrowLeftIcon, BriefcaseIcon, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../Config/Config.jsx';
-import { ContextData } from '../Context/ContextData.jsx';
-import RecruitmentForm from './RecruitmentForm.jsx';
 
-ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
-
-const RecruitmentMail = () => {
+const HODInbox = () => {
   const [searchText, setSearchText] = useState('');
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -32,107 +25,68 @@ const RecruitmentMail = () => {
   const navigate = useNavigate();
   const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
   const [selectedRowData, setSelectedRowData] = useState(null);
-  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
-   const [HrData,setHrData] = useState([]);
-
+  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {});
   const [emailInputs, setEmailInputs] = useState({});
   const [submitting, setSubmitting] = useState({});
+  const [hrData, setHrData] = useState([]);
+  const [hrEmployees, setHrEmployees] = useState([]); // Store HR employee list
 
-  //  const { HrData } = useContext(ContextData);
+  // Fetch HR employees list
+  useEffect(() => {
+    if (!userToken?.token) return;
 
- 
+    const fetchHrEmployees = async () => {
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/mhc-hr-list`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${userToken.token}`,
+            },
+          }
+        );
+
+        // Extract hrDropDownListData from response
+        const hrList = response.data?.hrDropDownListData || [];
+        setHrEmployees(hrList);
+        console.log("HR Employees List:", hrList);
+      } catch (err) {
+        console.error("Error fetching HR employees list", err);
+      }
+    };
+
+    fetchHrEmployees();
+  }, [userToken?.token]);
 
 
+const onBoarding = async () => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/hr_requisition_list`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${userToken.token}`,
+        },
+      }
+    );
 
+    setHrData(response.data.data);
+    console.log("NOTE FOR APPROVAL API DATA:", response.data);
+  } catch (err) {
+    console.error("Error fetching approval data", err);
+  }
+};
 
 useEffect(() => {
   if (!userToken?.token) return;
-
-  const Recuritment = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/task-Assign-GtDta`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${userToken.token}`,
-          },
-        }
-      );
-
-      setHrData(response.data)
-      console.log("NOTE FOR APPROVAL API DATA:", response.data);
-    } catch (err) {
-      console.error("Error fetching approval data", err);
-    }
-  };
-
-  Recuritment();
+  onBoarding();
 }, [userToken?.token]);
 
 
-
-
-
-
-
-
-  useEffect(() => {
-    if (Array.isArray(HrData?.TaskAssignmentData) && HrData?.TaskAssignmentData?.length > 0) {
-      const shortlistedData = HrData?.TaskAssignmentData?.filter(row => {
-        const status = row.ACTION_STATUS || row.STATUS || row.CUR_STATUS;
-        return status?.toUpperCase() === 'pending';
-      });
-
-      const rowsWithId = shortlistedData.map((row, index) => ({
-        ...row,
-        id: row.CASEID || `row_${index}`,
-      }));
-
-      
-
-      console.log(shortlistedData,"Filtered HR Data:", rowsWithId);
-      setData(HrData?.TaskAssignmentData);
-      setFilteredData(HrData?.TaskAssignmentData);
-      setLoading(false);
-    } else {
-      console.log("HrData is empty or not an array");
-      setData([]);
-      setFilteredData([]);
-      setLoading(false);
-    }
-  }, [HrData]);
-
-  useEffect(() => {
-    if (!userToken.token) navigate('/');
-  }, [navigate, userToken?.token]);
-
-  const handleSearch = (e) => {
-    const searchValue = e.target.value;
-    setSearchText(searchValue);
-    setPaginationModel(prev => ({ ...prev, page: 0 }));
-    if (!searchValue) {
-      setFilteredData(data);
-      return;
-    }
-    const filtered = data.filter(row => {
-      const search = searchValue.toLowerCase();
-      return (
-        (row.CASEID && row.CASEID.toLowerCase().includes(search)) ||
-        
-        (row.PROCESSNAME && row.PROCESSNAME.toLowerCase().includes(search)) ||
-        (row.RAISER && row.RAISER.toLowerCase().includes(search)) ||
-        (row.RAISER_DATE && row.RAISER_DATE.toLowerCase().includes(search)) ||
-        (row.CURRENT_USER && row.CURRENT_USER.toLowerCase().includes(search)) ||
-        (row.ACTION_STATUS && row.ACTION_STATUS.toLowerCase().includes(search)) ||
-        (row.PLANT && row.PLANT.toLowerCase().includes(search)) ||
-        (row.DEPT && row.DEPT.toLowerCase().includes(search)) ||
-        (row.MANPOWER_DESG && row.MANPOWER_DESG.toLowerCase().includes(search))
-      );
-    });
-    setFilteredData(filtered);
-  };
 
   const handleEmailChange = (caseId, email) => {
     setEmailInputs(prev => ({
@@ -169,8 +123,6 @@ useEffect(() => {
     }
 
     setSubmitting(prev => ({ ...prev, [caseId]: true }));
-
-
     const payload2 = {
       email: email,
       child_caseId: caseId,
@@ -216,7 +168,7 @@ useEffect(() => {
     setSelectedRowData(rowData);
     setProcessAndCaseIdData({
       processname: rowData.PROCESSNAME,
-      caseId: row.CASEID,
+      caseId: rowData.CHILD_CASEID,
       type: type
     });
     setManPowerOpen(true);
@@ -272,10 +224,9 @@ useEffect(() => {
         </Box>
       ),
     },
-
-        {
+    {
       field: 'CHILD_CASEID',
-      headerName: 'Child CaseID',
+      headerName: 'CHILD CASEID',
       flex: 1,
       minWidth: 120,
       renderCell: (params) => (
@@ -375,110 +326,139 @@ useEffect(() => {
       ),
     },
     {
-      field: 'USER_EMAIL',
-      headerName: 'User Email',
-      flex: 1.5,
-      minWidth: 180,
-      renderCell: (params) => {
-        const currentEmail = emailInputs[params.row.CHILD_CASEID] || '';
-        return (
-          <Tooltip 
-            title={currentEmail || 'No email entered'} 
-            arrow 
-            placement="top"
-            componentsProps={{
-              tooltip: {
-                sx: {
-                  backgroundColor: '#1f2937',
-                  fontSize: '12px',
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  '& .MuiTooltip-arrow': {
-                    color: '#1f2937',
-                  },
-                },
-              },
-            }}
-          >
-            <TextField
-              size="small"
-              type="email"
-              placeholder="Enter email address"
-              value={currentEmail}
-              onChange={(e) => handleEmailChange(params.row.CHILD_CASEID, e.target.value)}
-              sx={{
-                width: '100%',
-                '& .MuiOutlinedInput-root': {
-                  fontSize: '12px',
-                  height: '32px',
-                  '& fieldset': {
-                    borderColor: '#d1d5db',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#667eea',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#667eea',
-                  },
-                },
-              }}
-            />
-          </Tooltip>
-        );
-      },
-    },
-    {
       field: 'ACTIONS',
       headerName: 'Actions',
       flex: 1,
-      minWidth: 110,
+      minWidth: 130,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
-        const isSubmitting = submitting[params.row.CHILD_CASEID] || false;
-        const email = emailInputs[params.row.CHILD_CASEID] || '';
-        return (
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => handleSubmitEmail(params.row.CHILD_CASEID, params.row)}
-            disabled={isSubmitting || !email}
-            sx={{
-              background: isSubmitting
-                ? '#9ca3af'
-                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white',
-              fontSize: '10px',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              textTransform: 'capitalize',
-              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
-              minWidth: '90px',
-              '&:hover': {
-                background: isSubmitting
-                  ? '#9ca3af'
-                  : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                transform: isSubmitting ? 'none' : 'translateY(-1px)',
-                boxShadow: isSubmitting ? 'none' : '0 4px 10px rgba(16, 185, 129, 0.4)',
-              },
-              '&:disabled': {
-                background: '#9ca3af',
-                color: '#e5e7eb',
-              }
-            }}
-          >
-            {isSubmitting ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <CircularProgress size={12} sx={{ color: 'white' }} />
-                Sending...
-              </Box>
-            ) : (
-              'Send Email'
-            )}
-          </Button>
-        );
+        // Create a custom cell component with state
+        const CustomActionCell = ({ row }) => {
+          const [anchorEl, setAnchorEl] = useState(null);
+          const [selectedName, setSelectedName] = useState('');
+          
+          const handleClick = (event) => {
+            setAnchorEl(event.currentTarget);
+          };
+          
+          const handleClose = () => {
+            setAnchorEl(null);
+          };
+
+          const handleSelect = async (employee) => {
+            try {
+              const response = await axios.post(
+                `${API_BASE_URL}/task-Assign-StoreData`,
+                {
+                  case_id: row.CHILD_CASEID,
+                  assigned_to: employee.Emp_Name,
+                  legacy_id: employee.Legacy_Id, // Include Legacy_Id if needed
+                  current_task: "HR",
+                  status: "Pending"
+                },
+                {
+                  headers: {
+                    Accept: "application/json",
+                    Authorization: `Bearer ${userToken.token}`,
+                  },
+                }
+              );
+
+              const message = response.data?.message || `Case assigned to ${employee.Emp_Name}`;
+              
+              setSelectedName(employee.Emp_Name);
+              handleClose();
+
+              Swal.fire({
+                title: 'Assigned!',
+                text: message,
+                icon: 'success',
+                confirmButtonColor: '#10b981',
+              });
+
+
+             
+             await onBoarding();
+
+
+              
+            } catch (error) {
+              console.error("Assignment failed:", error.response?.data || error);
+              Swal.fire({
+                title: 'Error',
+                text: error.response?.data?.message || 'Assignment failed',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+              });
+            }
+          };
+
+          return (
+            <div>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleClick}
+                sx={{
+                  background: '#667eea',
+                  color: 'white',
+                  fontSize: '11px',
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  textTransform: 'none',
+                  minWidth: '100px',
+                  '&:hover': {
+                    background: '#5a67d8',
+                  }
+                }}
+              >
+                {selectedName || 'Assign To'} ▼
+              </Button>
+              
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                  sx: {
+                    mt: 1,
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    maxHeight: '200px',
+                    overflow: 'auto',
+                  }
+                }}
+              >
+                {hrEmployees.length > 0 ? (
+                  hrEmployees.map((employee, index) => (
+                    <MenuItem 
+                      key={index}
+                      onClick={() => handleSelect(employee)}
+                      sx={{
+                        fontSize: '12px',
+                        padding: '6px 16px',
+                        '&:hover': {
+                          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        }
+                      }}
+                    >
+                      {employee.Emp_Name} ({employee.Legacy_Id})
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled sx={{ fontSize: '12px', padding: '6px 16px' }}>
+                    No HR employees found
+                  </MenuItem>
+                )}
+              </Menu>
+            </div>
+          );
+        };
+
+        return <CustomActionCell row={params.row} />;
       },
-    },
+    }
   ];
 
   const modalStyle = {
@@ -497,18 +477,7 @@ useEffect(() => {
     overflow: 'hidden'
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen gap-2">
-  //       <RefreshCw className={`w-5 h-5 text-blue-600 ${loading ? "animate-spin" : ""}`} />
-  //       <span className="text-gray-600">Loading...</span>
-  //     </div>
-  //   );
-  // }
 
-  const handleBack = () => {
-    navigate('/');
-  };
 
   return (
     <Box sx={{
@@ -524,59 +493,8 @@ useEffect(() => {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
       }}>
-        {/* Compact Search bar */}
-        {/* <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={{ flex: 1, maxWidth: '400px' }}>
-            <TextField
-              variant="outlined"
-              size="small"
-              placeholder="Search shortlisted candidates..."
-              value={searchText}
-              onChange={handleSearch}
-              fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: '#667eea', fontSize: '20px' }} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  borderRadius: '10px',
-                  backgroundColor: '#f8fafc',
-                  height: '38px',
-                  fontSize: '13px',
-                  '&:hover': {
-                    backgroundColor: '#f1f5f9',
-                  },
-                  '&.Mui-focused': {
-                    backgroundColor: '#ffffff',
-                  }
-                }
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "#cedef2ff",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#d1d6ebff",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#667eea",
-                  },
-                },
-              }}
-            />
-          </Box>
-          <Typography variant="body2" sx={{
-            color: '#64748b',
-            minWidth: 'fit-content',
-            fontWeight: 500,
-            fontSize: '13px'
-          }}>
-            {filteredData.length} shortlisted candidates
-          </Typography>
-        </Box> */}
+   
+
 
         <Box sx={{
           width: "100%",
@@ -586,42 +504,14 @@ useEffect(() => {
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
         }}>
           <DataGrid
-            rows={filteredData}
+            rows={hrData}
             columns={columns}
-        getRowId={(row) => row.task_assignment_id}
+            getRowId={(row) => `${row.SNO}_${row.CHILD_CASEID}`}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[10, 20, 50]}
-       rowHeight={40}
-       loading={loading}
-
+            rowHeight={42}
             columnHeaderHeight={44}
-
-             slots={{
-    loadingOverlay: () => (
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50px',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          zIndex: 10,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
-          <Typography sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 500 }}>
-            Loading...
-          </Typography>
-        </Box>
-      </Box>
-    ),
-  }}
             sx={{
               border: "none",
               "& .MuiDataGrid-columnHeaders": {
@@ -676,7 +566,7 @@ useEffect(() => {
               flex: 1,
               textAlign: 'center',
             }}>
-              Case ID: {selectedRowData?.CASEID} | Process: {selectedRowData?.PROCESSNAME}
+              Case ID: {selectedRowData?.CHILD_CASEID} 
             </Typography>
             <IconButton
               aria-label="close"
@@ -699,15 +589,8 @@ useEffect(() => {
             overflowY: 'auto',
             backgroundColor: '#f8fafc',
           }}>
-            {processCaseId.type === "view" ? (
-              <DataFlow
-                processname={processCaseId.processname ?? ""}
-                caseId={processCaseId.caseId ?? ""}
-                mode={processCaseId.type ?? ""}
-              />
-            ) : (
-              <ManPowerView caseId={processCaseId.caseId ?? ""} />
-            )}
+            {/* Add your modal content here */}
+            <Typography>Case details would be shown here</Typography>
           </Box>
         </Box>
       </Modal>
@@ -715,4 +598,4 @@ useEffect(() => {
   );
 };
 
-export default RecruitmentMail;
+export default HODInbox;

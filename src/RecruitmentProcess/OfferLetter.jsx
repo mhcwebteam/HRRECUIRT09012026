@@ -45,15 +45,18 @@ const OfferLetter = () => {
   const [offerLetterOpen, setOfferLetterOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [ofrList,setOfferLetterData]=useState([]);
-  const [Token,setToken]=useState(()=>{
-    const authToken=JSON.parse(localStorage.getItem("userInfo"));
-    return authToken?authToken:null;
-  })
-  
-  const { personalData } = useContext(ContextData);
-  const { HrData } = useContext(ContextData);
+
+
+  console.log('hioiiiiiiiiiiiiiiiiiiiiiiiiiii');
+
+
+  const [token] = useState(() => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    return userInfo ? userInfo : null;
+  });
 
   const handleJoiningDateChange = (caseId, date) => {
+
 
     setJoiningDates(prev => ({
       ...prev,
@@ -63,6 +66,8 @@ const OfferLetter = () => {
   
   //----------------handleOfferLterEmail-----------------//
   const handleOfferLterEmail=async(rowData)=>
+
+
   {
     try
     {
@@ -76,10 +81,20 @@ const OfferLetter = () => {
           confirmButtonColor: "#2563eb",
         });
         if (!confirm.isConfirmed) return;
+
+
+const date_only = joiningDates
+  ? Object.values(joiningDates)[0]
+  : null;
+
+
+
+
         const  payload =
         {
-          "CHILD_CASEID":rowData.CHILD_CASEID,
-          "EMail"       :rowData.EMAIL
+          CHILD_CASEID:rowData.CHILD_CASEID,
+          EMAIL     :rowData.EMAIL,
+          joiningDate: date_only,
         }
       const ofrMailSend = await axios.post(`${API_BASE_URL}/ofr-ltr-issue-mail`,payload,
         {
@@ -87,9 +102,11 @@ const OfferLetter = () => {
         {
            "Content-Type" :"application/json",
            "Accept"       :"application/json",
-           "Authorization":`Bearer ${Token.token}`
+           "Authorization":`Bearer ${token.token}`
          }})
-      if (ofrMailSend.data.success) 
+
+         console.log("ofrMailSendofrMailSendofrMailSendofrMailSend",ofrMailSend);
+      if (ofrMailSend.data.message) 
         {
            await Swal.fire({
              title: "Success",
@@ -111,7 +128,10 @@ const OfferLetter = () => {
   
   //---------------Fetch the Offer Letter from Api--------------//
   const fetchOfrData = async()=>
+
+   
   {
+
     try
     {
       const ofrdata = await axios.get(`${API_BASE_URL}/offer-issue-list`,
@@ -119,10 +139,12 @@ const OfferLetter = () => {
         headers:
         {
             "Accept"       : "application/json",
-            "Authorization": `Bearer ${Token.token}`,
+            "Authorization": `Bearer ${token.token}`,
         }
       })
       setOfferLetterData(ofrdata.data.evcVerifiedData || []);
+
+      console.log(ofrdata,"dfffffffffffffffffffff");
     }
     catch(err)
     {
@@ -131,13 +153,15 @@ const OfferLetter = () => {
   }
   
   //useEffect Calling here ----
-  useEffect(()=>
-  {
-    if(Token.token)
-    {
+   useEffect(() => {
+
+    if (token?.token) {
+
       fetchOfrData();
+
     }
-  },[]);
+
+  }, [token]);
 
   //---------------------View the Offer Letter from Backend--------------------//
   const handleViewOfferLetter = (user) => 
@@ -492,7 +516,7 @@ const OfferLetter = () => {
       }}>
         
         {/* Compact Search bar matching RecruitmentMail */}
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ flex: 1, maxWidth: '400px' }}>
             <TextField
               variant="outlined"
@@ -579,7 +603,7 @@ const OfferLetter = () => {
           }}>
             {filteredData.length} offer letters
           </Typography>
-        </Box>
+        </Box> */}
 
         <Box sx={{
           width: "100%",
@@ -595,7 +619,7 @@ const OfferLetter = () => {
             getRowId={(row) => row.CHILD_CASEID}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[10, 20, 50]}
-            rowHeight={38}
+        rowHeight={40}
             columnHeaderHeight={42}
             sx={{
               border: "none",

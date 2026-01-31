@@ -32,13 +32,50 @@ const Verification = () =>
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const { personalData } = useContext(ContextData);
+  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
 
 
-  console.log(personalData,"perrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+const [personalData1, setPersonalData1] = useState([]);
+
+
+
+
+useEffect(() => {
+  if (!userToken?.token) return;
+
+  const EmpVerify= async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/emp-verify-data`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${userToken.token}`,
+          },
+        }
+      );
+
+      console.log(response,"newone added");
+
+      setPersonalData1(response?.data);
+    
+    } catch (err) {
+      console.error("Error fetching approval data", err);
+    }
+  };
+
+  EmpVerify();
+}, [userToken?.token]);
+
+
+   console.log(personalData,"ffffffffffffffffffffff555555555555");
   const filteredData = useMemo(() => 
   {
     if (!personalData || personalData.length === 0) return [];
     let result = [...personalData];
+
+  
     if (searchTerm) {
       result = result.filter(user =>
         (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,6 +88,8 @@ const Verification = () =>
     {
       result = result.filter(user => user.status === statusFilter);
     }
+
+    console.log(result,"trrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
     return result.map((item, index) => ({
       id: item.id || `row-${index}`,
       SNO: index + 1,
@@ -74,7 +113,7 @@ const Verification = () =>
       NOTICE_PERIOD: item.notice_period || 'N/A',
       PREVIOUS_COMPANY: item.previous_company || 'N/A',
       DURATION: item.duration || 'N/A',
-      STATUS: item.status || 'pending',
+      STATUS: item.status,
       remarks: item.remarks || 'No remarks',
       submitted_date: item.created_at || 'N/A',
       documents: item.documents || {}
@@ -116,6 +155,8 @@ const Verification = () =>
     );
   };
   const handleViewDetails = (user) => {
+
+
     setSelectedUser(user);
     setModalOpen(true);
   };
@@ -342,7 +383,7 @@ minWidth: 70,
         border: '1px solid #e2e8f0',
       }}>
         
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 ,gap:2}}>
+        {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 ,gap:2}}>
          <Box sx={{ flex: 1, maxWidth: '400px' }}>
             <TextField
               variant="outlined"
@@ -386,7 +427,7 @@ minWidth: 70,
             />
           </Box>
           
-        </Box>
+        </Box> */}
 
         {filteredData.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8, color: '#6b7280' }}>
@@ -411,7 +452,7 @@ minWidth: 70,
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 20, 50]}
-              rowHeight={50}
+              rowHeight={40}
               columnHeaderHeight={50}
               sx={{
                 border: "none",
@@ -449,6 +490,7 @@ minWidth: 70,
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         data={selectedUser}
+        setSelectedUser = {setSelectedUser}
         onStatusChange={handleStatusChange}
       />
     </Box>

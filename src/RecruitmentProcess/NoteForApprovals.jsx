@@ -54,12 +54,15 @@ const NoteForApprovals = () => {
   const [approveOpen, setApproveOpen] = useState(false);
 
 
-  const { personalData } = useContext(ContextData);
 
   const [token] = useState(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     return userInfo ? userInfo : null;
   });
+
+
+  console.log("noteAprvlDatanoteAprvlDatanoteAprvlData",noteAprvlData);
+
   
   /* ---------------------------------------API CALL -------------------------------------*/
   const noteFrAprvlData = async () => {
@@ -85,6 +88,8 @@ const NoteForApprovals = () => {
 
   /*-----------------------------ApprovalS---------------------------------------------*/
   const handleNtFrApprove = async (row) => {
+
+    alert(token?.token)
     try {
       // 🔵 Before API call (Loading alert)
       Swal.fire({
@@ -95,17 +100,25 @@ const NoteForApprovals = () => {
           Swal.showLoading();
         },
       });
-      const response = await axios.post(
-        axios.post(`${API_BASE_URL}/Note-For-AprvlUpdt`),
-        { caseId: row.CHILD_CASEID },
-        {
-          headers:
-          {
-            Accept: "application/json",
-            Authorization: `Bearer ${token.token}`,
-          },
-        }
-      );
+
+      
+const response = await axios.post(
+  `${API_BASE_URL}/Note-For-AprvlUpdt`,
+  { caseId: row.CHILD_CASEID },
+  {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token.token}`,
+    },
+  }
+);
+
+
+ setNoteAprvlData(prevData => 
+      prevData.filter(item => item.CHILD_CASEID !== row.CHILD_CASEID)
+    );
+      setApproveModalOpen(false); // added on 30-01-2026
+
       // 🟢 After success
       Swal.fire({
         icon: "success",
@@ -114,7 +127,7 @@ const NoteForApprovals = () => {
         confirmButtonColor: "#2563eb",
       });
       setApproveModalOpen(false);
-      noteFrAprvlData();
+      // noteFrAprvlData();
     } catch (err) {
       console.error("Error In Update Note For Aprvl", err);
       // 🔴 On error
@@ -146,16 +159,20 @@ const NoteForApprovals = () => {
         approver_role: role,
       };
       console.log("Assign Approver Payload:", payload);
-      await axios.post(
-        "http://172.20.0.9/laravel/myhomedashboardMRF/api/assign-approver",
+
+
+            const response = await axios.post(
+        `${API_BASE_URL}/assign-approver`,
         payload,
         {
           headers: {
+            Authorization: `Bearer ${token.token}`,
+            "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${token?.token}`,
           },
         }
       );
+
       alert(`${role} assigned successfully`);
       noteFrAprvlData(); // refresh list
     } catch (err) {
@@ -171,7 +188,7 @@ const NoteForApprovals = () => {
     if (searchTerm) {
       result = result.filter(
         (item) =>
-          item.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.FIRST_NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.CHILD_CASEID?.includes(searchTerm)
       );
@@ -186,7 +203,7 @@ const NoteForApprovals = () => {
       SNO: index + 1,
       CHILD_CASEID: item.CHILD_CASEID,
       PLANT: item.PLANT,
-      NAME: item.NAME,
+      FIRST_NAME: item.FIRST_NAME,
       EMAIL: item.EMAIL,
       PHONE_NUMBER: item.PHONE_NUMBER,
       DEPT: item.DEPT,
@@ -307,7 +324,7 @@ const NoteForApprovals = () => {
       ),
     },
     { 
-      field: "NAME", 
+      field: "FIRST_NAME", 
       headerName: "Candidate Name", 
       flex: 1.2,
       minWidth: 150,
@@ -434,6 +451,8 @@ const NoteForApprovals = () => {
         </Tooltip>
       ),
     },
+
+token?.Is_Employee === 2 &&
     {
       field: "APPROVER",
       headerName: "Send For Approval",
@@ -494,7 +513,7 @@ const NoteForApprovals = () => {
       }}>
         
         {/* Compact Search bar matching RecruitmentMail */}
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ flex: 1, maxWidth: '400px' }}>
             <TextField
               variant="outlined"
@@ -581,7 +600,7 @@ const NoteForApprovals = () => {
           }}>
             {filteredData.length} note approvals
           </Typography>
-        </Box>
+        </Box> */}
 
         {/* DataGrid */}
         <Box sx={{
@@ -597,7 +616,7 @@ const NoteForApprovals = () => {
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[10, 20, 50]}
-            rowHeight={42}
+           rowHeight={30}
             columnHeaderHeight={44}
             sx={{
               border: "none",
@@ -683,7 +702,9 @@ const NoteForApprovals = () => {
                   Candidate Name
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>
-                  {approveRow?.NAME}
+                  {approveRow?.FIRST_NAME}
+                  
+                  {/* || approveRow?.LAST_NAME} */}
                 </Typography>
               </Grid>
 

@@ -40,6 +40,18 @@ const Recruitments = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [hoveredTab, setHoveredTab] = useState(null);
 
+
+
+
+  const queryParams = new URLSearchParams(location.search);
+  const process = queryParams.get('process');   
+  useEffect(() => {
+    if (process) {
+      setActiveRecruitmentComponent(process);
+    }
+  }, [process]);
+
+
   const stats = [
     { 
       label: 'Total Employees', 
@@ -70,7 +82,7 @@ const Recruitments = () => {
   const RecruitmentMenuItems = [
     { 
       label: 'Recruitment Mail', 
-      component: 'recruitment-mail', 
+       component: 'HR Recruitment', 
       icon: Mail,
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
@@ -79,7 +91,7 @@ const Recruitments = () => {
     },
     { 
       label: 'Verification', 
-      component: 'verification', 
+      component: 'Verification', 
       icon: ShieldCheck,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
@@ -88,7 +100,7 @@ const Recruitments = () => {
     },
     { 
       label: 'Salary Stackup', 
-      component: 'salary-stackup', 
+      component: 'Salary Stack Up', 
       icon: DollarSign,
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
@@ -97,7 +109,7 @@ const Recruitments = () => {
     },
     { 
       label: 'Candidate Approval', 
-      component: 'candidate-approval', 
+      component: 'Candidate Approval', 
       icon: UserCheck,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',
@@ -106,7 +118,7 @@ const Recruitments = () => {
     },
     { 
       label: 'Note For Approval', 
-      component: 'note-approval', 
+      component: 'Note For Approval', 
       icon: FileText,
       color: 'from-pink-500 to-pink-600',
       bgColor: 'bg-pink-50',
@@ -115,7 +127,7 @@ const Recruitments = () => {
     },
     { 
       label: 'Offer Letter', 
-      component: 'offer-letter', 
+      component: 'Offer Letter', 
       icon: Send,
       color: 'from-indigo-500 to-indigo-600',
       bgColor: 'bg-indigo-50',
@@ -151,17 +163,17 @@ const Recruitments = () => {
   const renderRecruitmentComponent = () => {
     console.log('Current component:', activeRecruitmentComponent);
     switch (activeRecruitmentComponent) {
-      case 'recruitment-mail':
+     case 'HR Recruitment':
         return <RecruitmentMail />;
-      case 'verification':
+      case 'Verification':
         return <Verification />
-      case 'salary-stackup':
+      case 'Salary Stack Up':
         return <Salarystackup/>
-      case 'candidate-approval':
+      case 'Candidate Approval':
         return <CandidateApproval/>
-      case 'note-approval':
+      case 'Note For Approval':
         return <NoteForApprovals/>
-      case 'offer-letter':
+      case 'Offer Letter':
         return <OfferLetter/>      
       case 'form':
         // return <RecruitmentForm />

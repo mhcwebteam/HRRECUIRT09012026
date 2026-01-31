@@ -17,24 +17,7 @@ const Onboarding = () => {
       borderColor: 'border-orange-300',
       hoverBg: 'hover:bg-orange-100'
     },
-    {
-      label: 'Settings',
-      component: 'onboarding-settings',
-      icon: Settings,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-300',
-      hoverBg: 'hover:bg-blue-100'
-    },
-    {
-      label: 'Reports',
-      component: 'onboarding-reports',
-      icon: BarChart3,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-300',
-      hoverBg: 'hover:bg-green-100'
-    },
+ 
   ];
 
   const renderOnboardingComponent = () => {

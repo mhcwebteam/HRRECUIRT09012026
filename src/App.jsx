@@ -11,13 +11,20 @@ import Onboarding from "./OnBoarding/Onboarding";
 import Recruitments from "./RecruitmentProcess/Recruitments";
 import RecruitmentForm from "./RecruitmentProcess/RecruitmentForm";
 import HrInbox from './Components/HrInbox.jsx';
+import HODInbox from "./Components/HODInbox.jsx";
+import ProtectRoute from "./ProtectRoute/ProtectRoute.jsx";
 export const MyContext = createContext();
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const contextValues = { isSidebarOpen, setIsSidebarOpen };
+  
   const queryClient = new QueryClient();
   const router = createBrowserRouter([
     { path: "/", element: <Login />},
+
+  {
+      element: <ProtectRoute/>,
+      children: [    
     {
       path: '/OnBoarding',
       exact: true,
@@ -70,7 +77,7 @@ export default function App() {
           )
         },
      {
-      path: '/RecruitmentForm/:case_Id',
+ path: 'RecruitmentForm/:case_Id',
       exact: true,
       element: (
      <section className='main'>
@@ -101,6 +108,30 @@ export default function App() {
             </section>
           )
         },
+
+
+         {
+          path: '/PendingMRFS',
+          exact: true,
+            element: (
+            <section className='main'>
+              <Header/> 
+              <div className='contentMain flex'>
+                <div className={`sidebarWapper ${isSidebarOpen === true ? 'w-[18%]' : 'w-[90px]'} transition-all`}>
+                  <Sidebar/>
+                </div>
+                <div className={`contentRight py-4 px-4 ${isSidebarOpen ? 'w-[82%]' : 'w-[calc(100%-90px)]'} transition-all`}>
+                  <HODInbox />
+                </div>
+              </div>
+            </section>
+          )
+        },
+   ] },
+
+  //    {
+  //   basename: '/HRProcess'
+  // }
   ]);
   return (
     <QueryClientProvider client={queryClient}>

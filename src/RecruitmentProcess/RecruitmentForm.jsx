@@ -1,540 +1,10 @@
-// import React, { useContext, useEffect, useState } from 'react';
-// import Swal from 'sweetalert2';
-// import {
-//   Upload,
-//   User,
-//   Mail,
-//   Phone,
-//   Briefcase,
-//   BookOpen,
-//   Award
-// } from 'lucide-react';
-// import axios from 'axios';
-// import { API_BASE_URL } from "../Config/Config"
-// import { ContextData } from '../Context/ContextData';
-// import { useParams } from 'react-router-dom';
-
-// const RecruitmentForm = () => {
-//   const {case_Id} = useParams();
-//  const  { HrData} = useContext(ContextData);
-//   const [formData, setFormData] = useState({
-//     CHILD_CASEID: "",
-//     PLANT: "",
-//     NAME: '',
-//     EMAIL: '',
-//     PHONE_NUMBER: '',
-//     DOB: '',
-//     DEPT: '',
-//     ADDRESS: '',
-//     AADHAR_NUM: '',
-//     PAN_NUM: '',
-//     SSC_MARKS: '',
-//     INTER_MARKS: '',
-//     BTECH_MARKS: '',
-//     PG_MARKS: '',
-//     CURRENT_CTC: '',
-//     EXP_CTC: '',
-//     OFFER_CTC: '',
-//     NOTICE_PERIOD: '',
-//     PREVIOUS_COMPANY: '',
-//     DURATION: '',
-    
-//     AADHAR_PATH: null,
-//     PAN_PATH: null,
-//    '10TH_FILENAME': null,
-//     INTER_FILENAME: null,
-//     BTECH_FILENAME: null,
-//     PG_FILENAME: null,
-//     PHOTO: null,
-//     EXP_LETTER: null,
-//     RELIEVING_LETTER: '',
-//     PAYSLIPS: ""
-//   });
-
-//   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     console.log(name,"nameddddddddd", value)
-//     setFormData(prev => ({
-//       ...prev,
-//       [name]: value
-//     }));
-//   };
-
-//   useEffect(() => {
-//     if (HrData && HrData.length > 0 && case_Id) {
-//       var hr = HrData.find((ele) => ele.CHILD_CASEID === case_Id);
-//       if (hr) {
-//         setFormData((prev) => ({
-//           ...prev,
-//           PLANT: hr.PLANT || "",
-//           CHILD_CASEID: hr.CHILD_CASEID || case_Id,
-//           DEPT: hr.DEPT 
-//         }));
-//       }
-//     }
-//   }, [HrData, case_Id]);
-
-//   const handleFileChange = (e) => {
-//     const { name, files } = e.target;
-//     if (name === 'PAYSLIPS') {
-//       setFormData(prev => ({
-//         ...prev,
-//         PAYSLIPS: [...files]
-//       }));
-//     } 
-//    else 
-//     {
-//      setFormData(prev => ({
-//         ...prev,
-//         [name]: files[0]
-//       }));
-//    }
-//   };
-// //Validation Errors----
-// const validateForm = () => {
-//   const errors = {};
-//   // ===== REQUIRED TEXT FIELDS =====
-//   const requiredFields = [
-//     "NAME",
-//     "EMAIL",
-//     "PHONE_NUMBER",
-//     "DOB",
-//     "ADDRESS",
-//     "AADHAR_NUM",
-//     "PAN_NUM",
-//   ];
-
-//   requiredFields.forEach((field) => {
-//     if (!formData[field] || formData[field].toString().trim() === "") {
-//       errors[field] = `${field.replace("_", " ")} is required`;
-//     }
-//   });
-
-//   // ===== EMAIL =====
-//   if (formData.EMAIL && !/^\S+@\S+\.\S+$/.test(formData.EMAIL)) {
-//     errors.EMAIL = "Invalid email format";
-//   }
-
-//   // ===== PHONE =====
-//   if (formData.PHONE_NUMBER && formData.PHONE_NUMBER.length !== 10) {
-//     errors.PHONE_NUMBER = "Phone number must be 10 digits";
-//   }
-
-//   // ===== AADHAAR =====
-//   if (formData.AADHAR_NUM && formData.AADHAR_NUM.length !== 12) {
-//     errors.AADHAR_NUM = "Aadhaar must be 12 digits";
-//   }
-
-//   // ===== PAN =====
-//   // if (
-//   //   formData.PAN_NUM &&
-//   //   !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(formData.PAN_NUM)
-//   // ) {
-//   //   errors.PAN_NUM = "Invalid PAN format";
-//   // }
-
-//   // ===== NUMERIC FIELDS =====
-//   const numericFields = [
-//     "SSC_MARKS",
-//     "INTER_MARKS",
-//     "BTECH_MARKS",
-//     "PG_MARKS",
-//     "CURRENT_CTC",
-//     "EXP_CTC",
-//     "NOTICE_PERIOD",
-//     "DURATION",
-//   ];
-
-//   numericFields.forEach((field) => {
-//     if (formData[field] && isNaN(formData[field])) {
-//       errors[field] = `${field.replace("_", " ")} must be numeric`;
-//     }
-//   });
-
-//   // ===== REQUIRED FILES =====
-//   const requiredFiles = ["AADHAR_PATH", "PAN_PATH", "PHOTO"];
-
-//   requiredFiles.forEach((file) => {
-//     if (!formData[file]) {
-//       errors[file] = `${file.replace("_", " ")} is required`;
-//     }
-//   });
-
-//   return errors;
-// };
 
 
-//   const handleSubmit = async (e) => {
-//     //alert(e.target.value);
-//     //console.log("FormData:::::",formData);
-//   e.preventDefault();
-
-//   // 🔥 TEST CHECK
-//   console.log("Submit clicked");
-
-//   //const errors = validateForm();
-
-//   // ❌ STOP IF VALIDATION FAILS
-//   // if (Object.keys(errors).length > 0) {
-//   //   await Swal.fire({
-//   //     title: "Validation Errors",
-//   //     html: `<ul style="text-align:left">
-//   //       ${Object.values(errors).map(err => `<li>• ${err}</li>`).join("")}
-//   //     </ul>`,
-//   //     icon: "error",
-//   //   });
-//   //   return;
-//   // }
-
-//   // ✅ CONFIRMATION
-//   const confirm = await Swal.fire({
-//     title: "Are you sure?",
-//     text: "You want to submit this form",
-//     icon: "warning",
-//     showCancelButton: true,
-//     confirmButtonText: "Yes, Submit",
-//     cancelButtonText: "Cancel",
-//     confirmButtonColor: "#2563eb",
-//   });
-
-//   if (!confirm.isConfirmed) return;
-
-//   try {
-//     const data = new FormData();
-
-//     // ===== APPEND ALL FIELDS =====
-//     Object.entries(formData).forEach(([key, value]) => {
-//       if (!value) return;
-
-//       if (value instanceof File) 
-//       {
-//         data.append(key, value);
-//       } 
-//       else if (Array.isArray(value)) {
-//         value.forEach((file) => {
-//           if (file instanceof File) {
-//             data.append(key, file);
-//           }
-//         });
-//       } 
-//       else {
-//         data.append(key, String(value));
-//       }
-//     });
-//     console.log("Data::::::",data);
-//     const response = await axios.post(
-//       `${API_BASE_URL}/recruitStore`,
-//       data,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${userToken.token}`,
-//           "Content-Type": "multipart/form-data",
-//         },
-//       }
-//     );
-
-//     if (response.data.success) {
-//       await Swal.fire({
-//         title: "Success",
-//         text: "Data saved successfully",
-//         icon: "success",
-//       });
-//       resetForm();
-//     } else {
-//       await Swal.fire("Failed", response.data.message, "error");
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     await Swal.fire(
-//       "Error",
-//       error.response?.data?.message || "Something went wrong",
-//       "error"
-//     );
-//   }
-// };
-
-
-
-//   const resetForm = () => {
-//     setFormData({
-//       CHILD_CASEID: '',
-//       PLANT: '',
-//       NAME: '',
-//       EMAIL: '',
-//       PHONE_NUMBER: '',
-//       DOB: '',
-//       DEPT: '',
-//       ADDRESS: '',
-//       AADHAR_NUM: '',
-//       PAN_NUM: '',
-//       SSC_MARKS: '',
-//       INTER_MARKS: '',
-//       BTECH_MARKS: '',
-//       PG_MARKS: '',
-//       CURRENT_CTC: '',
-//       EXP_CTC: '',
-//       OFFER_CTC: '',
-//       NOTICE_PERIOD: '',
-//       PREVIOUS_COMPANY: '',
-//       DURATION: '',
-//       AADHAR_PATH: null,
-//       PAN_PATH: null,
-//       '10TH_FILENAME': null,
-//       INTER_FILENAME: null,
-//       BTECH_FILENAME: null,
-//       PG_FILENAME: null,
-//       PHOTO: null,
-//       EXP_LETTER: null,
-//       RELIEVING_LETTER: null,
-//       PAYSLIPS: []
-//     });
-//   };
-
-//   return (
-//     <div className="max-w-7xl w-full mx-auto p-10 
-//                 rounded-3xl shadow-2xl 
-//                 border border-gray-300 
-//                 bg-gradient-to-br from-pink-100 via-gray-50 to-gray-100">
-//       <div className="max-w-6xl mx-auto">
-//   <form onSubmit={handleSubmit} className="space-y-8">
-//   {/* ================= BASIC INFORMATION ================= */}
-//   <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-blue-500">
-//     <h2 className="text-xl font-bold mb-6">Basic Information</h2>
-
-//     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//       <InputField
-//         label="Child Case ID"
-//         name="CHILD_CASEID"
-//         value={formData.CHILD_CASEID}
-//         onChange={handleInputChange}
-//         disabled
-//       />
-
-//       <InputField
-//         label="Plant"
-//         name="PLANT"
-//         value={formData.PLANT}
-//         onChange={handleInputChange}
-//         disabled
-//       />
-
-//       <InputField
-//         label="Department"
-//         name="DEPT"
-//         value={formData.DEPT}
-//         onChange={handleInputChange}
-//         disabled
-//       />
-
-//       <InputField
-//         label="Full Name"
-//         name="NAME"
-//         value={formData.NAME}
-//         onChange={handleInputChange}
-//         required
-//       />
-
-//       <InputField
-//         label="Email"
-//         name="EMAIL"
-//         type="email"
-//         value={formData.EMAIL}
-//         onChange={handleInputChange}
-//         required
-//       />
-
-//       <InputField
-//         label="Phone Number"
-//         name="PHONE_NUMBER"
-//         value={formData.PHONE_NUMBER}
-//         maxLength={10}
-//         onChange={(e) => {
-//           const val = e.target.value.replace(/\D/g, "");
-//           if (val.length <= 10) {
-//             handleInputChange({
-//               target: { name: "PHONE_NUMBER", value: val },
-//             });
-//           }
-//         }}
-//         required
-//       />
-
-//       <InputField
-//         label="Date of Birth"
-//         name="DOB"
-//         type="date"
-//         value={formData.DOB}
-//         onChange={handleInputChange}
-//         required
-//       />
-
-//       <InputField
-//         label="Aadhaar Number"
-//         name="AADHAR_NUM"
-//         value={formData.AADHAR_NUM}
-//         onChange={(e) => {
-//           const val = e.target.value.replace(/\D/g, "");
-//           if (val.length <= 12) {
-//             handleInputChange({
-//               target: { name: "AADHAR_NUM", value: val },
-//             });
-//           }
-//         }}
-//         required
-//       />
-
-//       <InputField
-//         label="PAN Number"
-//         name="PAN_NUM"
-//         value={formData.PAN_NUM}
-//         onChange={(e) => {
-//           const val = e.target.value.toUpperCase();
-//           if (val.length <= 10) {
-//             handleInputChange({
-//               target: { name: "PAN_NUM", value: val },
-//             });
-//           }
-//         }}
-//         required
-//       />
-//     </div>
-
-//     <div className="mt-4">
-//       <label className="text-sm font-medium">Address *</label>
-//       <textarea
-//         name="ADDRESS"
-//         value={formData.ADDRESS}
-//         onChange={handleInputChange}
-//         rows={3}
-//         className="w-full border rounded-md px-3 py-2"
-//         required
-//       />
-//     </div>
-
-//     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-//       <FileUpload label="Aadhaar Card" name="AADHAR_PATH" onChange={handleFileChange} />
-//       <FileUpload label="PAN Card" name="PAN_PATH" onChange={handleFileChange} />
-//       <FileUpload label="Photo" name="PHOTO" onChange={handleFileChange} />
-//     </div>
-//   </div>
-
-//   {/* ================= EDUCATION DETAILS ================= */}
-//   <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-purple-500">
-//     <h2 className="text-xl font-bold mb-6">Education Details</h2>
-
-//     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-//       <InputField label="SSC Marks" name="SSC_MARKS" type="number" value={formData.SSC_MARKS} onChange={handleInputChange} />
-//       <InputField label="Inter Marks" name="INTER_MARKS" type="number" value={formData.INTER_MARKS} onChange={handleInputChange} />
-//       <InputField label="B.Tech Marks" name="BTECH_MARKS" type="number" value={formData.BTECH_MARKS} onChange={handleInputChange} />
-//       <InputField label="PG Marks" name="PG_MARKS" type="number" value={formData.PG_MARKS} onChange={handleInputChange} />
-//     </div>
-
-//     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-//       <FileUpload label="10th Marksheet" name="10TH_FILENAME" onChange={handleFileChange} />
-//       <FileUpload label="Inter Marksheet" name="INTER_FILENAME" onChange={handleFileChange} />
-//       <FileUpload label="Degree" name="BTECH_FILENAME" onChange={handleFileChange} />
-//       <FileUpload label="PG Certificate" name="PG_FILENAME" onChange={handleFileChange} />
-//     </div>
-//   </div>
-
-//   {/* ================= EXPERIENCE ================= */}
-//   <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-green-500">
-//     <h2 className="text-xl font-bold mb-6">Experience & Salary</h2>
-
-//     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//       <InputField label="Previous Company" name="PREVIOUS_COMPANY" value={formData.PREVIOUS_COMPANY} onChange={handleInputChange} />
-//       <InputField label="Duration (Months)" name="DURATION" type="number" value={formData.DURATION} onChange={handleInputChange} />
-//       <InputField label="Current CTC" name="CURRENT_CTC" type="number" value={formData.CURRENT_CTC} onChange={handleInputChange} />
-//       <InputField label="Expected CTC" name="EXP_CTC" type="number" value={formData.EXP_CTC} onChange={handleInputChange} />
-//       <InputField label="Notice Period (Days)" name="NOTICE_PERIOD" type="number" value={formData.NOTICE_PERIOD} onChange={handleInputChange} />
-//     </div>
-
-//     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-//       <FileUpload label="Experience Letter" name="EXP_LETTER" onChange={handleFileChange} />
-//       <FileUpload label="Relieving Letter" name="RELIEVING_LETTER" onChange={handleFileChange} />
-//       <FileUpload label="Payslips" name="PAYSLIPS" onChange={handleFileChange} />
-//     </div>
-//   </div>
-
-//   {/* ================= ACTION BUTTONS ================= */}
-//   <div className="flex justify-end gap-4">
-//     <button
-//       type="button"
-//       onClick={resetForm}
-//       className="px-6 py-3 bg-gray-200 rounded-md"
-//     >
-//       Reset
-//     </button>
-
-//     <button
-//       type="submit"
-//       className="px-8 py-3 bg-blue-600 text-white rounded-md"
-//     >
-//       Submit Form
-//     </button>
-//   </div>
-
-// </form>
-
-//       </div>
-//     </div>
-//   );
-// };
-
-// const InputField = ({ label, name, type, value, onChange, required, disabled = false }) => (
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 mb-2">
-//       {label}
-//     </label>
-//     <input
-//       type={type}
-//       name={name}
-//       value={value}
-//       onChange={onChange}
-//       disabled={disabled}
-//       className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-//         }`}
-//       required={required}
-//     />
-//   </div>
-// );
-
-// const FileUpload = ({ label, name, onChange, multiple = false }) => {
-//   const [fileName, setFileName] = useState('No file chosen');
-
-//   const handleChange = (e) => {
-//     setFileName(e.target.files?.length > 0 ? `${e.target.files.length} file(s) selected` : 'No file chosen');
-//     onChange(e);
-//   };
-
-//   return (
-//     <div>
-//       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-//       <label className="flex items-center gap-2 cursor-pointer">
-//         <input
-//           type="file"
-//           name={name}
-//           accept="application/pdf,image/*"
-//           onChange={handleChange}
-//           multiple={multiple}
-//           className="hidden"
-//         />
-//         <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium">
-//           Choose File
-//         </span>
-//         <span className="text-gray-600">{fileName}</span>
-//       </label>
-//     </div>
-//   );
-// }
-
-// export default RecruitmentForm;
 
 
 import React, { useContext, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { Upload, User, Mail, Phone, Briefcase, BookOpen, Award } from 'lucide-react';
+import { Upload, User, Mail, Phone, Briefcase, BookOpen, Award, Plus, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from "../Config/Config"
 import { ContextData } from '../Context/ContextData';
@@ -542,45 +12,103 @@ import { useParams } from 'react-router-dom';
 
 const RecruitmentForm = () => {
   const { case_Id } = useParams();
-  const { HrData } = useContext(ContextData);
+  // const { HrData } = useContext(ContextData);
   const [formData, setFormData] = useState({
     CHILD_CASEID: "",
     PLANT: "",
-    NAME: '',
+    FIRST_NAME: '',
+    LAST_NAME: '',
     EMAIL: '',
     PHONE_NUMBER: '',
     DOB: '',
+    GENDER: '',
+    MARITAL_STATUS: '',
+    LANGUAGES_KNOWN: [],
     DEPT: '',
     ADDRESS: '',
     AADHAR_NUM: '',
     PAN_NUM: '',
+    SSC_SCHOOL_NAME: '',
     SSC_MARKS: '',
+    INTER_COLLEGE_NAME: '',
     INTER_MARKS: '',
-    BTECH_MARKS: '',
-    PG_MARKS: '',
-    CURRENT_CTC: '',
+    GRAD_COLLEGE_NAME: '',
+        CURRENT_CTC: '',
     EXP_CTC: '',
-    OFFER_CTC: '',
-    NOTICE_PERIOD: '',
-    PREVIOUS_COMPANY: '',
-    DURATION: '',
-
+    BTECH_MARKS: '',
+    PG_COLLEGE_NAME: '',
+    PG_MARKS: '',
     AADHAR_PATH: null,
     PAN_PATH: null,
     '10TH_FILENAME': null,
     INTER_FILENAME: null,
     BTECH_FILENAME: null,
     PG_FILENAME: null,
+        CURRENT_CTC: '',
+    EXP_CTC: '',
     PHOTO: null,
-    EXP_LETTER: null,
-    RELIEVING_LETTER: '',
-    PAYSLIPS: ""
   });
+
+const [experiences, setExperiences] = useState([
+  {
+    id: Date.now(),
+    COMPANY_NAME: '',
+    DESIGNATION: '',
+    FROM_DATE: '',
+    TO_DATE: (() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })(),
+    DURATION: '',
+    CURRENT_CTC: '',
+    EXP_CTC: '',
+    NOTICE_PERIOD: '',
+    PAYSLIPS: [],
+    RELIEVING_LETTER: null,
+    EXP_LETTER: null,
+    BANK_STATEMENTS: [],
+    isCurrent: true
+  }
+]);
 
   const [errors, setErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
 
+     const [HrData,setHrData] = useState([]);
+
   const userToken = JSON.parse(localStorage.getItem("userInfo")) || {};
+
+  console.log(userToken,"tokjeeeeeeeeeeeeeeeeeee")
+
+
+  useEffect(() => {
+  if (!userToken?.token) return;
+
+  const Recuritment = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/task-Assign-GtDta`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${userToken.token}`,
+          },
+        }
+      );
+
+      setHrData(response.data)
+      console.log("NOTE FOR APPROVAL API DATA:", response.data);
+    } catch (err) {
+      console.error("Error fetching approval data", err);
+    }
+  };
+
+  Recuritment();
+}, [userToken?.token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -598,9 +126,31 @@ const RecruitmentForm = () => {
     }
   };
 
-  useEffect(() => {
-    if (HrData && HrData.length > 0 && case_Id) {
-      var hr = HrData.find((ele) => ele.CHILD_CASEID === case_Id);
+  const handleLanguagesChange = (e) => {
+    const options = e.target.options;
+    const selectedValues = [];
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selectedValues.push(options[i].value);
+      }
+    }
+    setFormData(prev => ({
+      ...prev,
+      LANGUAGES_KNOWN: selectedValues
+    }));
+
+    if (showErrors && errors.LANGUAGES_KNOWN) {
+      setErrors(prev => ({
+        ...prev,
+        LANGUAGES_KNOWN: ''
+      }));
+    }
+  };
+console.log("hr777777777777777777777",HrData?.TaskAssignmentData)
+useEffect(() => {
+    if (HrData?.TaskAssignmentData && HrData?.TaskAssignmentData?.length > 0 && case_Id) {
+      var hr = HrData?.TaskAssignmentData?.find((ele) => ele.CHILD_CASEID === case_Id);
+      console.log(hr,'hr88888888888888888888')
       if (hr) {
         setFormData((prev) => ({
           ...prev,
@@ -610,7 +160,7 @@ const RecruitmentForm = () => {
         }));
       }
     }
-  }, [HrData, case_Id]);
+  }, [HrData?.TaskAssignmentData, case_Id]);
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
@@ -625,75 +175,230 @@ const RecruitmentForm = () => {
     const maxSizeRegular = 2 * 1024 * 1024; // 2MB
     const maxSizePayslips = 4 * 1024 * 1024; // 4MB
 
-    if (name === 'PAYSLIPS') {
-      const validFiles = [];
-      const invalidFiles = [];
+    const file = files[0];
+    if (!file) return;
 
-      Array.from(files).forEach(file => {
-        if (file.type !== 'application/pdf') {
-          invalidFiles.push(`${file.name} - Only PDF files are allowed`);
-          return;
-        }
-
-        if (file.size > maxSizePayslips) {
-          invalidFiles.push(`${file.name} - File size must be less than 4MB`);
-          return;
-        }
-
-        validFiles.push(file);
+    if (file.type !== 'application/pdf') {
+      Swal.fire({
+        title: "Invalid File Type",
+        text: "Only PDF files are allowed",
+        icon: "error",
       });
-
-      if (invalidFiles.length > 0) {
-        Swal.fire({
-          title: "Invalid Files",
-          html: `<ul style="text-align:left">${invalidFiles.map(err => `<li>• ${err}</li>`).join("")}</ul>`,
-          icon: "error",
-        });
-        e.target.value = '';
-        return;
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        PAYSLIPS: validFiles
-      }));
-    } else {
-      const file = files[0];
-
-      if (!file) return;
-
-      if (file.type !== 'application/pdf') {
-        Swal.fire({
-          title: "Invalid File Type",
-          text: "Only PDF files are allowed",
-          icon: "error",
-        });
-        e.target.value = '';
-        return;
-      }
-
-      if (file.size > maxSizeRegular) {
-        Swal.fire({
-          title: "File Too Large",
-          text: "File size must be less than 2MB",
-          icon: "error",
-        });
-        e.target.value = '';
-        return;
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        [name]: file
-      }));
+      e.target.value = '';
+      return;
     }
+
+    const maxSize = (name === 'PAYSLIPS' || name === 'BANK_STATEMENTS') ? maxSizePayslips : maxSizeRegular;
+
+    if (file.size > maxSize) {
+      Swal.fire({
+        title: "File Too Large",
+        text: `File size must be less than ${maxSize === maxSizePayslips ? '4MB' : '2MB'}`,
+        icon: "error",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: file
+    }));
+  };
+
+  // Experience handlers
+
+
+  const handleExperienceChange = (id, field, value) => {
+    setExperiences(prev => prev.map(exp => {
+      if (exp.id === id) {
+        const updated = { ...exp, [field]: value };
+
+        // For current company, set TO_DATE to current date when FROM_DATE changes
+        if (exp.isCurrent && field === 'FROM_DATE') {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          updated.TO_DATE = `${year}-${month}-${day}`;
+        }
+
+        // Auto-calculate exact duration if FROM_DATE and TO_DATE are set
+        if (field === 'FROM_DATE' || field === 'TO_DATE') {
+          if (updated.FROM_DATE && updated.TO_DATE) {
+            const fromDate = new Date(updated.FROM_DATE);
+            const toDate = new Date(updated.TO_DATE);
+
+            // Calculate exact months and days
+            let years = toDate.getFullYear() - fromDate.getFullYear();
+            let months = toDate.getMonth() - fromDate.getMonth();
+            let days = toDate.getDate() - fromDate.getDate();
+
+            // Adjust for negative days
+            if (days < 0) {
+              months--;
+              const lastMonth = new Date(toDate.getFullYear(), toDate.getMonth(), 0);
+              days += lastMonth.getDate();
+            }
+
+            // Adjust for negative months
+            if (months < 0) {
+              years--;
+              months += 12;
+            }
+
+            const totalMonths = years * 12 + months;
+
+            if (totalMonths > 0 || days > 0) {
+              if (days > 0) {
+                // Round up to next month since they've passed the previous month
+                const roundedMonths = totalMonths + 1;
+                updated.DURATION = `${roundedMonths} (${totalMonths} months ${days} days)`;
+              } else {
+                updated.DURATION = totalMonths.toString();
+              }
+            } else {
+              updated.DURATION = '';
+            }
+          }
+        }
+
+        return updated;
+      }
+      return exp;
+    }));
+
+    if (showErrors && errors[`exp_${id}_${field}`]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[`exp_${id}_${field}`];
+        return newErrors;
+      });
+    }
+  };
+
+const handleExperienceFileChange = (id, field, e) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+
+  const maxSize = (field === 'PAYSLIPS' || field === 'BANK_STATEMENTS') ? 4 * 1024 * 1024 : 2 * 1024 * 1024;
+  const isMultiple = field === 'PAYSLIPS' || field === 'BANK_STATEMENTS';
+
+  if (isMultiple) {
+    const validFiles = [];
+    const invalidFiles = [];
+
+    Array.from(files).forEach(file => {
+      if (file.type !== 'application/pdf') {
+        invalidFiles.push(`${file.name} - Only PDF files are allowed`);
+        return;
+      }
+      if (file.size > maxSize) {
+        invalidFiles.push(`${file.name} - File size must be less than 4MB`);
+        return;
+      }
+      validFiles.push(file);
+    });
+
+    if (invalidFiles.length > 0) {
+      Swal.fire({
+        title: "Invalid Files",
+        html: `<ul style="text-align:left">${invalidFiles.map(err => `<li>• ${err}</li>`).join("")}</ul>`,
+        icon: "error",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    setExperiences(prev => prev.map(exp =>
+      exp.id === id ? { 
+        ...exp, 
+        [field]: [...(exp[field] || []), ...validFiles] 
+      } : exp
+    ));
+  } else {
+    const file = files[0];
+
+    if (file.type !== 'application/pdf') {
+      Swal.fire({
+        title: "Invalid File Type",
+        text: "Only PDF files are allowed",
+        icon: "error",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > maxSize) {
+      Swal.fire({
+        title: "File Too Large",
+        text: "File size must be less than 2MB",
+        icon: "error",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    setExperiences(prev => prev.map(exp =>
+      exp.id === id ? { ...exp, [field]: file } : exp
+    ));
+  }
+
+  if (showErrors && errors[`exp_${id}_${field}`]) {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[`exp_${id}_${field}`];
+      return newErrors;
+    });
+  }
+};
+
+  const addExperience = () => {
+    setExperiences(prev => [...prev, {
+      id: Date.now(),
+      COMPANY_NAME: '',
+      DESIGNATION: '',
+      FROM_DATE: '',
+      TO_DATE: '',
+      DURATION: '',
+      PAYSLIPS: null,
+      RELIEVING_LETTER: null,
+      EXP_LETTER: null,
+      BANK_STATEMENTS: null,
+      isCurrent: false
+    }]);
+  };
+
+  const removeExperience = (id) => {
+    if (experiences.length === 1) {
+      Swal.fire({
+        title: "Cannot Remove",
+        text: "At least one experience entry is required",
+        icon: "warning",
+      });
+      return;
+    }
+    setExperiences(prev => prev.filter(exp => exp.id !== id));
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.NAME || formData.NAME.trim() === "") {
-      newErrors.NAME = "Full Name is required";
+    // Basic Information Validation
+    if (!formData.FIRST_NAME || formData.FIRST_NAME.trim() === "") {
+      newErrors.FIRST_NAME = "First Name is required";
+    }
+    if (!formData.LAST_NAME || formData.LAST_NAME.trim() === "") {
+      newErrors.LAST_NAME = "Last Name is required";
+    }
+    if (!formData.GENDER || formData.GENDER.trim() === "") {
+      newErrors.GENDER = "Gender is required";
+    }
+    if (!formData.MARITAL_STATUS || formData.MARITAL_STATUS.trim() === "") {
+      newErrors.MARITAL_STATUS = "Marital Status is required";
+    }
+    if (!formData.LANGUAGES_KNOWN || formData.LANGUAGES_KNOWN.length === 0) {
+      newErrors.LANGUAGES_KNOWN = "At least one language is required";
     }
 
     if (!formData.EMAIL || formData.EMAIL.trim() === "") {
@@ -736,15 +441,26 @@ const RecruitmentForm = () => {
       newErrors.PHOTO = "Photo is required";
     }
 
+    // Education Validation
+    if (!formData.SSC_SCHOOL_NAME || formData.SSC_SCHOOL_NAME.trim() === "") {
+      newErrors.SSC_SCHOOL_NAME = "SSC School is required";
+    }
     if (!formData.SSC_MARKS || formData.SSC_MARKS.toString().trim() === "") {
       newErrors.SSC_MARKS = "SSC Marks is required";
+    }
+    if (!formData.INTER_COLLEGE_NAME || formData.INTER_COLLEGE_NAME.trim() === "") {
+      newErrors.INTER_COLLEGE_NAME = "Intermediate College is required";
     }
     if (!formData.INTER_MARKS || formData.INTER_MARKS.toString().trim() === "") {
       newErrors.INTER_MARKS = "Inter Marks is required";
     }
+    if (!formData.GRAD_COLLEGE_NAME || formData.GRAD_COLLEGE_NAME.trim() === "") {
+      newErrors.GRAD_COLLEGE_NAME = "Degree/B.tech College is required";
+    }
     if (!formData.BTECH_MARKS || formData.BTECH_MARKS.toString().trim() === "") {
       newErrors.BTECH_MARKS = "B.tech/Degree Marks is required";
     }
+    // PG_COLLEGE is no longer mandatory
 
     if (!formData['10TH_FILENAME']) {
       newErrors['10TH_FILENAME'] = "10th Marksheet is required";
@@ -756,31 +472,37 @@ const RecruitmentForm = () => {
       newErrors.BTECH_FILENAME = "B.tech/Degree is required";
     }
 
-    if (!formData.PREVIOUS_COMPANY || formData.PREVIOUS_COMPANY.trim() === "") {
-      newErrors.PREVIOUS_COMPANY = "Previous Company is required";
-    }
-    if (!formData.DURATION || formData.DURATION.toString().trim() === "") {
-      newErrors.DURATION = "Duration is required";
-    }
-    if (!formData.CURRENT_CTC || formData.CURRENT_CTC.toString().trim() === "") {
-      newErrors.CURRENT_CTC = "Current CTC is required";
-    }
-    if (!formData.EXP_CTC || formData.EXP_CTC.toString().trim() === "") {
-      newErrors.EXP_CTC = "Expected CTC is required";
-    }
-    if (!formData.NOTICE_PERIOD || formData.NOTICE_PERIOD.toString().trim() === "") {
-      newErrors.NOTICE_PERIOD = "Notice Period is required";
-    }
+    // Experience Validation
+    experiences.forEach((exp, index) => {
+      if (!exp.COMPANY_NAME || exp.COMPANY_NAME.trim() === "") {
+        newErrors[`exp_${exp.id}_COMPANY_NAME`] = "Company Name is required";
+      }
+      if (!exp.DESIGNATION || exp.DESIGNATION.trim() === "") {
+        newErrors[`exp_${exp.id}_DESIGNATION`] = "Designation is required";
+      }
+      if (!exp.FROM_DATE || exp.FROM_DATE.trim() === "") {
+        newErrors[`exp_${exp.id}_FROM_DATE`] = "From Date is required";
+      }
+     if (!exp.TO_DATE || exp.TO_DATE.trim() === "") {
+        newErrors[`exp_${exp.id}_TO_DATE`] = "To Date is required";
+      }
 
-    if (!formData.EXP_LETTER) {
-      newErrors.EXP_LETTER = "Experience Letter is required";
-    }
-    if (!formData.RELIEVING_LETTER) {
-      newErrors.RELIEVING_LETTER = "Relieving Letter is required";
-    }
-    if (!formData.PAYSLIPS || (Array.isArray(formData.PAYSLIPS) && formData.PAYSLIPS.length === 0)) {
-      newErrors.PAYSLIPS = "Pay Slips is required";
-    }
+      if (exp.isCurrent) {
+  
+        if (!exp.NOTICE_PERIOD || exp.NOTICE_PERIOD.toString().trim() === "") {
+          newErrors[`exp_${exp.id}_NOTICE_PERIOD`] = "Notice Period is required";
+        }
+        if (!exp.PAYSLIPS || (Array.isArray(exp.PAYSLIPS) && exp.PAYSLIPS.length === 0)) {
+          newErrors[`exp_${exp.id}_PAYSLIPS`] = "Pay Slips (3 months) is required";
+        }
+        if (!exp.RELIEVING_LETTER) {
+          newErrors[`exp_${exp.id}_RELIEVING_LETTER`] = "Relieving Letter is required";
+        }
+        if (!exp.BANK_STATEMENTS || (Array.isArray(exp.BANK_STATEMENTS) && exp.BANK_STATEMENTS.length === 0)) {
+          newErrors[`exp_${exp.id}_BANK_STATEMENTS`] = "Bank Statements (3 months) is required";
+        }
+      }
+    });
 
     return newErrors;
   };
@@ -790,52 +512,86 @@ const RecruitmentForm = () => {
 
     const validationErrors = validateForm();
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-
-      await Swal.fire({
-        title: "Validation Error",
-        text: "Please fill all the required fields correctly",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
-      });
-
-      setShowErrors(true);
-      return;
-    }
-
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "You want to submit this form",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Submit",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#2563eb",
-    });
-
-    if (!confirm.isConfirmed) return;
+   
 
     try {
       const data = new FormData();
 
+    
       Object.entries(formData).forEach(([key, value]) => {
         if (!value) return;
 
         if (value instanceof File) {
           data.append(key, value);
-        }
-        else if (Array.isArray(value)) {
-          value.forEach((file) => {
-            if (file instanceof File) {
-              data.append(key, file);
-            }
-          });
-        }
-        else {
+        } else if (Array.isArray(value)) {
+          data.append(key, JSON.stringify(value));
+        } else {
           data.append(key, String(value));
         }
       });
+
+      // Add experiences data
+    const experiencesArray = experiences.map((exp, index) => {
+      const experienceObj = {
+        companyname: exp.COMPANY_NAME || '',
+        designation: exp.DESIGNATION || '',
+        fromdate: exp.FROM_DATE || '',
+        todate: exp.TO_DATE || '',
+        duration: exp.DURATION || '',
+        currentCTC: exp.CURRENT_CTC || '',
+        expectedCTC: exp.EXP_CTC || '',
+        stage: index,
+        isCurrent: exp.isCurrent || false
+      };
+
+      if (exp.isCurrent) {
+        experienceObj.noticePeriod = exp.NOTICE_PERIOD || '';
+        
+        experienceObj.payslips = [];
+        if (exp.PAYSLIPS && Array.isArray(exp.PAYSLIPS)) {
+          exp.PAYSLIPS.forEach((file, fileIndex) => {
+            if (file instanceof File) {
+              // Append binary file
+              // data.append(`experience_${index}_payslip_${fileIndex}`, file);
+              // Store filename in JSON
+              experienceObj.payslips.push({
+                filename: file.name
+              });
+            }
+          });
+        }
+        
+        if (exp.BANK_STATEMENTS && Array.isArray(exp.BANK_STATEMENTS) && exp.BANK_STATEMENTS.length > 0) {
+          const bankStatementFile = exp.BANK_STATEMENTS[0];
+          if (bankStatementFile instanceof File) {
+            // data.append(`experience_${index}_bank_statement`, bankStatementFile);
+            experienceObj.bank_statements = bankStatementFile.name;
+          }
+        } else {
+          experienceObj.bank_statements = "";
+        }
+
+        if (exp.RELIEVING_LETTER instanceof File) {
+          // data.append(`experience_${index}_relieving_letter`, exp.RELIEVING_LETTER);
+          experienceObj.relieving_letter = exp.RELIEVING_LETTER.name;
+        } else {
+          experienceObj.relieving_letter = "";
+        }
+        
+        if (exp.EXP_LETTER instanceof File) {
+          // data.append(`experience_${index}_exp_letter`, exp.EXP_LETTER);
+          experienceObj.exp_letter = exp.EXP_LETTER.name;
+        } else {
+          experienceObj.exp_letter = "";
+        }
+      }
+
+      return experienceObj;
+    });
+
+    // 4. Append experiences as JSON
+
+    data.append('experiences', JSON.stringify(experiencesArray));
 
       const response = await axios.post(
         `${API_BASE_URL}/recruitStore`,
@@ -872,24 +628,26 @@ const RecruitmentForm = () => {
     setFormData({
       CHILD_CASEID: '',
       PLANT: '',
-      NAME: '',
+      FIRST_NAME: '',
+      LAST_NAME: '',
       EMAIL: '',
       PHONE_NUMBER: '',
       DOB: '',
+      GENDER: '',
+      MARITAL_STATUS: '',
+      LANGUAGES_KNOWN: [],
       DEPT: '',
       ADDRESS: '',
       AADHAR_NUM: '',
       PAN_NUM: '',
+      SSC_SCHOOL_NAME: '',
       SSC_MARKS: '',
+      INTER_COLLEGE_NAME: '',
       INTER_MARKS: '',
+      GRAD_COLLEGE_NAME: '',
       BTECH_MARKS: '',
+      PG_COLLEGE_NAME: '',
       PG_MARKS: '',
-      CURRENT_CTC: '',
-      EXP_CTC: '',
-      OFFER_CTC: '',
-      NOTICE_PERIOD: '',
-      PREVIOUS_COMPANY: '',
-      DURATION: '',
       AADHAR_PATH: null,
       PAN_PATH: null,
       '10TH_FILENAME': null,
@@ -897,10 +655,31 @@ const RecruitmentForm = () => {
       BTECH_FILENAME: null,
       PG_FILENAME: null,
       PHOTO: null,
-      EXP_LETTER: null,
-      RELIEVING_LETTER: null,
-      PAYSLIPS: []
     });
+    setExperiences([
+      {
+        id: Date.now(),
+        COMPANY_NAME: '',
+        DESIGNATION: '',
+        FROM_DATE: '',
+        TO_DATE: (() => {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        })(),
+        DURATION: '',
+        CURRENT_CTC: '',
+        EXP_CTC: '',
+        NOTICE_PERIOD: '',
+        PAYSLIPS: null,
+        RELIEVING_LETTER: null,
+        EXP_LETTER: null,
+        BANK_STATEMENTS: null,
+        isCurrent: true
+      }
+    ]);
     setErrors({});
     setShowErrors(false);
   };
@@ -939,12 +718,84 @@ const RecruitmentForm = () => {
               />
 
               <InputField
-                label={<>Full Name <span className="text-red-500">*</span></>}
-                name="NAME"
-                value={formData.NAME}
+                label={<>First Name (As Per Aadhar) <span className="text-red-500">*</span></>}
+                name="FIRST_NAME"
+                value={formData.FIRST_NAME}
                 onChange={handleInputChange}
-                error={showErrors ? errors.NAME : ''}
+                error={showErrors ? errors.FIRST_NAME : ''}
               />
+
+              <InputField
+                label={<>Last Name (As Per Aadhar) <span className="text-red-500">*</span></>}
+                name="LAST_NAME"
+                value={formData.LAST_NAME}
+                onChange={handleInputChange}
+                error={showErrors ? errors.LAST_NAME : ''}
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="GENDER"
+                  value={formData.GENDER}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${showErrors && errors.GENDER ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+                {showErrors && errors.GENDER && (
+                  <p className="text-red-500 text-xs mt-1">{errors.GENDER}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Marital Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="MARITAL_STATUS"
+                  value={formData.MARITAL_STATUS}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${showErrors && errors.MARITAL_STATUS ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                >
+                  <option value="">Select Status</option>
+                  <option value="Married">Married</option>
+                  <option value="Unmarried">Unmarried</option>
+                </select>
+                {showErrors && errors.MARITAL_STATUS && (
+                  <p className="text-red-500 text-xs mt-1">{errors.MARITAL_STATUS}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Languages Known <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  name="LANGUAGES_KNOWN"
+                  value={formData.LANGUAGES_KNOWN}
+                  onChange={handleInputChange}
+                  placeholder="e.g. English, Telugu, Hindi"
+                  className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${showErrors && errors.LANGUAGES_KNOWN
+                    ? 'border-red-500'
+                    : 'border-gray-300'
+                    }`}
+                />
+
+                {showErrors && errors.LANGUAGES_KNOWN && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.LANGUAGES_KNOWN}
+                  </p>
+                )}
+              </div>
 
               <InputField
                 label={<>Email <span className="text-red-500">*</span></>}
@@ -1010,7 +861,6 @@ const RecruitmentForm = () => {
                 error={showErrors ? errors.PAN_NUM : ''}
               />
 
-              {/* ✅ Address NEXT to PAN */}
               <div className="lg:col-span-2 md:col-span-2 col-span-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address <span className="text-red-500">*</span>
@@ -1028,7 +878,6 @@ const RecruitmentForm = () => {
                 )}
               </div>
             </div>
-
 
             <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
               <FileUpload
@@ -1058,12 +907,26 @@ const RecruitmentForm = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
               <InputField
+                label={<>SSC School <span className="text-red-500">*</span></>}
+                name="SSC_SCHOOL_NAME"
+                value={formData.SSC_SCHOOL_NAME}
+                onChange={handleInputChange}
+                error={showErrors ? errors.SSC_SCHOOL_NAME : ''}
+              />
+              <InputField
                 label={<>SSC Marks <span className="text-red-500">*</span></>}
                 name="SSC_MARKS"
                 type="number"
                 value={formData.SSC_MARKS}
                 onChange={handleInputChange}
                 error={showErrors ? errors.SSC_MARKS : ''}
+              />
+              <InputField
+                label={<>Intermediate College <span className="text-red-500">*</span></>}
+                name="INTER_COLLEGE"
+                value={formData.INTER_COLLEGE}
+                onChange={handleInputChange}
+                error={showErrors ? errors.INTER_COLLEGE : ''}
               />
               <InputField
                 label={<>Inter Marks <span className="text-red-500">*</span></>}
@@ -1074,6 +937,13 @@ const RecruitmentForm = () => {
                 error={showErrors ? errors.INTER_MARKS : ''}
               />
               <InputField
+                label={<>Degree/B.tech College <span className="text-red-500">*</span></>}
+                name="GRAD_COLLEGE_NAME"
+                value={formData.GRAD_COLLEGE_NAME}
+                onChange={handleInputChange}
+                error={showErrors ? errors.GRAD_COLLEGE_NAME : ''}
+              />
+              <InputField
                 label={<>B.tech/Degree Marks <span className="text-red-500">*</span></>}
                 name="BTECH_MARKS"
                 type="number"
@@ -1082,12 +952,35 @@ const RecruitmentForm = () => {
                 error={showErrors ? errors.BTECH_MARKS : ''}
               />
               <InputField
+                label="PG College"
+                name="PG_COLLEGE_NAME"
+                value={formData.PG_COLLEGE_NAME}
+                onChange={handleInputChange}
+              />
+              <InputField
                 label="PG Marks"
                 name="PG_MARKS"
                 type="number"
                 value={formData.PG_MARKS}
                 onChange={handleInputChange}
               />
+
+
+                  <InputField
+                        label={<>Current CTC <span className="text-red-500">*</span></>}
+                     name= "CURRENT_CTC"
+                        type="number"
+                        value={formData.CURRENT_CTC}
+                         onChange={handleInputChange}
+
+                      />
+                      <InputField
+                        label={<>Expected CTC <span className="text-red-500">*</span></>}
+                     name= "EXP_CTC"
+                        type="number"
+                        value={formData.EXP_CTC}
+                        onChange={handleInputChange}
+                      />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -1117,73 +1010,126 @@ const RecruitmentForm = () => {
             </div>
           </div>
 
-          {/* ================= EXPERIENCE ================= */}
+          {/* ================= EXPERIENCE & SALARY ================= */}
           <div className="bg-white rounded-md shadow p-4 border-l-4 border-green-500">
-            <h2 className="text-lg font-bold mb-3">Experience & Salary</h2>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-bold">Experience Details</h2>
+              <button
+                type="button"
+                onClick={addExperience}
+                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition text-sm"
+              >
+                <Plus size={16} /> Add
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              <InputField
-                label={<>Previous Company <span className="text-red-500">*</span></>}
-                name="PREVIOUS_COMPANY"
-                value={formData.PREVIOUS_COMPANY}
-                onChange={handleInputChange}
-                error={showErrors ? errors.PREVIOUS_COMPANY : ''}
-              />
-              <InputField
-                label={<>Duration (Months) <span className="text-red-500">*</span></>}
-                name="DURATION"
-                type="number"
-                value={formData.DURATION}
-                onChange={handleInputChange}
-                error={showErrors ? errors.DURATION : ''}
-              />
-              <InputField
-                label={<>Current CTC <span className="text-red-500">*</span></>}
-                name="CURRENT_CTC"
-                type="number"
-                value={formData.CURRENT_CTC}
-                onChange={handleInputChange}
-                error={showErrors ? errors.CURRENT_CTC : ''}
-              />
-              <InputField
-                label={<>Expected CTC <span className="text-red-500">*</span></>}
-                name="EXP_CTC"
-                type="number"
-                value={formData.EXP_CTC}
-                onChange={handleInputChange}
-                error={showErrors ? errors.EXP_CTC : ''}
-              />
-              <InputField
-                label={<>Notice Period (Days) <span className="text-red-500">*</span></>}
-                name="NOTICE_PERIOD"
-                type="number"
-                value={formData.NOTICE_PERIOD}
-                onChange={handleInputChange}
-                error={showErrors ? errors.NOTICE_PERIOD : ''}
-              />
+              </button>
             </div>
 
-            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <FileUpload
-                label={<>Experience Letter <span className="text-red-500">*</span></>}
-                name="EXP_LETTER"
-                onChange={handleFileChange}
-                error={showErrors ? errors.EXP_LETTER : ''}
-              />
-              <FileUpload
-                label={<>Relieving Letter <span className="text-red-500">*</span></>}
-                name="RELIEVING_LETTER"
-                onChange={handleFileChange}
-                error={showErrors ? errors.RELIEVING_LETTER : ''}
-              />
-              <FileUpload
-                label={<>Pay Slips <span className="text-red-500">*</span></>}
-                name="PAYSLIPS"
-                onChange={handleFileChange}
-                multiple={true}
-                error={showErrors ? errors.PAYSLIPS : ''}
-              />
-            </div>
+            {experiences.map((exp, index) => (
+              <div key={exp.id} className="mb-4 p-3 border border-gray-200 rounded-md bg-gray-50">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    {exp.isCurrent ? 'Current Company' : `Previous Company ${index}`}
+                  </h3>
+                  {experiences.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeExperience(exp.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                  <InputField
+                    label={<>{exp.isCurrent ? 'Current' : 'Previous'} Company <span className="text-red-500">*</span></>}
+                    name={`exp_${exp.id}_COMPANY_NAME`}
+                    value={exp.COMPANY_NAME}
+                    onChange={(e) => handleExperienceChange(exp.id, 'COMPANY_NAME', e.target.value)}
+                    error={showErrors ? errors[`exp_${exp.id}_COMPANY_NAME`] : ''}
+                  />
+                  <InputField
+                    label={<>Designation <span className="text-red-500">*</span></>}
+                    name={`exp_${exp.id}_DESIGNATION`}
+                    value={exp.DESIGNATION}
+                    onChange={(e) => handleExperienceChange(exp.id, 'DESIGNATION', e.target.value)}
+                    error={showErrors ? errors[`exp_${exp.id}_DESIGNATION`] : ''}
+                  />
+                  <InputField
+                    label={<>From Date <span className="text-red-500">*</span></>}
+                    name={`exp_${exp.id}_FROM_DATE`}
+                    type="date"
+                    value={exp.FROM_DATE}
+                    onChange={(e) => handleExperienceChange(exp.id, 'FROM_DATE', e.target.value)}
+                    error={showErrors ? errors[`exp_${exp.id}_FROM_DATE`] : ''}
+                  />
+                  <InputField
+                    label={<>To Date {exp.isCurrent ? '(Current Date)' : ''} <span className="text-red-500">*</span></>}
+                    name={`exp_${exp.id}_TO_DATE`}
+                    type="date"
+                    value={exp.TO_DATE}
+                    onChange={(e) => handleExperienceChange(exp.id, 'TO_DATE', e.target.value)}
+                    error={showErrors ? errors[`exp_${exp.id}_TO_DATE`] : ''}
+                    disabled={exp.isCurrent}
+                  />
+                  <InputField
+                    label="Duration(In Months)"
+                    name={`exp_${exp.id}_DURATION`}
+                    value={exp.DURATION}
+                    disabled
+                  />
+                  {exp.isCurrent && (
+                    <>
+            
+                      <InputField
+                        label={<>Notice Period (Days)</>}
+                        name={`exp_${exp.id}_NOTICE_PERIOD`}
+                        type="number"
+                        value={exp.NOTICE_PERIOD}
+                        onChange={(e) =>
+                          handleExperienceChange(exp.id, 'NOTICE_PERIOD', e.target.value)
+                        }
+
+                      />
+                    </>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  {exp.isCurrent && (
+                    <>
+                      <ExperienceFileUpload
+                        label={<>Pay Slips (3 months) <span className="text-red-500">*</span></>}
+                        name={`exp_${exp.id}_PAYSLIPS`}
+                        onChange={(e) => handleExperienceFileChange(exp.id, 'PAYSLIPS', e)}
+                        multiple={true}
+                        maxSize="4MB"
+                        error={showErrors ? errors[`exp_${exp.id}_PAYSLIPS`] : ''}
+                      />
+                      <ExperienceFileUpload
+                        label={<>Relieving Letter </>}
+                        name={`exp_${exp.id}_RELIEVING_LETTER`}
+                        onChange={(e) => handleExperienceFileChange(exp.id, 'RELIEVING_LETTER', e)}
+                      />
+                      <ExperienceFileUpload
+                        label="Experience Letter"
+                        name={`exp_${exp.id}_EXP_LETTER`}
+                        onChange={(e) => handleExperienceFileChange(exp.id, 'EXP_LETTER', e)}
+                      />
+                      <ExperienceFileUpload
+                        label={<>Bank Statements (3 months) <span className="text-red-500">*</span></>}
+                        name={`exp_${exp.id}_BANK_STATEMENTS`}
+                        onChange={(e) => handleExperienceFileChange(exp.id, 'BANK_STATEMENTS', e)}
+                        multiple={true}
+                        maxSize="4MB"
+                        error={showErrors ? errors[`exp_${exp.id}_BANK_STATEMENTS`] : ''}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* ================= ACTION BUTTONS ================= */}
@@ -1203,15 +1149,13 @@ const RecruitmentForm = () => {
               Submit Form
             </button>
           </div>
-
         </form>
-
       </div>
     </div>
   );
 };
 
-const InputField = ({ label, name, type = "text", value, onChange, error, disabled = false }) => (
+const InputField = ({ label, name, type = "text", value, onChange, error, disabled = false, maxLength }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label}
@@ -1222,6 +1166,7 @@ const InputField = ({ label, name, type = "text", value, onChange, error, disabl
       value={value}
       onChange={onChange}
       disabled={disabled}
+      maxLength={maxLength}
       className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
         } ${error ? 'border-red-500' : 'border-gray-300'}`}
     />
@@ -1231,8 +1176,7 @@ const InputField = ({ label, name, type = "text", value, onChange, error, disabl
 
 const FileUpload = ({ label, name, onChange, multiple = false, error }) => {
   const [fileName, setFileName] = useState('No file chosen');
-
-  const maxSize = name === 'PAYSLIPS' ? '4MB' : '2MB';
+  const maxSize = name === 'PAYSLIPS' || name === 'BANK_STATEMENTS' ? '4MB' : '2MB';
 
   const handleChange = (e) => {
     setFileName(e.target.files?.length > 0 ? `${e.target.files.length} file(s) selected` : 'No file chosen');
@@ -1261,6 +1205,39 @@ const FileUpload = ({ label, name, onChange, multiple = false, error }) => {
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
-}
+};
+
+const ExperienceFileUpload = ({ label, name, onChange, multiple = false, maxSize = '2MB', error }) => {
+  const [fileName, setFileName] = useState('No file chosen');
+
+  const handleChange = (e) => {
+    setFileName(e.target.files?.length > 0 ? `${e.target.files.length} file(s) selected` : 'No file chosen');
+    onChange(e);
+  };
+
+  return (
+   <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="file"
+          name={name}
+          accept="application/pdf"
+          onChange={handleChange}
+          multiple={multiple}
+          className="hidden"
+        />
+        <span className={`px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 font-medium text-sm ${error ? 'border border-red-500' : ''
+          }`}>
+          Choose File
+        </span>
+        <span className="text-gray-600 text-xs truncate">{fileName}</span>
+      </label>
+      <p className="text-gray-500 text-xs mt-0.5">PDF only, max {maxSize}</p>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+};
 
 export default RecruitmentForm;
+

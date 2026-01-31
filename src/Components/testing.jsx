@@ -1,207 +1,241 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
-import {API_BASE_URL} from '../Config/Config.jsx';
+import React, { useState, useMemo, useEffect, useContext } from 'react';
 import axios from 'axios';
-import {
-  Paper,
-  Box,
-  Typography,
-  IconButton,
-  Tooltip,
-  TextField,
-  InputAdornment,
-  MenuItem,
-  Button,
-  CircularProgress
-} from '@mui/material';
-import {
-  Search,
-  CheckCircle,
-  Cancel,
-  Visibility,
-  Refresh
-} from '@mui/icons-material';
+import { useLocation, useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 import { DataGrid } from '@mui/x-data-grid';
-import { ContextData } from '../Context/ContextData';
-import VerificationDetailsModal from './VerificationDetailsModal';
-import SalaryStackDetailsModal from './SalaryStackDetailsModal';
-import { CirclePlus } from 'lucide-react';
+import { Box, Paper, Modal, IconButton, Typography, Button, CircularProgress, TextField, InputAdornment, Tooltip, Menu, MenuItem } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import 'sweetalert2/dist/sweetalert2.min.css';
+import SearchIcon from '@mui/icons-material/Search';
+import { Doughnut } from 'react-chartjs-2';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import { FaCheckCircle, FaExclamationCircle, FaTimesCircle, FaChartPie } from 'react-icons/fa';
+import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend as ChartLegend, } from 'chart.js';
+import DataFlow from "../Components/DataFlow.jsx"
+import ManPowerView from '../ManpowerComponent/ManPowerView.jsx';
+import { ArrowLeftIcon, BriefcaseIcon, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { API_BASE_URL } from '../Config/Config.jsx';
+import { ContextData } from '../Context/ContextData.jsx';
 
-const Salarystackup = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+
+ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
+
+const HODInbox = () => {
+
+  const [searchText, setSearchText] = useState('');
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [manpowerOpen, setManPowerOpen] = useState(false);
+  const [processCaseId, setProcessAndCaseIdData] = useState('');
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
+  const [selectedRowData, setSelectedRowData] = useState(null);
+  const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
+  const [emailInputs, setEmailInputs] = useState({});
   const [submitting, setSubmitting] = useState({});
-  const { personalData  } = useContext(ContextData);
-  // Change from string to object to store offer CTC for each row
-  const [offerCtcValues, setOfferCtcValues] = useState({});
+  const [hrData,setHrData]=useState([]);
+  const [Hrlist, setHrList] = useState([]);
 
-  const [token,setToken]=useState(()=>{
-    const userInfo=localStorage.getItem('userInfo');
-    return userInfo ? JSON.parse(userInfo):null;
-  });
-  
-  // Initialize offerCtcValues from personalData when component mounts
-  useEffect(() => {
-    if (personalData && personalData.length > 0) {
-      const initialOfferCtc = {};
-      personalData.forEach((item, index) => {
-        const rowId = item.id || `row-${index}`;
-        initialOfferCtc[rowId] = item.offer_ctc || '';
-      });
-      setOfferCtcValues(initialOfferCtc);
-    }
-  }, [personalData]);
+  // const { Approvals, setSelectedRecord } = useContext(ContextData);
 
-  const filteredData = useMemo(() => 
-  {
-    if (!personalData || personalData.length === 0) return [];
-    let result = [...personalData];
-    
-    if (searchTerm) {
-        result = result.filter(user =>
-        (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
-      ));
-    }
-    if (statusFilter !== 'all') {
-      result = result.filter(user => user.status === statusFilter);
-    }
-    
-    return result.map((item, index) => ({
-      id: item.id || `row-${index}`,
-      SNO: index + 1,
-      verification_id: item.Verification_Id,
-      CHILD_CASEID: item.child_caseid || 'N/A',
-      PLANT: item.plant || 'N/A', 
-      NAME: item.name || 'N/A',
-      EMAIL: item.email || 'N/A',
-      ADDRESS: item.address || 'N/A',
-      PHONE_NUMBER: item.phone_number || 'N/A',
-      DOB: item.dob || 'N/A',
-      DEPT: item.DEPT || 'N/A',
-      AADHAR_NUM: item.aadhar_number || 'N/A',
-      PAN_NUM: item.pan_number || 'N/A',
-      SSC_MARKS: item.ssc_marks || 'N/A',
-      INTER_MARKS: item.inter_marks || 'N/A',
-      BTECH_MARKS: item.btech_marks || 'N/A',
-      PG_MARKS: item.pg_marks || 'N/A',
-      CURRENT_CTC: item.current_ctc || 'N/A',
-      EXP_CTC: item.expected_ctc || 'N/A',
-      OFFER_CTC: item.offer_ctc || 'N/A',
-      NOTICE_PERIOD: item.notice_period || 'N/A',
-      PREVIOUS_COMPANY: item.previous_company || 'N/A',
-      DURATION: item.duration || 'N/A',
-      STATUS: item.status || 'pending',
-      remarks: item.remarks || 'No remarks',
-      submitted_date: item.created_at || 'N/A',
-      documents: item.documents || {}
-    }));
-  }, [personalData, searchTerm, statusFilter]);
 
-  const getStatusChip = (status) => 
-  {
-    const statusValue = status?.toLowerCase();
-    const config = {
-      verified: { color: '#10b981'  },
-      pending:  { color: '#f59e0b'  },
-      rejected: { color: '#ef4444'  },
-      uploaded: { color: '#3b82f6'  },
-      'not uploaded': { color: '#6b7280' }
-    };
-    const { color, icon } = config[statusValue] || config.pending;
-    return (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%'
-      }}>
-        <Box sx={{
-          color: '#ffffff',
-          backgroundColor: color,
-          padding: '4px 10px',
-          borderRadius: '6px',
-          fontSize: '10px',
-          height: '25px',
-          fontWeight: 600,
-          textTransform: 'capitalize',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
-        }}>
-          {icon}
-          {statusValue?.charAt(0).toUpperCase() + statusValue?.slice(1) || 'Pending'}
-        </Box>
-      </Box>
-    );
-  };
-  
-  const handleSendEmail = async (row) => 
-  {
+
+
+
+
+
+
+
+
+useEffect(() => {
+  if (!userToken?.token) return;
+
+  const onBoarding = async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/cand-aprvl-email`,
+      const response = await axios.get(
+        `${API_BASE_URL}/hr_requisition_list`,
         {
-          case_id : row.CHILD_CASEID,
-          email   : row.EMAIL,
-          name    : row.NAME,
-        },
-        {
-          headers:
-          {
-               "Accept":"application/json",
-               Authorization:`Bearer ${token.token}`
-          }
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${userToken.token}`,
+          },
         }
       );
-      console.log('CandApprovalMail',response);
-      if (response.data.success) 
-      {
-        alert('Email sent successfully');
-      } else {
-        alert('Failed to send email');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Error while sending email');
+
+      setHrData(response.data.data)
+      console.log("NOTE FOR APPROVAL API DATA:", response.data);
+    } catch (err) {
+      console.error("Error fetching approval data", err);
     }
   };
+
+  onBoarding();
+}, [userToken?.token]);
+
+
+
+
+useEffect(() => {
+  if (!userToken?.token) return;
+
+  const HrList= async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/mhc-hr-list`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${userToken.token}`,
+          },
+        }
+      );
+
+      console.log(response,"666666666666666666666666666666666666666");
+
+      setHrList(response?.hrDropDownListData);
+    
+    } catch (err) {
+      console.error("Error fetching approval data", err);
+    }
+  };
+
+  HrList();
+}, [userToken?.token]);
+
+
+
+
+
+
+
+
+
+
+
+
+  useEffect(() => {
+    if (!userToken.token) navigate('/');
+  }, [navigate, userToken?.token]);
+
   
-  const handleViewDetails = (user) => {
-    console.log('user',user)
-    setSelectedUser(user);
-    setModalOpen(true);
-  };
 
-  const handleStatusChange = (updateData) => {
-    console.log('Status updated:', updateData);
-  };
-
-  // Handle Offer CTC change for specific row
-  const handleOfferCtcChange = (rowId, value) => {
-    setOfferCtcValues(prev => ({
+  const handleEmailChange = (caseId, email) => {
+    setEmailInputs(prev => ({
       ...prev,
-      [rowId]: value
+      [caseId]: email
     }));
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString || dateString === 'N/A') return 'N/A';
+  const handleSubmitEmail = async (caseId, rowData) => {
+    const email = emailInputs[caseId];
+    if (!email) {
+      Swal.fire('Error', 'Please enter email', 'error');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Swal.fire('Error', 'Please enter a valid email address', 'error');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to send the onboarding form link to ${email}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Send Email',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    setSubmitting(prev => ({ ...prev, [caseId]: true }));
+    const payload2 = {
+      email: email,
+      child_caseId: caseId,
+    }
+
     try {
-      const date = new Date(dateString);
-      return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('en-GB');
-    } catch {
-      return dateString;
+      const response = await axios.post(
+        `${API_BASE_URL}/emp-email`,
+        payload2,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken.token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      console.log(response, "pay1");
+
+      if (response.data) {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Onboarding form link sent to employee email!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+        setEmailInputs(prev => ({ ...prev, [caseId]: '' }));
+      }
+    } catch (error) {
+      console.error('Email send error:', error);
+      Swal.fire('Error', 'Failed to send email', 'error');
+    } finally {
+      setSubmitting(prev => ({ ...prev, [caseId]: false }));
     }
   };
 
-  const formatNumber = (value) => {
-    if (!value || value === 'N/A') return 'N/A';
-    return value.toString();
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const columns = useMemo(() => [
+  const handleOpenManpower = async (rowData, type) => {
+    setSelectedRowData(rowData);
+    setProcessAndCaseIdData({
+      processname: rowData.PROCESSNAME,
+      caseId: row.CHILD_CASEID,
+      type: type
+    });
+    setManPowerOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setManPowerOpen(false);
+    setSelectedRowData(null);
+  };
+
+  const statusCounts = useMemo(() => {
+    const counts = {
+      total: filteredData.length,
+      completed: 0,
+      pending: 0,
+      rejected: 0
+    };
+    filteredData.forEach(row => {
+      const status = row.ACTION_STATUS?.toLowerCase();
+      if (status === 'completed') {
+        counts.completed++;
+      } else if (status === 'pending' || status === 'to_do') {
+        counts.pending++;
+      } else if (status === 'rejected') {
+        counts.rejected++;
+      }
+    });
+    return counts;
+  }, [filteredData]);
+
+  const columns = [
     {
       field: 'SNO',
       headerName: 'S.NO',
@@ -211,15 +245,27 @@ const Salarystackup = () => {
       filterable: false,
       renderCell: (params) => (
         <Box sx={{ fontWeight: 600, color: '#374151' }}>
-          {params.value}
+          {params.api.getAllRowIds().indexOf(params.id) + 1}
         </Box>
       ),
     },
     {
-      field: 'CHILD_CASEID',
+      field: 'CASEID',
       headerName: 'Case ID',
       flex: 1,
-      minWidth: 130,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Box sx={{ fontWeight: 500, color: '#1f2937' }}>
+          {params.value}
+        </Box>
+      ),
+    },
+
+        {
+      field: 'CHILD_CASEID',
+      headerName: 'CHILD CASEID',
+      flex: 1,
+      minWidth: 120,
       renderCell: (params) => (
         <Box sx={{ fontWeight: 500, color: '#1f2937' }}>
           {params.value}
@@ -227,10 +273,10 @@ const Salarystackup = () => {
       ),
     },
     {
-      field: 'PLANT',
-      headerName: 'Plant Name',
-      flex: 1.2,
-      minWidth: 160,
+      field: 'RAISER',
+      headerName: 'Raiser',
+      flex: 1,
+      minWidth: 110,
       renderCell: (params) => (
         <Box sx={{ color: '#374151' }}>
           {params.value}
@@ -238,35 +284,24 @@ const Salarystackup = () => {
       ),
     },
     {
-      field: 'NAME',
-      headerName: 'Name',
+      field: 'RAISER_DATE',
+      headerName: 'Raiser Date',
       flex: 1,
+      minWidth: 110,
+      renderCell: (params) => (
+        <Box sx={{ color: '#6b7280' }}>
+          {params.value ? new Date(params.value).toLocaleDateString('en-GB') : ''}
+        </Box>
+      ),
+    },
+    {
+      field: 'PLANT',
+      headerName: 'Plant',
+      flex: 1.2,
       minWidth: 140,
       renderCell: (params) => (
-        <Box sx={{ fontWeight: 600, color: '#1f2937' }}>
+        <Box sx={{ color: '#374151' }}>
           {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'EMAIL',
-      headerName: 'Email',
-      flex: 1.5,
-      minWidth: 200,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151', fontSize: '12px' }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'PHONE_NUMBER',
-      headerName: 'Phone Number',
-      flex: 0.9,
-      minWidth: 120,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151', fontWeight: 500 }}>
-          {formatNumber(params.value)}
         </Box>
       ),
     },
@@ -277,193 +312,201 @@ const Salarystackup = () => {
       minWidth: 120,
       renderCell: (params) => (
         <Box sx={{ color: '#374151', fontWeight: 500 }}>
-          {formatNumber(params.value)}
+          {params.value}
         </Box>
       ),
     },
     {
-      field: 'CURRENT_CTC',
-      headerName: 'Current CTC',
-      width: 110,
-      renderCell: (params) => {
-        const formattedValue = params.value
-          ? Number(params.value).toLocaleString('en-IN')
-          : '0';
-        return (
-          <Box sx={{ color: '#059669', fontWeight: 600, fontSize: '12px' }}>
-            ₹{formattedValue}
-          </Box>
-        );
-      },
-    },
-    {
-      field: 'EXP_CTC',
-      headerName: 'Expected CTC',
-      width: 120,
-      renderCell: (params) => {
-        const formattedValue = params.value
-          ? Number(params.value).toLocaleString('en-IN')
-          : '0';
-        return (
-          <Box sx={{ color: '#059669', fontWeight: 600, fontSize: '12px' }}>
-            ₹{formattedValue}
-          </Box>
-        );
-      },
-    },
-    {
-      field: 'OFFER_CTC',
-      headerName: 'Offer CTC',
-      width: 120,
+      field: 'MANPOWER_DESG',
+      headerName: 'Designation',
+      flex: 1.2,
+      minWidth: 130,
       renderCell: (params) => (
-        <TextField
+        <Box sx={{
+          color: '#374151',
+          padding: '2px 8px',
+          borderRadius: '6px',
+          fontSize: '12px',
+          fontWeight: 600,
+        }}>
+          {params.value || 'N/A'}
+        </Box>
+      ),
+    },
+    {
+      field: 'ACTION_STATUS',
+      headerName: 'Status',
+      flex: 0.8,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Button
+          variant="contained"
           size="small"
-          type="number"
-          placeholder="Enter CTC"
-          value={offerCtcValues[params.row.id] || ''}
-          onChange={(e) => handleOfferCtcChange(params.row.id, e.target.value)}
-          onBlur={() => {
-            console.log(`Offer CTC for ${params.row.NAME}:`, offerCtcValues[params.row.id]);
-          }}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-          }}
-          inputProps={{
-            min: 0,
-            step: 1000,
-          }}
           sx={{
-            width: '100%',
-            '& .MuiOutlinedInput-root': {
-              fontSize: '12px',
-              height: '35px',
-              '& fieldset': {
-                borderColor: '#d1d5db',
-              },
-              '&:hover fieldset': {
-                borderColor: '#667eea',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#667eea',
-              },
-              '& input': {
-                textAlign: 'right',
-              },
+            background: '#10b981',
+            color: 'white',
+            fontSize: '11px',
+            padding: '3px 10px',
+            borderRadius: '4px',
+            textTransform: 'capitalize',
+            fontWeight: 600,
+            minWidth: 'auto',
+            boxShadow: 'none',
+            '&:hover': {
+              background: '#059669',
+              boxShadow: 'none',
             },
           }}
-        />
+        >
+          Shortlisted
+        </Button>
       ),
     },
-    {
-      field: 'STATUS',
-      headerName: 'Overall Status',
-      flex: 0.9,
-      minWidth: 120,
-      renderCell: (params) => getStatusChip(params.value),
-    },
-    {
-      field: 'submitted_date',
-      headerName: 'Submitted Date',
-      width: 120,
-      renderCell: (params) => (
-        <Box sx={{ color: '#6b7280', fontSize: '11px' }}>
-          {formatDate(params.value)}
-        </Box>
-      ),
-    },
-    {
-      field: 'create',
-      headerName: 'Create',
-      width: 80,
-      sortable: false,
-      renderCell: (params) => (
-        <Tooltip title="Create">
-          <IconButton
-            size="small"
-            onClick={() => handleViewDetails(params.row)}
-            sx={{
-              color: '#3b82f6',
-              '&:hover': {
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              },
-            }}
-          >
-            <CirclePlus fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
-    },
-    {
-      field: 'ACTIONS',
-      headerName: 'Actions',
-      flex: 1,
-      minWidth: 110,
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => 
-      {
-        const isSubmitting = submitting[params.row.CASEID] || false;
-        return (
-          <Button
-            variant="contained"
-            size="small"
-            onClick={()=>handleSendEmail(params.row)}
-            disabled={isSubmitting}
-            sx={{
-              background: isSubmitting 
-                ? '#9ca3af' 
-                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white',
-              fontSize: '10px',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              textTransform: 'capitalize',
-              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
-              minWidth: '90px',
-              '&:hover': {
-                background: isSubmitting 
-                  ? '#9ca3af' 
-                  : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                transform: isSubmitting ? 'none' : 'translateY(-1px)',
-                boxShadow: isSubmitting ? 'none' : '0 4px 10px rgba(16, 185, 129, 0.4)',
-              },
-              '&:disabled': {
-                background: '#9ca3af',
-                color: '#e5e7eb',
-              }
-            }}
-          >
-            {isSubmitting ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <CircularProgress size={12} sx={{ color: 'white' }} />
-                Sending...
-              </Box>
-            ) : (
-              'Send Email'
-            )}
-          </Button>
-        );
-      },
-    },
-  ], [offerCtcValues, submitting]);
+ 
+ {
+  field: 'ACTIONS',
+  headerName: 'Actions',
+  flex: 1,
+  minWidth: 130,
+  sortable: false,
+  filterable: false,
+  renderCell: (params) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedName, setSelectedName] = useState('');
+    
+    const handleClick = (event) => {
+      setAnchorEl(event.currentTarget);
+    };
+    
+    const handleClose = () => {
+      setAnchorEl(null);
+    };
+    
 
-  // Function to save all offer CTC values
-  const handleSaveAllOfferCtc = async () => {
-    try {
-      const offersToSave = Object.entries(offerCtcValues).map(([id, value]) => ({
-        id,
-        offer_ctc: value
-      }));
+
+    
+    const handleSelect = async (name) => {
+
+
+            const response = await axios.post(`${API_BASE_URL}/task-Assign-StoreData`,
+        {
+        
+         case_id   : params.row.CHILD_CASEID, 
+         assigned_to : name,
+         current_task:"HR",
+         status :"Pending"
+        },
+
+
+        {
+          headers:
+          {
+               "Accept":"application/json",
+               Authorization:`Bearer ${userToken.token}`
+          }
+        }
+      );
+
+      setSelectedName(name);
+      handleClose();
       
-      console.log('Saving offer CTC values:', offersToSave);
-      // Add your API call here to save the data
-      // await axios.post(`${API_BASE_URL}/save-offer-ctc`, { offers: offersToSave });
+  
+      console.log(`Selected ${name} for case: ${params.row.CHILD_CASEID}`);
       
-      alert('Offer CTC values saved successfully!');
-    } catch (error) {
-      console.error('Error saving offer CTC:', error);
-      alert('Failed to save offer CTC values');
+    
+      Swal.fire({
+        title: 'Assigned!',
+        text: `Case assigned to ${name}`,
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#10b981',
+      });
+    };
+    
+    return (
+      <div>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={handleClick}
+          sx={{
+            background: '#667eea',
+            color: 'white',
+            fontSize: '11px',
+            padding: '4px 12px',
+            borderRadius: '6px',
+            textTransform: 'none',
+            minWidth: '100px',
+            '&:hover': {
+              background: '#5a67d8',
+            }
+          }}
+        >
+          {selectedName || 'Assign To'} ▼
+        </Button>
+        
+      <Menu
+  anchorEl={anchorEl}
+  open={Boolean(anchorEl)}
+  onClose={handleClose}
+  PaperProps={{
+    sx: {
+      mt: 1,
+      borderRadius: '8px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     }
+  }}
+>
+  {Hrlist?.map((emp) => (
+    <MenuItem
+      key={emp.Legacy_Id}
+      onClick={() => handleSelect(emp.Emp_Name)}
+      sx={{
+        fontSize: '12px',
+        padding: '6px 16px',
+        '&:hover': {
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        }
+      }}
+    >
+      {emp.Emp_Name}
+    </MenuItem>
+  ))}
+</Menu>
+
+      </div>
+    );
+  },
+}
+  ];
+
+  const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '90%',
+    maxWidth: '1200px',
+    bgcolor: '#ffffff',
+    border: 'none',
+    borderRadius: '16px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    p: 0,
+    maxHeight: '80vh',
+    overflow: 'hidden'
+  };
+
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen gap-2">
+  //       <RefreshCw className={`w-5 h-5 text-blue-600 ${loading ? "animate-spin" : ""}`} />
+  //       <span className="text-gray-600">Loading...</span>
+  //     </div>
+  //   );
+  // }
+
+  const handleBack = () => {
+    navigate('/');
   };
 
   return (
@@ -480,121 +523,18 @@ const Salarystackup = () => {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
       }}>
-        
-        {/* Header with Save Button */}
-        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e293b' }}>
-            Salary Stackup
-          </Typography>
-          
-          <Button
-            variant="contained"
-            onClick={handleSaveAllOfferCtc}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              textTransform: 'capitalize',
-              fontWeight: 500,
-              padding: '6px 16px',
-              borderRadius: '8px',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                transform: 'translateY(-1px)',
-                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-              }
-            }}
-          >
-            Save All Offer CTC
-          </Button>
-        </Box>
-        
-        {/* Compact Search bar matching RecruitmentMail */}
+        {/* Compact Search bar */}
         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ flex: 1, maxWidth: '400px' }}>
-            <TextField
-              variant="outlined"
-              size="small"
-              placeholder="Search name, email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: '#667eea', fontSize: '20px' }} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  borderRadius: '10px',
-                  backgroundColor: '#f8fafc',
-                  height: '38px',
-                  fontSize: '13px',
-                  '&:hover': {
-                    backgroundColor: '#f1f5f9',
-                  },
-                  '&.Mui-focused': {
-                    backgroundColor: '#ffffff',
-                  }
-                }
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "#cedef2ff",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#d1d6ebff",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#667eea",
-                  },
-                },
-              }}
-            />
+            
           </Box>
-          
-          <TextField
-            select
-            size="small"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            sx={{
-              minWidth: 150,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '10px',
-                backgroundColor: '#f8fafc',
-                height: '38px',
-                fontSize: '13px',
-                '&:hover': {
-                  backgroundColor: '#f1f5f9',
-                },
-              },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "#cedef2ff",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#d1d6ebff",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#667eea",
-                },
-              },
-            }}
-          >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="verified">Verified</MenuItem>
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="rejected">Rejected</MenuItem>
-          </TextField>
-          
           <Typography variant="body2" sx={{
             color: '#64748b',
             minWidth: 'fit-content',
             fontWeight: 500,
             fontSize: '13px'
           }}>
-            {filteredData.length} salary records
+            {filteredData.length} shortlisted candidates
           </Typography>
         </Box>
 
@@ -606,8 +546,9 @@ const Salarystackup = () => {
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
         }}>
           <DataGrid
-            rows={filteredData}
+            rows={hrData}
             columns={columns}
+            getRowId={(row) => row.SNO}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[10, 20, 50]}
@@ -647,15 +588,63 @@ const Salarystackup = () => {
           />
         </Box>
       </Paper>
-      
-      <SalaryStackDetailsModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        data={selectedUser}
-        onStatusChange={handleStatusChange}
-      />
+
+      {/* Manpower Modal */}
+      <Modal open={manpowerOpen} onClose={handleCloseModal}>
+        <Box sx={modalStyle}>
+          <Box sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+          }}>
+            <Typography variant="h6" sx={{
+              fontWeight: 600,
+              fontSize: '16px',
+              flex: 1,
+              textAlign: 'center',
+            }}>
+              Case ID: {selectedRowData?.CHILD_CASEID} | Process: {selectedRowData?.PROCESSNAME}
+            </Typography>
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseModal}
+              sx={{
+                color: 'white',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                },
+                ml: 1,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{
+            padding: '20px',
+            maxHeight: 'calc(80vh - 80px)',
+            overflowY: 'auto',
+            backgroundColor: '#f8fafc',
+          }}>
+            {processCaseId.type === "view" ? (
+              <DataFlow
+                processname={processCaseId.processname ?? ""}
+                caseId={processCaseId.caseId ?? ""}
+                mode={processCaseId.type ?? ""}
+              />
+            ) : (
+              <ManPowerView caseId={processCaseId.caseId ?? ""} />
+            )}
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };
 
-export default Salarystackup;
+export default HODInbox;

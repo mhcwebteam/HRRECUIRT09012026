@@ -5,9 +5,13 @@ import { Home, Users, LogOut, ChevronRight, FileKey2 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MyContext } from "../../App";
 
+
+
+
 const Sidebar = () => {
   const { isSidebarOpen, setIsSidebarOpen } = useContext(MyContext);
   const location = useLocation();
+   const [userToken] = useState(() => JSON.parse(localStorage.getItem('userInfo')) || {})
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -15,11 +19,12 @@ const Sidebar = () => {
   }
 
   const menuItems = [
-    { path: '/Manpower', icon: Users, label: 'Manpower', gradient: 'from-purple-400 to-pink-400', hoverGradient: 'from-purple-500 to-pink-500' },
+    // { path: '/Manpower', icon: Users, label: 'Manpower', gradient: 'from-purple-400 to-pink-400', hoverGradient: 'from-purple-500 to-pink-500'},
+        {path:'/HrInbox', icon: Home, label:"HrInbox" ,gradient: 'from-pink-400 to-rose-400', hoverGradient: 'from-pink-500 to-rose-500'},
     { path: '/RecruitmentProcess', icon: FileKey2, label: 'Recruitments', gradient: 'from-violet-400 to-purple-400', hoverGradient: 'from-violet-500 to-purple-500' },
     { path: '/onBoarding', icon: Home, label: 'Onboarding', gradient: 'from-fuchsia-400 to-purple-400', hoverGradient: 'from-fuchsia-500 to-purple-500' },
-    // { path: '/RecruitmentForm', icon: Home, label: 'RecruitmentForm', gradient: 'from-pink-400 to-rose-400', hoverGradient: 'from-pink-500 to-rose-500' },
-    {path:'/HrInbox', icon: Home, label:"HrInbox" ,gradient: 'from-pink-400 to-rose-400', hoverGradient: 'from-pink-500 to-rose-500'}
+     { path: '/PendingMRFS', icon: Home, label: 'PendingMRFS', gradient: 'from-pink-400 to-rose-400', hoverGradient: 'from-pink-500 to-rose-500' },
+
   ];
 
   return (
@@ -68,7 +73,32 @@ const Sidebar = () => {
 
       {/* Navigation Menu */}
       <nav className='mt-6 px-3'>
-        {menuItems.map((item, index) => {
+        {menuItems?.filter(item => {
+
+
+    // Show HODInbox only for HOD
+  if (item.path == "/PendingMRFS") {
+    return userToken.Emp_Category === "HOD";
+  }
+
+  //  if (item.path == "/HrInbox'") {
+  //   return userToken.Emp_Category === "HOD";
+  // }
+
+  // Hide onboarding for HOD
+if (item.path == "/onBoarding" || item.path == '/HrInbox') {
+  return userToken.Emp_Category === "HR";
+}
+
+
+ 
+
+  // Show all other menus
+  return true;
+
+    
+    // show all other menus
+  }).map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
 

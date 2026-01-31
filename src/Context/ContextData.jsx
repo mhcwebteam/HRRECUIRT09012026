@@ -1,6 +1,7 @@
 import React, { createContext, useState } from "react";
 import 
 {
+  useapprovals,
   useHrhistory,
   usePersonalDetails,
   usePostPersonalDetails,
@@ -15,7 +16,8 @@ export const ContextData = createContext({
   subproject: [],
   isSubProjectLoading: true,
   personalData: [],
-  HrData: [],
+  // HrData: [],
+  Approvals:[],
   PersonPostData: [],
   selectedRecord: null,
   setSelectedRecord: () => {},
@@ -34,8 +36,12 @@ export const AppProvider = ({ children }) =>
     data: PersonalInfo,
     isLoading: isLoadingInfo,
   } = usePersonalDetails(userToken?.token);
-  const { data: Hrhistory } = useHrhistory(userToken?.token);
-  console.log(Hrhistory);
+  // const { data: Hrhistory } = useHrhistory(userToken?.token);
+
+  const {data: Approvals}  = useapprovals(userToken?.token);
+
+  console.log(Approvals,"fffffffffffffffffffffffff");
+ 
   const { data: Personpost } = usePostPersonalDetails(userToken?.token);
 //console.log("selectedRecordselectedRecordselectedRecord",selectedRecord)
   return (
@@ -46,7 +52,8 @@ export const AppProvider = ({ children }) =>
         subproject: subProjects || [],
         isSubProjectLoading: isLoadingSub,
         personalData: PersonalInfo || [],
-        HrData: Hrhistory || [],
+        // HrData: Hrhistory || [],
+        Approvals: Approvals || [],
         PersonPostData: Personpost || [],
         selectedRecord,
         setSelectedRecord,

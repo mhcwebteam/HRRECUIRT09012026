@@ -1,8 +1,11 @@
 
 
 
+
+
+
 import React, { useState, useEffect, useContext, useMemo } from 'react';
-import {API_BASE_URL} from '../Config/Config.jsx';
+import { API_BASE_URL } from '../Config/Config.jsx';
 import axios from 'axios';
 import {
   Paper,
@@ -14,7 +17,9 @@ import {
   InputAdornment,
   MenuItem,
   Button,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Search,
@@ -28,6 +33,7 @@ import { ContextData } from '../Context/ContextData';
 import VerificationDetailsModal from './VerificationDetailsModal';
 import SalaryStackDetailsModal from './SalaryStackDetailsModal';
 import { CirclePlus } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const Salarystackup = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,122 +42,89 @@ const Salarystackup = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [submitting, setSubmitting] = useState({});
-  const { personalData  } = useContext(ContextData);
+  const { personalData } = useContext(ContextData);
+
+  const [savingOfferCtc, setSavingOfferCtc] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const [stackupData, setStackupData] = useState([]);
   // Change from string to object to store offer CTC for each row
   const [offerCtcValues, setOfferCtcValues] = useState({});
-const [confirmedOffers, setConfirmedOffers] = useState({});
-  const [token,setToken]=useState(()=>{
-    const userInfo=localStorage.getItem('userInfo');
-    return userInfo ? JSON.parse(userInfo):null;
+  const [confirmedOffers, setConfirmedOffers] = useState({});
+  const [token, setToken] = useState(() => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo) : null;
   });
-  
-  // Initialize offerCtcValues from personalData when component mounts
-  // useEffect(() => {
-  //   if (personalData && personalData.length > 0) {
-  //     const initialOfferCtc = {};
-  //     personalData.forEach((item, index) => {
-  //       const rowId = item.id || `row-${index}`;
-  //       initialOfferCtc[rowId] = item.offer_ctc || '';
-  //     });
-
-  //     console.log("innnnnnnnnnnnnn",initialOfferCtc);
-  //     setOfferCtcValues(initialOfferCtc);
-  //   }
-  // }, [personalData]);
 
 
-
-  const handleLocalSave = (rowId) => {
-  const typedValue = offerCtcValues[rowId];
-  if (!typedValue) {
-    alert("Please enter an amount");
-    return;
-  }
-  
-  // Mark this row as "Confirmed" locally
-  setConfirmedOffers(prev => ({
-    ...prev,
-    [rowId]: typedValue
-  }));
-  
-  alert(`Total Amount ₹${typedValue} saved for this session.`);
-};
 
 
   useEffect(() => {
-  if (personalData && personalData.length > 0) {
-    setOfferCtcValues(personalData[0].offer_ctc || '');
-  }
-}, [personalData]);
+    if (stackupData?.salaryStackUpGetData && stackupData?.salaryStackUpGetData?.length > 0) {
+      setOfferCtcValues(stackupData?.salaryStackUpGetData[0].offer_ctc || '');
+    }
+  }, [personalData]);
 
+  
+  const fetchData = async () => {
 
+    try {
+      const response = await axios.get(`${API_BASE_URL}/salaryStackGetData`, {
+        headers:
+        {
+          "Content-Type": "application/json",
+          Accept: 'application/json',
+          Authorization: `Bearer ${token.token}`
+        }
+      });
+      const responseData = response.data;
 
+      console.log(responseData,"fffffffffffffffffffffffffffffff");
 
-  console.log("offerctccccccccccccccc",personalData);
- const filteredData = useMemo(() => 
-{
-  if (!personalData || personalData.length === 0) return [];
-  let result = [...personalData];
+      setStackupData(responseData);
+    }
+    catch (error) {
+      console.error("Error fetching data. Using mock:", error);
+    }
+    finally {
+      // setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token.token) {
+      fetchData()
+    }
+  }, [token?.token])
+  const filteredData = useMemo(() => {
+  if (!stackupData?.salaryStackUpGetData || stackupData?.salaryStackUpGetData?.length === 0) return [];
+  let result = [...stackupData.salaryStackUpGetData];
 
   if (searchTerm) {
     result = result.filter(user =>
-      (user.NAME?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       user.EMAIL?.toLowerCase().includes(searchTerm.toLowerCase())
+      (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       user.email?.toLowerCase().includes(searchTerm.toLowerCase())
     ));
   }
   if (statusFilter !== 'all') {
     result = result.filter(user => user.status === statusFilter);
   }
 
+  return result.map((item, index) => ({
+    ...item,
+    id: item.verification_id,
+    SNO: index + 1,
+    OFFER_CTC: confirmedOffers[item.verification_id] || item.offer_ctc || 'N/A'
+  }));
+}, [stackupData, searchTerm, statusFilter, confirmedOffers]);
 
-
-
-  
-  return result.map((item, index) => {
-    const rowId = item.id || `row-${index}`;
-    
-    return {
-      id: rowId,
-      SNO: index + 1,
-      verification_id: item.Verification_Id,
-      CHILD_CASEID: item.child_caseid || 'N/A',
-      PLANT: item.plant || 'N/A', 
-      NAME: item.name || 'N/A',
-      EMAIL: item.email || 'N/A',
-      ADDRESS: item.address || 'N/A',
-      PHONE_NUMBER: item.phone_number || 'N/A',
-      DOB: item.dob || 'N/A',
-      DEPT: item.DEPT || 'N/A',
-      AADHAR_NUM: item.aadhar_number || 'N/A',
-      PAN_NUM: item.pan_number || 'N/A',
-      SSC_MARKS: item.ssc_marks || 'N/A',
-      INTER_MARKS: item.inter_marks || 'N/A',
-      BTECH_MARKS: item.btech_marks || 'N/A',
-      PG_MARKS: item.pg_marks || 'N/A',
-      CURRENT_CTC: item.current_ctc || 'N/A',
-      EXP_CTC: item.expected_ctc || 'N/A',
-      // ✅ Use offerCtcValues if available, otherwise fall back to item.offer_ctc
-      // Inside your filteredData useMemo:
-OFFER_CTC: confirmedOffers[rowId] || item.offer_ctc || 'N/A',
-      NOTICE_PERIOD: item.notice_period || 'N/A',
-      PREVIOUS_COMPANY: item.previous_company || 'N/A',
-      DURATION: item.duration || 'N/A',
-      STATUS: item.status || 'pending',
-      remarks: item.remarks || 'No remarks',
-      submitted_date: item.created_at || 'N/A',
-      documents: item.documents || {}
-    };
-  });
-}, [personalData, searchTerm, statusFilter, offerCtcValues]); // ✅ Add offerCtcValues dependency
-
-  const getStatusChip = (status) => 
-  {
+  const getStatusChip = (status) => {
     const statusValue = status?.toLowerCase();
     const config = {
-      verified: { color: '#10b981'  },
-      pending:  { color: '#f59e0b'  },
-      rejected: { color: '#ef4444'  },
-      uploaded: { color: '#3b82f6'  },
+      verified: { color: '#10b981' },
+      pending: { color: '#f59e0b' },
+      rejected: { color: '#ef4444' },
+      uploaded: { color: '#3b82f6' },
       'not uploaded': { color: '#6b7280' }
     };
     const { color, icon } = config[statusValue] || config.pending;
@@ -181,94 +154,156 @@ OFFER_CTC: confirmedOffers[rowId] || item.offer_ctc || 'N/A',
       </Box>
     );
   };
-  
-  const handleSendEmail = async (row) => 
-  {
+
+  const handleSendEmail = async (row) => {
+    const result = await Swal.fire({
+      title: 'Send Approval Email?',
+      text: `Are you sure you want to send the approval email to ${row.EMAIL}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Send',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      reverseButtons: true,
+    });
+
+    // ❌ If user clicks Cancel, stop here
+    if (!result.isConfirmed) return;
+
     try {
-      const response = await axios.post(`${API_BASE_URL}/cand-aprvl-email`,
+      const response = await axios.post(
+        `${API_BASE_URL}/cand-aprvl-email`,
         {
-          case_id : row.CHILD_CASEID,
-          email   : row.EMAIL,
-          name    : row.NAME,
+          case_id: row.CHILD_CASEID,
+          email: row.EMAIL,
+          name: row.NAME,
         },
         {
-          headers:
-          {
-               "Accept":"application/json",
-               Authorization:`Bearer ${token.token}`
-          }
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token.token}`,
+          },
         }
       );
-      console.log('CandApprovalMail',response);
-      if (response.data.success) 
-      {
-        alert('Email sent successfully');
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Email Sent!',
+          text: response.data.message,
+          confirmButtonColor: '#10b981',
+        });
       } else {
-        alert('Failed to send email');
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission Failed',
+          text: response.data.error || 'Something went wrong',
+        });
       }
     } catch (error) {
-      console.error(error);
-      alert('Error while sending email');
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission Failed',
+        text:
+          error.response?.data?.error ||
+          error.message ||
+          'Server error occurred',
+      });
     }
   };
-  
-
-// const totalAmount = async () => {
 
 
+  const handleSaveOfferCtc = async (rowId, row) => {
+    const typedValue = offerCtcValues[rowId];
 
-//   const payload = {
-//     child_caseid: row.CHILD_CASEID,
-//     offerCtc: "600000"
+    if (!typedValue || typedValue === '0') {
+      setSnackbar({ open: true, message: 'Please enter a valid amount', severity: 'error' });
+      return;
+    }
 
-//   }
+    setSavingOfferCtc(prev => ({ ...prev, [rowId]: true }));
 
-//   console.log(personalData,"payload",payload, "token",token);
+    const payload = {
+      child_caseid: row.CHILD_CASEID,
+      offerCtc: typedValue
+    };
 
-//     try {
-//       const response = await axios.post(`${API_BASE_URL}/Ofr-Ctc-Upt`, payload, {
-//         headers:     {
-//                "Accept":"application/json",
-//                Authorization:`Bearer ${token.token}`
-//           },
-//       });
-//       console.log(response.data, "Response from server");
-//       // Show success message
+    try {
+      // const response = await axios.post(
+      //   `${API_BASE_URL}/Ofr-Ctc-Upt`, 
+      //   payload, 
+      //   {
+      //     headers: {
+      //       "Accept": "application/json",
+      //       Authorization: `Bearer ${token.token}`
+      //     },
+      //   }
+      // );
 
-//     } catch (err) {
-//       console.error('Error saving salary breakup:', err);
-     
-//     } 
+      // console.log('Offer CTC saved:', response.data);
 
-// }
+      // Mark as confirmed after successful save
+      setConfirmedOffers(prev => ({
+        ...prev,
+        [rowId]: typedValue
+      }));
 
+      setSnackbar({
+        open: true,
+        message: `Offer CTC ₹${Number(typedValue).toLocaleString('en-IN')} saved successfully!`,
+        severity: 'success'
+      });
 
-const handleViewDetails = (row) => {
-  // Check chestunnam: State lo emaina kotha value unda?
-  // 1. confirmedOffers (Save kottina value)
-  // 2. offerCtcValues (Type chestunna value - just in case Save kottakunda Modal open chesthe)
-  // 3. Row actual value
-  
-  const currentOfferValue = confirmedOffers[row.id] || offerCtcValues[row.id] || row.OFFER_CTC;
-
-  const userDataWithOffer = {
-    ...row,
-    OFFER_CTC: currentOfferValue // Ikkada update chestunnam, so modal lo Null radu
+    } catch (err) {
+      console.error('Error saving Offer CTC:', err);
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error occurred';
+      setSnackbar({
+        open: true,
+        message: 'Error saving Offer CTC: ' + errorMessage,
+        severity: 'error'
+      });
+    } finally {
+      setSavingOfferCtc(prev => ({ ...prev, [rowId]: false }));
+    }
   };
 
-  setSelectedUser(userDataWithOffer);
-  setModalOpen(true);
-};
 
+  const handleViewDetails = (row) => {
 
-  // const handleViewDetails = (user) => {
-  //   // totalAmount()
-  //   setSelectedUser(user);
-  //   setModalOpen(true);
-  // };
+    const currentOfferValue = confirmedOffers[row.id] || offerCtcValues[row.id] || row.offer_ctc;
+    const userDataWithOffer = {
+      ...row,
+      OFFER_CTC: currentOfferValue // Ikkada update chestunnam, so modal lo Null radu
+    };
 
-  const handleStatusChange = (updateData) => {
-    console.log('Status updated:', updateData);
+    setSelectedUser(userDataWithOffer);
+    setModalOpen(true);
+  };
+const handleStatusChange = (updateData) => {
+  console.log('Status updated:', updateData);
+
+  // Update the confirmed offers if offer_ctc is present in updateData
+  if (updateData.offer_ctc && updateData.id) {
+    setConfirmedOffers(prev => ({
+      ...prev,
+      [updateData.id]: updateData.offer_ctc
+    }));
+    
+    // ✅ ALSO update the stackupData to reflect the change immediately
+    setStackupData(prevData => {
+      if (!prevData?.salaryStackUpGetData) return prevData;
+      
+      return {
+        ...prevData,
+        salaryStackUpGetData: prevData.salaryStackUpGetData.map(item => 
+          item.verification_id === updateData.id 
+            ? { ...item, offer_ctc: updateData.offer_ctc, status: updateData.status }
+            : item
+        )
+      };
+    });
+  }
   };
 
   // Handle Offer CTC change for specific row
@@ -293,6 +328,8 @@ const handleViewDetails = (row) => {
     if (!value || value === 'N/A') return 'N/A';
     return value.toString();
   };
+
+  console.log(stackupData, "sttttttttttttttttt1222222222222222222222");
 
   const columns = useMemo(() => [
     {
@@ -404,71 +441,84 @@ const handleViewDetails = (row) => {
         );
       },
     },
-{
-  field: 'OFFER_CTC',
-  headerName: 'Offer CTC',
-  width: 220,
-  renderCell: (params) => {
-    const rowId = params.row.id;
-    // Database nunchi vachina value
-    const dbValue = params.row.OFFER_CTC;
-    // Nuvvu Save kottaka vachina temporary local value
-    const localSavedValue = confirmedOffers[rowId];
 
-    // Check: Already value unda (DB lo or just now Saved)?
-    const isLocked = (dbValue && dbValue !== 'N/A' && dbValue !== '0') || localSavedValue;
-
-    if (isLocked) {
-      return (
-        <Typography sx={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>
-          ₹{Number(localSavedValue || dbValue).toLocaleString('en-IN')}
-        </Typography>
-      );
-    }
-
-    // Ledante: TextField chupinchu
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <TextField
-          value={offerCtcValues[rowId] || ''}
-          onChange={(e) => handleOfferCtcChange(rowId, e.target.value)}
-          size="small"
-          placeholder="Enter Amount"
-          sx={{ '& .MuiOutlinedInput-root': { height: '35px' } }}
-        />
-        <Button 
-          variant="contained" 
-          size="small"
-          onClick={() => {
-            if(!offerCtcValues[rowId]) return alert("Value entry cheyi bhayya!");
-            // Ee state update valla current cell text field nunchi text ki maripoddi
-            setConfirmedOffers(prev => ({ ...prev, [rowId]: offerCtcValues[rowId] }));
-          }}
-          sx={{ backgroundColor: '#059669', minWidth: '60px' }}
-        >
-          Save
-        </Button>
-      </Box>
-    );
-  }
-},
     {
-      field: 'STATUS',
-      headerName: 'Overall Status',
+      field: 'OFFER_CTC',
+      headerName: 'Offer CTC',
+      width: 220,
+      renderCell: (params) => {
+        const rowId = params.row.id;
+        const dbValue = params.row.OFFER_CTC;
+        const localSavedValue = confirmedOffers[rowId];
+        const isSaving = savingOfferCtc[rowId];
+
+        // Check if value is locked (either from DB or locally saved)
+        const isLocked = (dbValue && dbValue !== 'N/A' && dbValue !== '0') || localSavedValue;
+
+        if (isLocked) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography sx={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>
+                ₹{Number(localSavedValue || dbValue).toLocaleString('en-IN')}
+              </Typography>
+              <CheckCircle sx={{ fontSize: '16px', color: '#10b981' }} />
+            </Box>
+          );
+        }
+
+        // Show input field if not locked
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TextField
+              value={offerCtcValues[rowId] || ''}
+              onChange={(e) => handleOfferCtcChange(rowId, e.target.value)}
+              size="small"
+              placeholder="Enter Amount"
+              type="number"
+              disabled={isSaving}
+              sx={{
+                width: '130px',
+                '& .MuiOutlinedInput-root': {
+                  height: '35px',
+                  fontSize: '12px'
+                }
+              }}
+            />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => handleSaveOfferCtc(rowId, params.row)}
+              disabled={isSaving || !offerCtcValues[rowId]}
+              sx={{
+                backgroundColor: '#059669',
+                minWidth: '60px',
+                height: '35px',
+                '&:hover': {
+                  backgroundColor: '#047857'
+                },
+                '&:disabled': {
+                  backgroundColor: '#9ca3af'
+                }
+              }}
+            >
+              {isSaving ? (
+                <CircularProgress size={16} sx={{ color: 'white' }} />
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </Box>
+        );
+      }
+    },
+    {
+      field: 'status',
+      headerName: 'Salary Status',
       flex: 0.9,
       minWidth: 120,
       renderCell: (params) => getStatusChip(params.value),
     },
-    {
-      field: 'submitted_date',
-      headerName: 'Submitted Date',
-      width: 120,
-      renderCell: (params) => (
-        <Box sx={{ color: '#6b7280', fontSize: '11px' }}>
-          {formatDate(params.value)}
-        </Box>
-      ),
-    },
+
     {
       field: 'create',
       headerName: 'Create',
@@ -498,18 +548,17 @@ const handleViewDetails = (row) => {
       minWidth: 110,
       sortable: false,
       filterable: false,
-      renderCell: (params) => 
-      {
+      renderCell: (params) => {
         const isSubmitting = submitting[params.row.CASEID] || false;
         return (
           <Button
             variant="contained"
             size="small"
-            onClick={()=>handleSendEmail(params.row)}
+            onClick={() => handleSendEmail(params.row)}
             disabled={isSubmitting}
             sx={{
-              background: isSubmitting 
-                ? '#9ca3af' 
+              background: isSubmitting
+                ? '#9ca3af'
                 : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white',
               fontSize: '10px',
@@ -519,8 +568,8 @@ const handleViewDetails = (row) => {
               boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
               minWidth: '90px',
               '&:hover': {
-                background: isSubmitting 
-                  ? '#9ca3af' 
+                background: isSubmitting
+                  ? '#9ca3af'
                   : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                 transform: isSubmitting ? 'none' : 'translateY(-1px)',
                 boxShadow: isSubmitting ? 'none' : '0 4px 10px rgba(16, 185, 129, 0.4)',
@@ -543,7 +592,7 @@ const handleViewDetails = (row) => {
         );
       },
     },
-  ], [offerCtcValues, submitting]);
+  ], [offerCtcValues, submitting, savingOfferCtc]);
 
   // Function to save all offer CTC values
   const handleSaveAllOfferCtc = async () => {
@@ -552,11 +601,11 @@ const handleViewDetails = (row) => {
         id,
         offer_ctc: value
       }));
-      
+
       console.log('Saving offer CTC values:', offersToSave);
       // Add your API call here to save the data
       // await axios.post(`${API_BASE_URL}/save-offer-ctc`, { offers: offersToSave });
-      
+
       alert('Offer CTC values saved successfully!');
     } catch (error) {
       console.error('Error saving offer CTC:', error);
@@ -578,9 +627,9 @@ const handleViewDetails = (row) => {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
       }}>
-        
-    
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+
+
+        {/* <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ flex: 1, maxWidth: '400px' }}>
             <TextField
               variant="outlined"
@@ -623,7 +672,7 @@ const handleViewDetails = (row) => {
               }}
             />
           </Box>
-          
+
           <TextField
             select
             size="small"
@@ -658,7 +707,7 @@ const handleViewDetails = (row) => {
             <MenuItem value="pending">Pending</MenuItem>
             <MenuItem value="rejected">Rejected</MenuItem>
           </TextField>
-          
+
           <Typography variant="body2" sx={{
             color: '#64748b',
             minWidth: 'fit-content',
@@ -667,7 +716,7 @@ const handleViewDetails = (row) => {
           }}>
             {filteredData.length} salary records
           </Typography>
-        </Box>
+        </Box> */}
 
         <Box sx={{
           width: "100%",
@@ -679,10 +728,11 @@ const handleViewDetails = (row) => {
           <DataGrid
             rows={filteredData}
             columns={columns}
+            getRowId={(row) => row.verification_id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[10, 20, 50]}
-            rowHeight={42}
+         rowHeight={40}
             columnHeaderHeight={44}
             sx={{
               border: "none",
@@ -718,7 +768,7 @@ const handleViewDetails = (row) => {
           />
         </Box>
       </Paper>
-      
+
       <SalaryStackDetailsModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

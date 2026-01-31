@@ -681,54 +681,71 @@ const JoiningReportList = () => {
   })
 
   //----------------------------JoiningDataStart------------------------//
-  const joinData = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/verify-getData`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Authorization": `Bearer ${Token.token}`,
-          },
-        }
-      );
-      const apiData = response.data.data;
+const joinData = async () => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/emp-verify-data`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${Token.token}`,
+        },
+      }
+    );
 
-      const formattedRows = apiData
-        .filter(item => item.joiningDate && item.joiningDate !== '')
-        .map((item, index) => ({
-          id: item.verification_id || index,
-          CHILD_CASEID: item.CHILD_CASEID,
-          employee_name: item.NAME,
-          email: item.EMAIL,
-          phone: item.PHONE_NUMBER,
-          department: item.DEPT,
-          location: item.PLANT,
-          joining_date: item.joiningDate,
-          current_ctc: item.CURRENT_CTC,
-          expected_ctc: item.EXP_CTC,
-          offered_ctc: item.OFFER_CTC ?? 'Pending',
-          joining_status: 'Joined',
-          offer_letter: item.OfferLetterFlag ?? 'Pending',
-          bgv_status: item.verification_status ?? 'Pending',
-          documents_status: item.overallDocments_aprvl === '1' ? 'Complete' : 'Pending',
-          current_stage: item.CURRENT_TASK,
-          hr_owner: item.CURRENT_USER,
-          created_at: item.created_at,
-          // Store the entire item for History modal
-          fullData: item,
-        }));
-      console.log("formattedRows:", formattedRows);
-      setJoiningData(formattedRows);
-      setFilteredData(formattedRows);
-    } catch (error) {
-      console.error("Error in fetching joining data", error);
-    }
-  };
-  //----------------------------JoiningDataEnd---------------------------//
+    
+    const apiData = response.data.data;
 
-  //------------------------------useEffect------------------------------//
+    console.log(apiData,": API Data");
+
+    // Filter only items with valid joining dates
+    const formattedRows = apiData
+      .filter(item => {
+        // Check if joiningDate exists and is not null/empty
+        const hasJoiningDate = item.joiningDate && 
+                              item.joiningDate !== '' && 
+                              item.joiningDate !== null &&
+                              item.joiningDate !== undefined &&
+                              item.joiningDate !== 'null';
+        
+        // Also check if it's a valid date string (not just whitespace)
+        const isValidDateString = item.joiningDate && 
+                                 item.joiningDate.toString().trim() !== '';
+        
+        return hasJoiningDate && isValidDateString;
+      })
+      .map((item, index) => ({
+        id: item.verification_id || index,
+        CHILD_CASEID: item.child_caseid,
+        employee_name: item.name,
+        email: item.email,
+        phone: item.phone_number,
+        department: item.DEPT,
+        location: item.PLANT,
+        joining_date: item.joiningDate,
+        current_ctc: item.CURRENT_CTC,
+        expected_ctc: item.EXP_CTC,
+        offered_ctc: item.OFFER_CTC ?? 'Pending',
+        joining_status: 'Joined',
+        offer_letter: item.OfferLetterFlag ?? 'Pending',
+        bgv_status: item.verification_status ?? 'Pending',
+        documents_status: item.overallDocments_aprvl === '1' ? 'Complete' : 'Pending',
+        current_stage: item.CURRENT_TASK,
+        hr_owner: item.CURRENT_USER,
+        created_at: item.created_at,
+        // Store the entire item for History modal
+        fullData: item,
+      }));
+    
+    console.log("Filtered formattedRows (with joining dates):", formattedRows);
+    setJoiningData(formattedRows);
+    setFilteredData(formattedRows);
+  } catch (error) {
+    console.error("Error in fetching joining data", error);
+  }
+};
+
   useEffect(() => {
     if (Token.token) {
       joinData();
@@ -784,6 +801,8 @@ const JoiningReportList = () => {
     navigate('/DocApproval', { state: { rowData } });
   };
 
+  console.log()
+
   const columns = [
     {
       field: 'SNO',
@@ -828,6 +847,9 @@ const JoiningReportList = () => {
         </Button>
       ),
     },
+
+
+    
     {
       field: 'CHILD_CASEID',
       headerName: 'Case ID',
@@ -924,79 +946,7 @@ const JoiningReportList = () => {
         />
       ),
     },
-    {
-      field: 'current_ctc',
-      headerName: 'Current CTC',
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151' }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'expected_ctc',
-      headerName: 'Expected CTC',
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151' }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'offered_ctc',
-      headerName: 'Offered CTC',
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151' }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'offer_letter',
-      headerName: 'Offer Letter',
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (params) => (
-        <Chip
-          size="small"
-          label={params.value}
-          sx={{
-            backgroundColor: params.value === 'Sent' ? '#10b981' : '#f59e0b',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: '11px',
-            height: '24px',
-          }}
-        />
-      ),
-    },
-    {
-      field: 'bgv_status',
-      headerName: 'BGV Status',
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (params) => (
-        <Chip
-          size="small"
-          label={params.value}
-          sx={{
-            backgroundColor:
-              params.value === 'Approved' ? '#10b981' :
-                params.value === 'Pending' ? '#f59e0b' : '#9ca3af',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: '11px',
-            height: '24px',
-          }}
-        />
-      ),
-    },
+
     {
       field: 'documents_status',
       headerName: 'Docs Status',
@@ -1016,28 +966,7 @@ const JoiningReportList = () => {
         />
       ),
     },
-    {
-      field: 'current_stage',
-      headerName: 'Current Stage',
-      flex: 1,
-      minWidth: 120,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151' }}>
-          {params.value}
-        </Box>
-      ),
-    },
-    {
-      field: 'hr_owner',
-      headerName: 'HR Owner',
-      flex: 1,
-      minWidth: 120,
-      renderCell: (params) => (
-        <Box sx={{ color: '#374151' }}>
-          {params.value}
-        </Box>
-      ),
-    },
+
     {
       field: 'history',
       headerName: 'History',

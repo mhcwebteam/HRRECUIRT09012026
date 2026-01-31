@@ -88,20 +88,55 @@ export const useHrhistory = (token) => {
 return useQuery({
     queryKey: ["history", token],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/hr_requisition_list`, {
+     
+     
+      // const response = await axios.get(`${API_BASE_URL}/hr_requisition_list`,
+        
+          const response = await axios.get(`${API_BASE_URL}/task-Assign-GtDta`,
+        {
           headers: {
             "Content-Type": "application/json",
             Accept: 'application/json',
-            //Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
           }
         })
-      console.log("fffffffffffffffffffff",response);
-      return response.data.data; 
+
+        console.log(response,"777777777777777777777777777");
+    
+   
+      return response.data;
     },
     enabled: !!token 
   });
 }
 
+
+
+export const useapprovals = (token) => {
+return useQuery({
+
+
+    queryKey: ["history", token],
+    queryFn: async () => {
+     
+     
+        
+          const response = await axios.get(`${API_BASE_URL}/hr_requisition_list`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+          }
+        })
+
+    console.log(response,"ajithhhhhhhhhh22222222222222222222222222");
+   
+      return response.data;
+    },
+    enabled: !!token 
+  });
+}
 
 
 
